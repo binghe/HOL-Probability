@@ -16,10 +16,8 @@
 
 open HolKernel Parse boolLib bossLib;
 
-open arithmeticTheory optionTheory pred_setTheory pred_setLib
-     pairTheory combinTheory seqTheory;
-
-open hurdUtils util_probTheory;
+open arithmeticTheory optionTheory pairTheory combinTheory pred_setTheory
+     pred_setLib seqTheory hurdUtils util_probTheory;
 
 val _ = new_theory "sigma_algebra";
 
@@ -27,6 +25,8 @@ val std_ss' = std_ss ++ boolSimps.ETA_ss;
 
 val DISC_RW_KILL = DISCH_TAC >> ONCE_ASM_REWRITE_TAC [] >> POP_ASSUM K_TAC;
 fun METIS ths tm = prove(tm, METIS_TAC ths);
+
+val SET_RULE = SET_CONV; (* for backward compatibility *)
 
 (* ------------------------------------------------------------------------- *)
 (*  Basic definitions.                                                       *)
