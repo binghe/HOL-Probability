@@ -1,8 +1,6 @@
-/src/probability/.hollogs/
-/src/probability/.HOLMK/
-/examples/diningcryptos/.HOLMK/
+.hollogs/
+.HOLMK/
 *.ui
 *.uo
-*.dat
 *Theory.*
 *.DS_Store

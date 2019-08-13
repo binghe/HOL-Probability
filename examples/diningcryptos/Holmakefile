@@ -1,2 +1,2 @@
-INCLUDES = $(HOLDIR)/examples/miller/subtypes
+INCLUDES = ../miller/subtypes
 OPTIONS = QUIT_ON_FAILURE
