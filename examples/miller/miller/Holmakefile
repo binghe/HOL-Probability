@@ -1,0 +1,11 @@
+PRE_INCLUDES = ../prob ../formalize
+INCLUDES = ../ho_prover ../subtypes ../../RSA ../groups
+OPTIONS = QUIT_ON_FAILURE
+
+all: $(DEFAULT_TARGETS) selftest.exe
+.PHONY: all
+
+selftest.exe: selftest.uo miller_rabinTools.uo
+	$(HOLMOSMLC) -o $@ $<
+
+EXTRA_CLEANS = selftest.exe
