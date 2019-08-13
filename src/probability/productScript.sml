@@ -22,7 +22,7 @@ open HolKernel Parse boolLib bossLib;
 open numLib unwindLib tautLib Arith prim_recTheory combinTheory quotientTheory
      arithmeticTheory hrealTheory realaxTheory realTheory realLib jrhUtils
      pairTheory seqTheory limTheory transcTheory listTheory mesonLib
-     boolTheory pred_setTheory optionTheory numTheory hurdUtils
+     boolTheory pred_setTheory pred_setLib optionTheory numTheory hurdUtils
      sumTheory InductiveDefinition ind_typeTheory;
 
 open cardinalTheory iterateTheory;
@@ -30,7 +30,7 @@ open cardinalTheory iterateTheory;
 val _ = new_theory "product";
 
 (* ------------------------------------------------------------------------- *)
-(* MESON, METIS, SET_TAC, SET_RULE, ASSERT_TAC, ASM_ARITH_TAC                *)
+(* MESON, METIS, ASSERT_TAC, ASM_ARITH_TAC                                   *)
 (* ------------------------------------------------------------------------- *)
 
 fun MESON ths tm = prove(tm,MESON_TAC ths);
@@ -41,8 +41,8 @@ val DISC_RW_KILL = DISCH_TAC THEN ONCE_ASM_REWRITE_TAC [] THEN
 
 fun ASSERT_TAC tm = SUBGOAL_THEN tm STRIP_ASSUME_TAC;
 
-val ASM_ARITH_TAC = rpt (POP_ASSUM MP_TAC) THEN ARITH_TAC;
-val ASM_REAL_ARITH_TAC = rpt (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC;
+val ASM_ARITH_TAC = REPEAT (POP_ASSUM MP_TAC) THEN ARITH_TAC;
+val ASM_REAL_ARITH_TAC = REPEAT (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC;
 
 (* ------------------------------------------------------------------------- *)
 (* misc.                                                                     *)
@@ -76,12 +76,12 @@ val NPRODUCT_CLAUSES = store_thm ("NPRODUCT_CLAUSES",
    (!x f s. FINITE(s)
             ==> (nproduct (x INSERT s) f =
                  if x IN s then nproduct s f else f(x) * nproduct s f))``,
-  REWRITE_TAC [nproduct, GSYM NEUTRAL_MUL] THEN
+  REWRITE_TAC[nproduct, GSYM NEUTRAL_MUL] THEN
   METIS_TAC [SWAP_FORALL_THM, ITERATE_CLAUSES, MONOIDAL_MUL]);
 
 val NPRODUCT_SUPPORT = store_thm ("NPRODUCT_SUPPORT",
  ``!f s. nproduct (support ( * ) f s) f = nproduct s f``,
-  REWRITE_TAC [nproduct, ITERATE_SUPPORT]);
+  REWRITE_TAC[nproduct, ITERATE_SUPPORT]);
 
 val NPRODUCT_UNION = store_thm ("NPRODUCT_UNION",
  ``!f s t. FINITE s /\ FINITE t /\ DISJOINT s t
@@ -132,7 +132,7 @@ val NPRODUCT_CLAUSES_NUMSEG = store_thm ("NPRODUCT_CLAUSES_NUMSEG",
  ``(!m. nproduct(m..(0:num)) f = if m = 0 then f(0) else 1) /\
    (!m n. nproduct(m..SUC n) f = if m <= SUC n then nproduct(m..n) f * f(SUC n)
                                 else nproduct(m..n) f)``,
-  REWRITE_TAC[NUMSEG_CLAUSES] THEN rpt STRIP_TAC THEN
+  REWRITE_TAC[NUMSEG_CLAUSES] THEN REPEAT STRIP_TAC THEN
   COND_CASES_TAC THEN
   ASM_SIMP_TAC std_ss [NPRODUCT_SING, NPRODUCT_CLAUSES, FINITE_NUMSEG, IN_NUMSEG] THEN
   SIMP_TAC arith_ss [ARITH_PROVE ``~(SUC n <= n)``, MULT_AC]);
@@ -235,7 +235,7 @@ val NPRODUCT_CLOSED = store_thm ("NPRODUCT_CLOSED",
  ``!P f:'a->num s.
         P(1) /\ (!x y. P x /\ P y ==> P(x * y)) /\ (!a. a IN s ==> P(f a))
         ==> P(nproduct s f)``,
-  rpt STRIP_TAC THEN MP_TAC(MATCH_MP ITERATE_CLOSED MONOIDAL_MUL) THEN
+  REPEAT STRIP_TAC THEN MP_TAC(MATCH_MP ITERATE_CLOSED MONOIDAL_MUL) THEN
   DISCH_THEN(MP_TAC o SPEC ``P:num->bool``) THEN
   ASM_SIMP_TAC std_ss [NEUTRAL_MUL, GSYM nproduct]);
 
@@ -283,7 +283,7 @@ val th = store_thm ("th",
                 ==> (nproduct(a..b) (\i. f(i)) = nproduct(a..b) g)) /\
      (!f g p.   (!x. p x ==> (f x = g x))
                 ==> (nproduct {y | p y} (\i. f(i)) = nproduct {y | p y} g))``,
-    rpt STRIP_TAC THEN MATCH_MP_TAC NPRODUCT_EQ THEN
+    REPEAT STRIP_TAC THEN MATCH_MP_TAC NPRODUCT_EQ THEN
     ASM_SIMP_TAC std_ss [GSPECIFICATION, IN_NUMSEG]);
 
 (* ------------------------------------------------------------------------- *)
@@ -368,7 +368,7 @@ val PRODUCT_CLAUSES_NUMSEG = store_thm ("PRODUCT_CLAUSES_NUMSEG",
  ``(!m. product(m..(0:num)) f = if m = 0 then f(0) else &1) /\
    (!m n. product(m..SUC n) f = if m <= SUC n then product(m..n) f * f(SUC n)
                                 else product(m..n) f)``,
-  REWRITE_TAC[NUMSEG_CLAUSES] THEN rpt STRIP_TAC THEN
+  REWRITE_TAC[NUMSEG_CLAUSES] THEN REPEAT STRIP_TAC THEN
   COND_CASES_TAC THEN
   ASM_SIMP_TAC std_ss [PRODUCT_SING, PRODUCT_CLAUSES, FINITE_NUMSEG, IN_NUMSEG] THEN
   SIMP_TAC std_ss [ARITH_PROVE ``~(SUC n <= n)``, REAL_MUL_ASSOC, REAL_MUL_SYM]);
@@ -485,7 +485,7 @@ val PRODUCT_INV = store_thm ("PRODUCT_INV",
    (product s (\x. inv(f x)) = inv(product s f)) =
    (\s. product s (\x. inv(f x)) = inv(product s f)) s``] THEN
   MATCH_MP_TAC FINITE_INDUCT THEN BETA_TAC THEN
-  SIMP_TAC real_ss [PRODUCT_CLAUSES, REAL_INV1] THEN rpt STRIP_TAC THEN
+  SIMP_TAC real_ss [PRODUCT_CLAUSES, REAL_INV1] THEN REPEAT STRIP_TAC THEN
   ASM_CASES_TAC ``((f:'a->real) e <> 0) /\ (product s f <> 0:real)`` THENL
   [ASM_SIMP_TAC real_ss [GSYM REAL_INV_MUL], ALL_TAC] THEN
   FULL_SIMP_TAC real_ss [REAL_INV_0]);
@@ -514,7 +514,7 @@ val PRODUCT_LE_1 = store_thm ("PRODUCT_LE_1",
          ==> product s f <= &1) s``] THEN
   MATCH_MP_TAC FINITE_INDUCT THEN BETA_TAC THEN
   SIMP_TAC std_ss [PRODUCT_CLAUSES, REAL_LE_REFL, IN_INSERT] THEN
-  rpt STRIP_TAC THEN GEN_REWR_TAC RAND_CONV [GSYM REAL_MUL_LID] THEN
+  REPEAT STRIP_TAC THEN GEN_REWR_TAC RAND_CONV [GSYM REAL_MUL_LID] THEN
   MATCH_MP_TAC REAL_LE_MUL2 THEN ASM_SIMP_TAC std_ss [PRODUCT_POS_LE]);
 
 val PRODUCT_ABS = store_thm ("PRODUCT_ABS",

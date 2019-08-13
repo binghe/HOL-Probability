@@ -1,0 +1,7 @@
+/src/probability/.hollogs/
+/src/probability/.HOLMK/
+/examples/diningcryptos/.HOLMK/
+*.ui
+*.uo
+*.dat
+*Theory.*
