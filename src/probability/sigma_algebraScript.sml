@@ -5,13 +5,13 @@
 (* Author: Chun Tian (2018, 2019)                                            *)
 (* Fondazione Bruno Kessler and University of Trento, Italy                  *)
 (* ------------------------------------------------------------------------- *)
-(* Based on the work of Joe Hurd [1] (2001) and Aaron Coble [2] (2010)       *)
-(* Cambridge University.                                                     *)
-(* ------------------------------------------------------------------------- *)
 (* Based on the work of Tarek Mhamdi, Osman Hasan, Sofiene Tahar [3]         *)
 (* HVG Group, Concordia University, Montreal (2013, 2015)                    *)
 (*                                                                           *)
 (* With some further additions by M. Qasim & W. Ahmed (2019)                 *)
+(* ------------------------------------------------------------------------- *)
+(* Based on the work of Joe Hurd [1] (2001) and Aaron Coble [2] (2010)       *)
+(* Cambridge University.                                                     *)
 (* ------------------------------------------------------------------------- *)
 
 open HolKernel Parse boolLib bossLib;
@@ -25,8 +25,6 @@ val std_ss' = std_ss ++ boolSimps.ETA_ss;
 
 val DISC_RW_KILL = DISCH_TAC >> ONCE_ASM_REWRITE_TAC [] >> POP_ASSUM K_TAC;
 fun METIS ths tm = prove(tm, METIS_TAC ths);
-
-val SET_RULE = SET_CONV; (* for backward compatibility *)
 
 (* ------------------------------------------------------------------------- *)
 (*  Basic definitions.                                                       *)
@@ -1678,7 +1676,7 @@ val finite_Union = store_thm ("finite_Union",
   rpt GEN_TAC THEN
   REWRITE_TAC [ring_def,subsets_def] THEN STRIP_TAC THEN POP_ASSUM MP_TAC THEN
   SPEC_TAC (``X:('a->bool)->bool``,``X:('a->bool)->bool``) THEN
-  pred_setLib.SET_INDUCT_TAC THENL
+  SET_INDUCT_TAC THENL
   [FULL_SIMP_TAC std_ss [semiring_def, BIGUNION_EMPTY], ALL_TAC] THEN
   DISCH_TAC THEN REWRITE_TAC [BIGUNION_INSERT] THEN FIRST_ASSUM MATCH_MP_TAC THEN
   ASM_SET_TAC []);
@@ -1689,7 +1687,7 @@ val finite_UN = store_thm ("finite_UN",
   rpt GEN_TAC THEN
   REWRITE_TAC [ring_def,subsets_def] THEN STRIP_TAC THEN POP_ASSUM MP_TAC THEN
   POP_ASSUM MP_TAC THEN SPEC_TAC (``N:'a->bool``,``N:'a->bool``) THEN
-  pred_setLib.SET_INDUCT_TAC THENL
+  SET_INDUCT_TAC THENL
   [REWRITE_TAC [SET_RULE ``{A i | i IN {}} = {}``, BIGUNION_EMPTY] THEN
    FULL_SIMP_TAC std_ss [semiring_def], ALL_TAC] THEN
   DISCH_TAC THEN REWRITE_TAC [IN_INSERT] THEN
@@ -2126,6 +2124,7 @@ val sigma_sets_superset_generator = store_thm ("sigma_sets_superset_generator",
   SIMP_TAC std_ss [SUBSET_DEF, sigma_sets_basic]);
 
 val _ = export_theory ();
+val _ = html_theory "sigma_algebra";
 
 (* References:
 

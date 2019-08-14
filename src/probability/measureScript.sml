@@ -21,7 +21,7 @@
 open HolKernel Parse boolLib bossLib;
 
 open prim_recTheory arithmeticTheory optionTheory pairTheory
-     numpairTheory combinTheory pred_setTheory pred_setLib;
+     numpairTheory combinTheory pred_setTheory;
 
 open realTheory realLib seqTheory transcTheory real_sigmaTheory;
 
@@ -3465,14 +3465,13 @@ QED
    named after Constantin Caratheodory, a Greek mathematician who spent most
    of his professional career in Germany. [9]
  *)
-val CARATHEODORY_SEMIRING = store_thm
-  ("CARATHEODORY_SEMIRING",
-  ``!m0.
+Theorem CARATHEODORY_SEMIRING :
+    !m0.
        semiring (m_space m0, measurable_sets m0) /\ premeasure m0 ==>
        ?m. (!s. s IN measurable_sets m0 ==> (measure m s = measure m0 s)) /\
            ((m_space m, measurable_sets m) =
-            sigma (m_space m0) (measurable_sets m0)) /\ measure_space m``,
- (* proof *)
+            sigma (m_space m0) (measurable_sets m0)) /\ measure_space m
+Proof
     PRINT_TAC "Beginning Caratheodory's extension theorem"
  >> rpt STRIP_TAC >> Cases_on `m0` >> Cases_on `r`
  >> fs [m_space_def, measurable_sets_def, measure_def, premeasure_def]
@@ -3486,7 +3485,8 @@ val CARATHEODORY_SEMIRING = store_thm
  >> fs [countable_covers_def, outer_measure_def, caratheodory_sets_def]
  >> Know `outer_measure_space (sp, POW sp, m) /\ (!x. x IN sts ==> m x <= mu x) /\
           measure_space (sp,A',m)`
- >- (`subset_class sp sts /\ {} IN sts` by PROVE_TAC [semiring_def, space_def, subsets_def] \\
+ >- (`subset_class sp sts /\ {} IN sts`
+       by PROVE_TAC [semiring_def, space_def, subsets_def] \\
      METIS_TAC [MUNROE_METHOD_I,
                 outer_measure_def, countable_covers_def, caratheodory_sets_def])
  >> STRIP_TAC
@@ -4553,7 +4553,8 @@ val CARATHEODORY_SEMIRING = store_thm
         by METIS_TAC [SPACE_SIGMA, SPACE, space_def, subsets_def] >> POP_ORW \\
      MATCH_MP_TAC SIGMA_ALGEBRA_SIGMA \\
      PROVE_TAC [semiring_def, space_def, subsets_def])
- >> METIS_TAC [SPACE_SIGMA, SPACE, space_def, subsets_def]);
+ >> METIS_TAC [SPACE_SIGMA, SPACE, space_def, subsets_def]
+QED
 
 (* The original Caratheodory theorem proved by Joe Hurd now becomes an easy corollary *)
 val CARATHEODORY = store_thm
@@ -4744,6 +4745,7 @@ val SIGMA_FINITE_ALT2 = store_thm
       Q.EXISTS_TAC `n` >> REWRITE_TAC [] ]);
 
 val _ = export_theory ();
+val _ = html_theory "measure";
 
 (* References:
 

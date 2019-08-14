@@ -1,5 +1,5 @@
 (* ------------------------------------------------------------------------- *)
-(* Useful Theorems, some are taken from various theories by Hurd, Coble, ... *)
+(* Useful Theorems, some are taken from various theories by Hurd and Coble   *)
 (* Authors: Tarek Mhamdi, Osman Hasan, Sofiene Tahar                         *)
 (* HVG Group, Concordia University, Montreal                                 *)
 (*                                                                           *)
@@ -712,12 +712,12 @@ val MINIMAL_SUC_IMP = store_thm
 
 Theorem DISJOINT_RESTRICT_L :
   !s t c. DISJOINT s t ==> DISJOINT (s INTER c) (t INTER c)
-Proof SET_TAC [DISJOINT_DEF]
+Proof SET_TAC []
 QED
 
 Theorem DISJOINT_RESTRICT_R :
   !s t c. DISJOINT s t ==> DISJOINT (c INTER s) (c INTER t)
-Proof SET_TAC [DISJOINT_DEF]
+Proof SET_TAC []
 QED
 
 Theorem SUBSET_RESTRICT_L :
@@ -1566,13 +1566,13 @@ val INCREASING_TO_DISJOINT_SETS' = store_thm
 
 
 (******************************************************************************)
-(*  Liminf and limsup [1, p.74] [2, p.76] - the set-theoretic version         *)
+(*  liminf and limsup [1, p.74] [2, p.76] - the set-theoretic version         *)
 (******************************************************************************)
 
 (* this lemma is provided by Konrad Slind *)
-val set_ss = arith_ss ++ pred_setLib.PRED_SET_ss;
+val set_ss = arith_ss ++ PRED_SET_ss;
 
-val lem = Q.prove
+val lemma = Q.prove
   (`!P. ~(?N. INFINITE N /\ !n. N n ==> P n) <=> !N. N SUBSET P ==> FINITE N`,
   rw_tac set_ss [EQ_IMP_THM, SUBSET_DEF, IN_DEF]
   >- (`FINITE P \/ ?n. P n /\ ~P n` by metis_tac []
@@ -1580,7 +1580,7 @@ val lem = Q.prove
        >> full_simp_tac std_ss [SUBSET_DEF, IN_DEF])
   >- metis_tac[]);
 
-(* TODO: use above lem to simplify this proof with the following hints:
+(* TODO: use above lemma to simplify this proof with the following hints:
 
    "From this and the original assumption, you should be able to get that P is finite,
     so has a maximum element." -- Konrad Slind, Feb 17, 2019.
@@ -1645,6 +1645,7 @@ val IN_FROM = store_thm ("IN_FROM",
   ``!m n. m IN from n <=> n <= m``,
     SIMP_TAC std_ss [from_def, GSPECIFICATION]);
 
+(* TODO: restate this lemma by "from" *)
 val tail_not_empty = store_thm
   ("tail_not_empty", ``!A m:num. {A n | m <= n} <> {}``,
     RW_TAC std_ss [Once EXTENSION, NOT_IN_EMPTY, GSPECIFICATION]

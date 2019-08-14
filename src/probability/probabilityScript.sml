@@ -13,11 +13,12 @@
 open HolKernel Parse boolLib bossLib;
 
 open pairTheory combinTheory optionTheory prim_recTheory arithmeticTheory
-     realTheory realLib seqTheory pred_setTheory pred_setLib
-     res_quanTheory res_quanTools transcTheory real_sigmaTheory;
+     res_quanTheory res_quanTools pred_setTheory;
 
-open hurdUtils util_probTheory extrealTheory sigma_algebraTheory measureTheory
-     borelTheory lebesgueTheory martingaleTheory;
+open realTheory realLib seqTheory transcTheory real_sigmaTheory;
+
+open hurdUtils util_probTheory extrealTheory sigma_algebraTheory
+     measureTheory borelTheory lebesgueTheory martingaleTheory;
 
 val _ = new_theory "probability";
 

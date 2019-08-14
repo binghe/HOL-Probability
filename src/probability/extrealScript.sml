@@ -9,7 +9,7 @@
 
 open HolKernel Parse boolLib bossLib;
 
-open metisLib combinTheory pred_setTheory pred_setLib res_quanTools pairTheory
+open metisLib combinTheory pred_setTheory res_quanTools pairTheory
      prim_recTheory arithmeticTheory realTheory realLib real_sigmaTheory
      seqTheory limTheory Diff transcTheory jrhUtils;
 
@@ -25,30 +25,41 @@ val extreal_def = Datatype
    `extreal = NegInf | PosInf | Normal real`;
 
 (* INFINITY, the vertical position of UTF8.chr 0x2212 is better than "-" *)
-val _ = Unicode.unicode_version {u = "+" ^ UTF8.chr 0x221E, tmnm = "PosInf"};
-val _ = Unicode.unicode_version {u = UTF8.chr 0x2212 ^ UTF8.chr 0x221E, tmnm = "NegInf"};
+val _ = Unicode.unicode_version {u = "+" ^ UTF8.chr 0x221E,
+                                 tmnm = "PosInf"};
+val _ = Unicode.unicode_version {u = UTF8.chr 0x2212 ^ UTF8.chr 0x221E,
+                                 tmnm = "NegInf"};
 
-val _ = TeX_notation {hol = "+" ^ UTF8.chr 0x221E, TeX = ("\\ensuremath{+\\infty}", 1)};
-val _ = TeX_notation {hol = "-" ^ UTF8.chr 0x221E, TeX = ("\\ensuremath{-\\infty}", 1)};
+val _ = TeX_notation {hol = "+" ^ UTF8.chr 0x221E,
+                      TeX = ("\\ensuremath{+\\infty}", 1)};
 
-val extreal_of_num_def = Define
-   `extreal_of_num n = Normal (&n)`;
+val _ = TeX_notation {hol = "-" ^ UTF8.chr 0x221E,
+                      TeX = ("\\ensuremath{-\\infty}", 1)};
 
-val real_def = Define
-   `real x = if (x = NegInf) \/ (x = PosInf) then (0 :real)
-             else @r. x = Normal r`;
+Definition extreal_of_num_def :
+    extreal_of_num n = Normal (&n)
+End
 
-val real_normal = store_thm
-  ("real_normal", ``!x. real (Normal x) = x``,
-    RW_TAC std_ss [real_def]);
+Definition real_def :
+    real x = if (x = NegInf) \/ (x = PosInf) then (0 :real)
+             else @r. x = Normal r
+End
 
-val normal_real = store_thm
-  ("normal_real", ``!x. x <> NegInf /\ x <> PosInf ==> (Normal (real x) = x)``,
+Theorem real_normal :
+    !x. real (Normal x) = x
+Proof
+    RW_TAC std_ss [real_def]
+QED
+
+Theorem normal_real :
+    !x. x <> NegInf /\ x <> PosInf ==> (Normal (real x) = x)
+Proof
     RW_TAC std_ss [real_def]
  >> SELECT_ELIM_TAC
  >> RW_TAC std_ss []
  >> Cases_on `x`
- >> METIS_TAC []);
+ >> METIS_TAC []
+QED
 
 (* ********************************************* *)
 (*     Definitions of Arithmetic Operations      *)
@@ -107,15 +118,15 @@ Definition extreal_lt_def :
    extreal_lt x y = ~extreal_le y x
 End
 
-(* "The rationaly behind our definitions is to understand PosInf (or NegInf) in every
-    instance as the limit of some (possibly each time different) sequence, and '0' as
-    a bona fide zero. Then
+(* "The rationaly behind our definitions is to understand PosInf (or
+    NegInf) in every instance as the limit of some (possibly each time
+    different) sequence, and '0' as a bona fide zero. Then
 
        `0 * PosInf (or NegInf) = 0 * lim a_n = lim (0 * a_n) = lim 0 = 0`
 
     while expressions of the type `PosInf - PosInf` or `PosInf / PosInf`
-    become `lim (a_n - b_n)` or `lim a_n / lim b_n` where two sequences compete and
-    do not lead to unique results." [1, p.58]
+    become `lim (a_n - b_n)` or `lim a_n / lim b_n` where two
+    sequences compete and do not lead to unique results." [1, p.58]
  *)
 Definition extreal_mul_def :
    (extreal_mul NegInf NegInf = PosInf) /\
@@ -305,7 +316,7 @@ val _ = add_rule {fixity = Suffix 2100,
                   term_name = UnicodeChars.sup_4,
                   block_style = (AroundEachPhrase,(PP.CONSISTENT, 0)),
                   paren_style = OnlyIfNecessary,
-                  pp_elements = [TOK UnicodeChars.sup_4]}
+                  pp_elements = [TOK UnicodeChars.sup_4]};
 
 val _ = overload_on (UnicodeChars.sup_4, ``\x :extreal. x pow 4``);
 
@@ -2853,18 +2864,19 @@ val EXTREAL_SUM_IMAGE_CMUL2 = store_thm
  *)
 
 (* more antecedents added *)
-val EXTREAL_SUM_IMAGE_IMAGE = store_thm
-  ("EXTREAL_SUM_IMAGE_IMAGE",
-   ``!s. FINITE s ==>
+Theorem EXTREAL_SUM_IMAGE_IMAGE :
+    !s. FINITE s ==>
         !f'. INJ f' s (IMAGE f' s) ==>
-            (!f. (!x. x IN (IMAGE f' s) ==> f x <> NegInf) \/
+             !f. (!x. x IN (IMAGE f' s) ==> f x <> NegInf) \/
                  (!x. x IN (IMAGE f' s) ==> f x <> PosInf)
-             ==> (EXTREAL_SUM_IMAGE f (IMAGE f' s) = EXTREAL_SUM_IMAGE (f o f') s))``,
+             ==> (EXTREAL_SUM_IMAGE f (IMAGE f' s) = EXTREAL_SUM_IMAGE (f o f') s)
+Proof
      Suff `!s. FINITE s ==>
                (\s. !f'. INJ f' s (IMAGE f' s) ==>
-                         (!f. (!x. x IN (IMAGE f' s) ==> f x <> NegInf) \/
-                              (!x. x IN (IMAGE f' s) ==> f x <> PosInf)
-                          ==> (EXTREAL_SUM_IMAGE f (IMAGE f' s) = EXTREAL_SUM_IMAGE (f o f') s))) s`
+                         !f. (!x. x IN (IMAGE f' s) ==> f x <> NegInf) \/
+                             (!x. x IN (IMAGE f' s) ==> f x <> PosInf) ==>
+                             (EXTREAL_SUM_IMAGE f (IMAGE f' s) =
+                              EXTREAL_SUM_IMAGE (f o f') s)) s`
   >- METIS_TAC []
   >> MATCH_MP_TAC FINITE_INDUCT
   >> RW_TAC std_ss [EXTREAL_SUM_IMAGE_EMPTY,IMAGE_EMPTY,IMAGE_INSERT,INJ_DEF]
@@ -2884,7 +2896,7 @@ val EXTREAL_SUM_IMAGE_IMAGE = store_thm
   >> `FINITE (IMAGE f' s)` by METIS_TAC [IMAGE_FINITE]
   >> `!x. x IN e INSERT s ==> (f o f') x <> PosInf` by METIS_TAC [o_DEF]
   >> RW_TAC std_ss [EXTREAL_SUM_IMAGE_PROPERTY]
-  >> `~ (f' e IN IMAGE f' s)`
+  >> `f' e NOTIN IMAGE f' s`
         by (RW_TAC std_ss [IN_IMAGE] >> Reverse (Cases_on `x IN s`)
             >- ASM_REWRITE_TAC [] >> METIS_TAC [IN_INSERT])
   >> `s DELETE e = s` by METIS_TAC [DELETE_NON_ELEMENT]
@@ -2893,17 +2905,16 @@ val EXTREAL_SUM_IMAGE_IMAGE = store_thm
   >> `(!x. x IN s ==> f' x IN IMAGE f' s)` by METIS_TAC [IN_IMAGE]
   >> `(!x y. x IN s /\ y IN s ==> (f' x = f' y) ==> (x = y))` by METIS_TAC [IN_INSERT]
   >> `(!x. x IN IMAGE f' s ==> f x <> PosInf)` by METIS_TAC [IN_INSERT]
-  >> FULL_SIMP_TAC std_ss []);
+  >> FULL_SIMP_TAC std_ss []
+QED
 
-(* more antecedents added *)
-val EXTREAL_SUM_IMAGE_DISJOINT_UNION = store_thm
-  ("EXTREAL_SUM_IMAGE_DISJOINT_UNION",
-  ``!s s'. FINITE s /\ FINITE s' /\ DISJOINT s s' ==>
-           (!f. (!x. x IN s UNION s' ==> f x <> NegInf) \/
-                (!x. x IN s UNION s' ==> f x <> PosInf) ==>
-                (EXTREAL_SUM_IMAGE f (s UNION s') =
-                 EXTREAL_SUM_IMAGE f s +
-                 EXTREAL_SUM_IMAGE f s'))``,
+Theorem EXTREAL_SUM_IMAGE_DISJOINT_UNION : (* more antecedents added *)
+    !s s'. FINITE s /\ FINITE s' /\ DISJOINT s s' ==>
+           !f. (!x. x IN s UNION s' ==> f x <> NegInf) \/
+               (!x. x IN s UNION s' ==> f x <> PosInf) ==>
+               (EXTREAL_SUM_IMAGE f (s UNION s') =
+                EXTREAL_SUM_IMAGE f s + EXTREAL_SUM_IMAGE f s')
+Proof
   Suff `!s. FINITE s ==> (\s. !s'. FINITE s' ==>
             (\s'. DISJOINT s s' ==>
                   (!f. (!x. x IN s UNION s' ==> f x <> NegInf) \/
@@ -2973,7 +2984,8 @@ val EXTREAL_SUM_IMAGE_DISJOINT_UNION = store_thm
               by METIS_TAC [add_comm,add_not_infty,add_assoc,IN_INSERT]
   >> POP_ORW
   >> RW_TAC std_ss [add_assoc]
-  >> METIS_TAC [add_not_infty,add_comm,add_assoc]);
+  >> METIS_TAC [add_not_infty, add_comm, add_assoc]
+QED
 
 val EXTREAL_SUM_IMAGE_EQ_CARD = store_thm
   ("EXTREAL_SUM_IMAGE_EQ_CARD",
@@ -4673,8 +4685,10 @@ val ext_suminf_lt_infty = store_thm
 val ext_suminf_posinf = store_thm
   ("ext_suminf_posinf",
   ``!f. (!n. 0 <= f n) /\ (?n. f n = PosInf) ==> (ext_suminf f = PosInf)``,
-    METIS_TAC [SIMP_RULE std_ss [GSYM lt_infty]
-                         (ONCE_REWRITE_RULE [MONO_NOT_EQ] (Q.SPEC `f` ext_suminf_lt_infty))]);
+ let val th =
+     SIMP_RULE std_ss [GSYM lt_infty]
+                      (ONCE_REWRITE_RULE [MONO_NOT_EQ] (Q.SPEC `f` ext_suminf_lt_infty));
+ in METIS_TAC [th] end);
 
 val ext_suminf_suminf = store_thm
   ("ext_suminf_suminf",
@@ -5931,15 +5945,15 @@ val MUL_IN_Q = store_thm
 
 val DIV_IN_Q = store_thm
   ("DIV_IN_Q", ``!x y. (x IN Q_set) /\ (y IN Q_set) /\ (y <> 0) ==> (x / y IN Q_set)``,
-  RW_TAC std_ss []
-  >> `?x1. x = Normal x1` by METIS_TAC [Q_not_infty]
-  >> `?y1. y = Normal y1` by METIS_TAC [Q_not_infty]
-  >> `Normal (inv y1) IN Q_set`
+    RW_TAC std_ss []
+ >> `?x1. x = Normal x1` by METIS_TAC [Q_not_infty]
+ >> `?y1. y = Normal y1` by METIS_TAC [Q_not_infty]
+ >> `Normal (inv y1) IN Q_set`
      by METIS_TAC [INV_IN_Q, REAL_INV_1OVER, INV_IN_Q, extreal_div_eq,
                    extreal_inv_def,extreal_of_num_def]
-  >> FULL_SIMP_TAC real_ss [extreal_div_def, extreal_of_num_def, extreal_11,
-                            extreal_inv_def, extreal_mul_def]
-  >> METIS_TAC [MUL_IN_Q, extreal_mul_def]);
+ >> FULL_SIMP_TAC real_ss [extreal_div_def, extreal_of_num_def, extreal_11,
+                           extreal_inv_def, extreal_mul_def]
+ >> METIS_TAC [MUL_IN_Q, extreal_mul_def]);
 
 val rat_not_infty = store_thm
   ("rat_not_infty", ``!r. r IN Q_set ==> r <> NegInf /\ r <> PosInf``,
@@ -6257,8 +6271,8 @@ val EXTREAL_PROD_IMAGE_EQ = store_thm
  >- PROVE_TAC []
  >> MATCH_MP_TAC FINITE_INDUCT
  >> RW_TAC std_ss [EXTREAL_PROD_IMAGE_EMPTY]
- >> FULL_SIMP_TAC std_ss [EXTREAL_PROD_IMAGE_PROPERTY, DELETE_NON_ELEMENT, IN_INSERT,
-                          DISJ_IMP_THM, FORALL_AND_THM]
+ >> FULL_SIMP_TAC std_ss [EXTREAL_PROD_IMAGE_PROPERTY, DELETE_NON_ELEMENT,
+                          IN_INSERT, DISJ_IMP_THM, FORALL_AND_THM]
  >> METIS_TAC []);
 
 val EXTREAL_PROD_IMAGE_DISJOINT_UNION = store_thm
@@ -6309,9 +6323,11 @@ val EXTREAL_PROD_IMAGE_IMAGE = store_thm
   ``!s. FINITE s ==>
         !f'. INJ f' s (IMAGE f' s) ==>
              !f. EXTREAL_PROD_IMAGE f (IMAGE f' s) = EXTREAL_PROD_IMAGE (f o f') s``,
+ (* proof *)
     Suff `!s. FINITE s ==>
              (\s. !f'. INJ f' s (IMAGE f' s) ==>
-                       !f. EXTREAL_PROD_IMAGE f (IMAGE f' s) = EXTREAL_PROD_IMAGE (f o f') s) s`
+                       !f. EXTREAL_PROD_IMAGE f (IMAGE f' s) =
+                           EXTREAL_PROD_IMAGE (f o f') s) s`
  >- METIS_TAC []
  >> MATCH_MP_TAC FINITE_INDUCT
  >> RW_TAC std_ss [EXTREAL_PROD_IMAGE_EMPTY, IMAGE_EMPTY, IMAGE_INSERT, INJ_DEF]
@@ -6327,14 +6343,14 @@ val EXTREAL_PROD_IMAGE_IMAGE = store_thm
  >> `(!x y. x IN s /\ y IN s ==> (f' x = f' y) ==> (x = y))` by METIS_TAC [IN_INSERT]
  >> FULL_SIMP_TAC std_ss []);
 
-
 val _ = export_theory();
+val _ = html_theory "extreal";
 
 (* References:
 
   [1] Schilling, R.L.: Measures, Integrals and Martingales. Cambridge University Press (2005).
-  [2] Fichtenholz, G.M.: Differential- und Integralrechnung (Differential and Integral Calculus),
-      Vol.2. (1967).
+  [2] Fichtenholz, G.M.: Differential- und Integralrechnung (Differential and Integral
+      Calculus), Vol.2. (1967).
   [3] Harrison, J.: Constructing the real numbers in HOL. TPHOLs. (1992).
   [4] Wikipedia: https://en.wikipedia.org/wiki/Limit_superior_and_limit_inferior
  *)

@@ -11,7 +11,7 @@
 
 open HolKernel Parse boolLib bossLib;
 
-open arithmeticTheory prim_recTheory pairTheory pred_setTheory pred_setLib
+open arithmeticTheory prim_recTheory pairTheory pred_setTheory
      optionTheory combinTheory res_quanTheory res_quanTools listTheory;
 
 open realTheory realLib seqTheory transcTheory real_sigmaTheory jrhUtils;

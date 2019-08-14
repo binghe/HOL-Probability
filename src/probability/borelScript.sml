@@ -12,13 +12,13 @@
 
 open HolKernel Parse boolLib bossLib;
 
-open arithmeticTheory optionTheory res_quanTheory res_quanTools
-     listTheory rich_listTheory pairTheory numpairTheory combinTheory
-     pred_setTheory pred_setLib;
+open arithmeticTheory optionTheory res_quanTheory res_quanTools listTheory
+     pairTheory numpairTheory combinTheory pred_setTheory;
 
 open realTheory realLib seqTheory transcTheory real_sigmaTheory sortingTheory;
-open real_topologyTheory;
-open hurdUtils util_probTheory extrealTheory sigma_algebraTheory measureTheory;
+
+open real_topologyTheory hurdUtils util_probTheory extrealTheory
+     sigma_algebraTheory measureTheory;
 
 val _ = new_theory "borel";
 
@@ -4055,6 +4055,7 @@ val limsup_suminf_indicator_space = store_thm
       MATCH_MP_TAC le_trans >> Q.EXISTS_TAC `&n` >> art [] ]);
 
 val _ = export_theory ();
+val _ = html_theory "borel";
 
 (* References:
 
