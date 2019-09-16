@@ -572,23 +572,70 @@ val SUP_UNION = store_thm ("SUP_UNION",
   rpt STRIP_TAC THEN MATCH_MP_TAC SUP_UNIQUE THEN
   SIMP_TAC real_ss [FORALL_IN_UNION, REAL_MAX_LE] THEN METIS_TAC[SUP, REAL_LE_TRANS]);
 
-val _ = hide "inf"; (* in realTheory, TODO: remove this definition of "inf" here *)
+(* The original definition of "inf" in HOL Light (sets.ml) *)
+val inf_tm = ``@a:real. (!x. x IN s ==> a <= x) /\
+                        !b. (!x. x IN s ==> b <= x) ==> b <= a``;
 
-(* The original definition is in HOL Light's "sets.ml" *)
-val inf = new_definition ("inf",
-  ``inf s = @a:real. (!x. x IN s ==> a <= x) /\
-                     !b. (!x. x IN s ==> b <= x) ==> b <= a``);
+(* `inf s` exists iff s is non-empty and has a lower bound b *)
+val inf_criteria = ``s <> {} /\ (?b. !x. x IN s ==> b <= x)``;
 
-val INF_EQ = store_thm ("INF_EQ",
- ``!s t:real->bool. (!a. (!x. x IN s ==> a <= x) <=> (!x. x IN t ==> a <= x))
-         ==> (inf s = inf t)``,
-  SIMP_TAC std_ss [inf]);
+(* renamed `inf` to `inf'`, a local definition *)
+val inf' = new_definition ("inf'", ``inf' s = ^inf_tm``);
+
+val inf_convert = Q.prove (
+   `!s. ^inf_criteria ==> (inf s = inf' s)`,
+    RW_TAC std_ss [inf']
+ >> Suff `(\f. inf s = f) (^inf_tm)` >- METIS_TAC []
+ >> MATCH_MP_TAC SELECT_ELIM_THM
+ >> RW_TAC std_ss []
+ >- (Q.EXISTS_TAC `inf s` >> CONJ_TAC
+     >- (Know `(?y. s y) /\ (?y. !z. s z ==> y <= z)`
+         >- (STRONG_CONJ_TAC >- METIS_TAC [MEMBER_NOT_EMPTY, IN_APP] \\
+             STRIP_TAC >> `y IN s` by fs [IN_APP] >> RES_TAC \\
+             Q.EXISTS_TAC `b` >> rpt STRIP_TAC \\
+             FIRST_X_ASSUM MATCH_MP_TAC >> PROVE_TAC [IN_APP]) \\
+         DISCH_THEN (MP_TAC o (MATCH_MP REAL_INF_LE)) >> Rewr \\
+         Q.X_GEN_TAC `z` >> rpt STRIP_TAC \\
+         FIRST_X_ASSUM MATCH_MP_TAC >> fs [IN_APP]) \\
+     rpt STRIP_TAC >> MATCH_MP_TAC REAL_IMP_LE_INF \\
+     CONJ_TAC >- METIS_TAC [MEMBER_NOT_EMPTY, IN_APP] \\
+     fs [IN_APP])
+ >> RW_TAC std_ss [GSYM REAL_LE_ANTISYM]
+ >- (Know `(?y. s y) /\ (?y. !z. s z ==> y <= z)`
+     >- (STRONG_CONJ_TAC >- METIS_TAC [MEMBER_NOT_EMPTY, IN_APP] \\
+         STRIP_TAC >> `y IN s` by fs [IN_APP] >> RES_TAC \\
+         Q.EXISTS_TAC `b` >> rpt STRIP_TAC \\
+         FIRST_X_ASSUM MATCH_MP_TAC >> PROVE_TAC [IN_APP]) \\
+     DISCH_THEN (MP_TAC o (MATCH_MP REAL_INF_LE)) >> Rewr \\
+     rpt STRIP_TAC \\
+     Q.PAT_X_ASSUM `!b. (!x. x IN s ==> b <= x) ==> b <= x`
+       MATCH_MP_TAC >> fs [IN_APP])
+ >> MATCH_MP_TAC REAL_IMP_LE_INF
+ >> CONJ_TAC >- METIS_TAC [MEMBER_NOT_EMPTY, IN_APP]
+ >> fs [IN_APP]);
+
+(* added `s <> EMPTY /\ (?b. !x. x IN s ==> b <= x) /\
+          t <> EMPTY /\ (?b. !x. x IN t ==> b <= x)`
+   to make sure that both `inf s` and `inf t` exist. *)
+Theorem INF_EQ :
+    !s t:real->bool. s <> EMPTY /\ (?b. !x. x IN s ==> b <= x) /\
+                     t <> EMPTY /\ (?b. !x. x IN t ==> b <= x) /\
+                    (!a. (!x. x IN s ==> a <= x) <=> (!x. x IN t ==> a <= x))
+                ==> (inf s = inf t)
+Proof
+    rpt STRIP_TAC
+ >> `(inf s = inf' s) /\ (inf t = inf' t)` by METIS_TAC [inf_convert]
+ >> ASM_SIMP_TAC std_ss [inf']
+QED
 
 val INF = store_thm ("INF",
  ``!s:real->bool. ~(s = {}) /\ (?b. !x. x IN s ==> b <= x)
        ==> (!x. x IN s ==> inf s <= x) /\
            !b. (!x. x IN s ==> b <= x) ==> b <= inf s``,
-  GEN_TAC THEN STRIP_TAC THEN REWRITE_TAC[inf] THEN
+  GEN_TAC THEN STRIP_TAC THEN
+ `inf s = inf' s` by METIS_TAC [inf_convert]
+  THEN POP_ORW THEN
+  REWRITE_TAC[inf'] THEN
   CONV_TAC(ONCE_DEPTH_CONV SELECT_CONV) THEN
   ONCE_REWRITE_TAC[GSYM REAL_LE_NEG2] THEN
   EXISTS_TAC ``-(sup (IMAGE (\x:real. -x) s))`` THEN
@@ -634,11 +681,18 @@ val REAL_INF_UNIQUE = store_thm ("REAL_INF_UNIQUE",
  ``!s b:real. (!x. x IN s ==> b <= x) /\
          (!b'. b < b' ==> ?x. x IN s /\ x < b')
          ==> (inf s = b)``,
-  rpt STRIP_TAC THEN REWRITE_TAC[inf] THEN MATCH_MP_TAC SELECT_UNIQUE THEN
+  rpt STRIP_TAC THEN
+  Know `s <> EMPTY`
+  >- (REWRITE_TAC [GSYM MEMBER_NOT_EMPTY] \\
+      POP_ASSUM (MP_TAC o (Q.SPEC `b + 1`)) \\
+      RW_TAC real_ss [REAL_LT_ADDR, REAL_LT_01] \\
+      Q.EXISTS_TAC `x` >> ASM_REWRITE_TAC []) >> DISCH_TAC \\
+ `inf s = inf' s` by METIS_TAC [inf_convert] >> POP_ORW \\
+  REWRITE_TAC[inf'] THEN MATCH_MP_TAC SELECT_UNIQUE THEN
   METIS_TAC[REAL_NOT_LE, REAL_LE_ANTISYM]);
 
 val REAL_LE_INF = store_thm ("REAL_LE_INF",
- ``!b:real. ~(s = {}) /\ (!x. x IN s ==> b <= x) ==> b <= inf s``,
+ ``!s b:real. ~(s = {}) /\ (!x. x IN s ==> b <= x) ==> b <= inf s``,
   MESON_TAC[INF]);
 
 val REAL_LE_INF_SUBSET = store_thm ("REAL_LE_INF_SUBSET",
@@ -669,14 +723,14 @@ val REAL_INF_ASCLOSE = store_thm ("REAL_INF_ASCLOSE",
   METIS_TAC[REAL_INF_BOUNDS]);
 
 val SUP_UNIQUE_FINITE = store_thm ("SUP_UNIQUE_FINITE",
- ``!s:real->bool. FINITE s /\ ~(s = {})
+ ``!s:real->bool a. FINITE s /\ ~(s = {})
        ==> ((sup s = a) <=> a IN s /\ !y. y IN s ==> y <= a)``,
    ASM_SIMP_TAC std_ss [GSYM REAL_LE_ANTISYM, REAL_LE_SUP_FINITE, REAL_SUP_LE_FINITE,
                NOT_INSERT_EMPTY, FINITE_INSERT, FINITE_EMPTY] THEN
    METIS_TAC[REAL_LE_REFL, REAL_LE_TRANS, REAL_LE_ANTISYM]);
 
 val INF_UNIQUE_FINITE = store_thm ("INF_UNIQUE_FINITE",
- ``!s. FINITE s /\ ~(s = {})
+ ``!s a. FINITE s /\ ~(s = {})
        ==> ((inf s = a) <=> a IN s /\ !y. y IN s ==> a <= y)``,
    ASM_SIMP_TAC std_ss [GSYM REAL_LE_ANTISYM, REAL_LE_INF_FINITE, REAL_INF_LE_FINITE,
                NOT_INSERT_EMPTY, FINITE_INSERT, FINITE_EMPTY] THEN
