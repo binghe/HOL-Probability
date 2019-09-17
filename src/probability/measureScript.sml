@@ -2909,10 +2909,8 @@ val MEASURE_SPACE_RESTRICTION = store_thm
 
    NOTE: there's no structual requirements on `sts` and `mu` (except for `{} IN sts`);
          and (*3*) is not needed by CARATHEODORY_SEMIRING.
-
-   c.f. hausdorff_measureTheory.MUNROE_METHOD_II (the name is due to Munroe [6])
  *)
-Theorem MUNROE_METHOD_I :
+Theorem OUTER_MEASURE_CONSTRUCTION :
   !sp sts m u. subset_class sp sts /\ {} IN sts /\ positive (sp,sts,m) /\
                (u = outer_measure m (countable_covers sts)) ==>
    (*1*) outer_measure_space (sp,POW sp,u) /\ (!x. x IN sts ==> u x <= m x) /\
@@ -3487,7 +3485,7 @@ Proof
           measure_space (sp,A',m)`
  >- (`subset_class sp sts /\ {} IN sts`
        by PROVE_TAC [semiring_def, space_def, subsets_def] \\
-     METIS_TAC [MUNROE_METHOD_I,
+     METIS_TAC [OUTER_MEASURE_CONSTRUCTION,
                 outer_measure_def, countable_covers_def, caratheodory_sets_def])
  >> STRIP_TAC
 (******************************************************************************)
