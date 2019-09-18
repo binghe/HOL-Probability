@@ -3700,7 +3700,6 @@ val le_sup' = store_thm
     REWRITE_TAC [IN_APP]
  >> REWRITE_TAC [le_sup]);
 
-(* "Any true statement in imagination should always be provable." --Chun Tian *)
 val le_sup_imp2 = store_thm
   ("le_sup_imp2", ``!p z. (?x. x IN p) /\ (!x. x IN p ==> z <= x) ==> z <= sup p``,
     RW_TAC std_ss [le_sup']
@@ -4512,189 +4511,262 @@ val _ = overload_on ("liminf", ``ext_liminf``);
 (* Suminf over extended reals. Definition and properties                     *)
 (* ------------------------------------------------------------------------- *)
 
-(* this definition is meaningful only if (!n. 0 <= f n) *)
+(* old definition, which (wrongly) allows `!f. 0 <= ext_suminf f`:
 val ext_suminf_def = Define
    `ext_suminf f = sup (IMAGE (\n. SIGMA f (count n)) UNIV)`;
 
-val ext_suminf_add = store_thm
-  ("ext_suminf_add",
-  ``!f g. (!n. 0 <= f n /\ 0 <= g n) ==>
-          (ext_suminf (\n. f n + g n) = ext_suminf f + ext_suminf g)``,
-  RW_TAC std_ss [ext_suminf_def,sup_eq]
-  >- (POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
-      >> RW_TAC std_ss [IN_IMAGE,IN_UNIV,SPECIFICATION]
-      >> `!n. f n <> NegInf /\ g n <> NegInf` by METIS_TAC [lt_infty,lte_trans,num_not_infty]
-      >> RW_TAC std_ss [FINITE_COUNT,EXTREAL_SUM_IMAGE_ADD]
-      >> MATCH_MP_TAC le_add2
-      >> RW_TAC std_ss [le_sup]
-      >> POP_ASSUM MATCH_MP_TAC
-      >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-      >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-      >> METIS_TAC [])
-  >> `!n. SIGMA (\n. f n + g n) (count n) <= y`
-       by (RW_TAC std_ss []
-           >> POP_ASSUM MATCH_MP_TAC
-           >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-           >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-           >> METIS_TAC [])
-  >> `!n. f n <> NegInf /\ g n <> NegInf` by METIS_TAC [lt_infty,lte_trans,num_not_infty]
-  >> `!n. SIGMA (\n. f n + g n) (count n) = SIGMA f (count n) + SIGMA g (count n)`
-       by METIS_TAC [EXTREAL_SUM_IMAGE_ADD,FINITE_COUNT]
-  >> `!n. SIGMA f (count n) + SIGMA g (count n) <= y` by FULL_SIMP_TAC std_ss []
-  >> `!n m. SIGMA f (count n) + SIGMA g (count m) <= y`
-       by (RW_TAC std_ss []
-           >> Cases_on `n <= m`
-           >- (MATCH_MP_TAC le_trans
-               >> Q.EXISTS_TAC `SIGMA f (count m) + SIGMA g (count m)`
-               >> RW_TAC std_ss []
-               >> MATCH_MP_TAC le_radd_imp
-               >> MATCH_MP_TAC EXTREAL_SUM_IMAGE_MONO_SET
-               >> RW_TAC std_ss [FINITE_COUNT,SUBSET_DEF,IN_COUNT]
-               >> DECIDE_TAC)
-           >> MATCH_MP_TAC le_trans
-           >> Q.EXISTS_TAC `SIGMA f (count n) + SIGMA g (count n)`
-           >> RW_TAC std_ss []
-           >> MATCH_MP_TAC le_ladd_imp
-           >> MATCH_MP_TAC EXTREAL_SUM_IMAGE_MONO_SET
-           >> RW_TAC std_ss [FINITE_COUNT,SUBSET_DEF,IN_COUNT]
-           >> DECIDE_TAC)
-  >> Cases_on `y = PosInf` >- RW_TAC std_ss [le_infty]
-  >> `!n. SIGMA f (count n) <> NegInf` by METIS_TAC [EXTREAL_SUM_IMAGE_NOT_INFTY,FINITE_COUNT]
-  >> `!n. SIGMA g (count n) <> NegInf` by METIS_TAC [EXTREAL_SUM_IMAGE_NOT_INFTY,FINITE_COUNT]
-  >> `y <> NegInf` by METIS_TAC [lt_infty,add_not_infty,lte_trans]
-  >> FULL_SIMP_TAC std_ss [GSYM le_sub_eq2]
-  >> `!m. sup (IMAGE (\n. SIGMA f (count n)) univ(:num)) <= y - SIGMA g (count m)`
-       by (RW_TAC std_ss [sup_le]
-           >> POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
-           >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-           >> FULL_SIMP_TAC std_ss [])
-  >> `sup (IMAGE (\n. SIGMA f (count n)) univ(:num)) <> NegInf`
-         by (RW_TAC std_ss [lt_infty,GSYM sup_lt]
-             >> Q.EXISTS_TAC `SIGMA f (count 1)`
-             >> Reverse (RW_TAC std_ss [])
-             >- FULL_SIMP_TAC std_ss [lt_infty]
-             >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-             >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-             >> METIS_TAC [])
-  >> `!m.  SIGMA g (count m) + sup (IMAGE (\n. SIGMA f (count n)) univ(:num)) <= y`
-        by METIS_TAC [le_sub_eq2,add_comm]
-  >> `!m.  SIGMA g (count m) <= y - sup (IMAGE (\n. SIGMA f (count n)) univ(:num))`
-        by METIS_TAC [le_sub_eq2]
-  >> `!m. sup (IMAGE (\n. SIGMA g (count n)) univ(:num)) <=
-          y - sup (IMAGE (\n. SIGMA f (count n)) univ(:num))`
-       by (RW_TAC std_ss [sup_le]
-           >> POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
-           >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-           >> FULL_SIMP_TAC std_ss [])
-  >> `sup (IMAGE (\n. SIGMA g (count n)) univ(:num)) <> NegInf`
-         by (RW_TAC std_ss [lt_infty,GSYM sup_lt]
-             >> Q.EXISTS_TAC `SIGMA g (count 1)`
-             >> Reverse (RW_TAC std_ss [])
-             >- FULL_SIMP_TAC std_ss [lt_infty]
-             >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-             >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-             >> METIS_TAC [])
-  >> METIS_TAC [le_sub_eq2,add_comm]);
+   new definition: *)
+Definition ext_suminf_def :
+    ext_suminf f = sup (IMAGE (\n. SIGMA f (count (SUC n))) UNIV)
+End
 
-val ext_suminf_cmul = store_thm
-  ("ext_suminf_cmul",
-  ``!f c. 0 <= c /\ (!n. 0 <= f n) ==> (ext_suminf (\n. c * f n) = c * ext_suminf f)``,
-  RW_TAC std_ss [ext_suminf_def]
-  >> `c <> NegInf` by METIS_TAC [lt_infty,num_not_infty,lte_trans]
-  >> `!n. f n <> NegInf` by METIS_TAC [lt_infty,num_not_infty,lte_trans]
-  >> Reverse (Cases_on `c` >> (RW_TAC std_ss []))
-  >- (`!n. SIGMA (\n. Normal r * f n) (count n) = Normal r * SIGMA f (count n)`
-       by METIS_TAC [EXTREAL_SUM_IMAGE_CMUL,FINITE_COUNT]
-      >> POP_ORW
-      >> METIS_TAC [sup_cmul,extreal_le_def,extreal_of_num_def])
-  >> Cases_on `!n. f n = 0`
-  >- (RW_TAC std_ss [extreal_mul_def,extreal_of_num_def,EXTREAL_SUM_IMAGE_0,FINITE_COUNT]
-      >> `sup (IMAGE (\n. Normal 0) univ(:num)) = 0`
-           by (MATCH_MP_TAC sup_const_alt
-               >> RW_TAC std_ss []
-               >- (Q.EXISTS_TAC `Normal 0`
-                   >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-                   >> RW_TAC std_ss [IN_IMAGE,IN_UNIV])
-               >> POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
-               >> RW_TAC std_ss [IN_IMAGE,IN_UNIV,extreal_of_num_def])
-      >> RW_TAC std_ss [extreal_of_num_def,extreal_mul_def])
-  >> FULL_SIMP_TAC std_ss []
-  >> `0 < f n` by METIS_TAC [lt_le]
-  >> `0 < sup (IMAGE (\n. SIGMA f (count n)) univ(:num))`
-       by (RW_TAC std_ss [GSYM sup_lt]
-           >> Q.EXISTS_TAC `SIGMA f (count (SUC n))`
-           >> RW_TAC std_ss []
-           >- (ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-               >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-               >> METIS_TAC [])
-           >> `f n <= SIGMA f (count (SUC n))`
-                 by METIS_TAC [COUNT_SUC,IN_INSERT,FINITE_COUNT,EXTREAL_SUM_IMAGE_POS_MEM_LE]
-           >> METIS_TAC [lte_trans])
-  >> `PosInf * f n <= SIGMA (\n. PosInf * f n) (count (SUC n))`
-      by (`!n. 0 <= PosInf * f n` by METIS_TAC [le_infty,le_mul]
-          >> `n IN count (SUC n)` by METIS_TAC [COUNT_SUC,IN_INSERT]
-          >> (MP_TAC o REWRITE_RULE [FINITE_COUNT] o Q.ISPECL [`(\n:num. PosInf * f n)`,
-                 `count (SUC n)`]) EXTREAL_SUM_IMAGE_POS_MEM_LE
-          >> RW_TAC std_ss [])
-  >> `!x. 0 < x ==> (PosInf * x = PosInf)`
+(* alternative definition, some proofs are easier using this one *)
+Theorem ext_suminf_alt :
+    !f. ext_suminf f =
+        sup (IMAGE (\n. SIGMA f (count n)) (UNIV DELETE 0))
+Proof
+    RW_TAC std_ss [ext_suminf_def]
+ >> Suff `(IMAGE (\n. SIGMA f (count (SUC n))) UNIV) =
+          (IMAGE (\n. SIGMA f (count n)) (UNIV DELETE 0))`
+ >- rw []
+ >> RW_TAC std_ss [EXTENSION, IN_IMAGE, IN_UNIV, IN_DELETE]
+ >> EQ_TAC >> rpt STRIP_TAC
+ >- (Q.EXISTS_TAC `SUC n` >> RW_TAC arith_ss [])
+ >> Cases_on `n` >- fs []
+ >> Q.EXISTS_TAC `n'` >> art []
+QED
+
+(* alternative (old) definition when f is positive, this lemma makes sure
+   that, almost all existing proofs still work under the new definition.
+  *)
+Theorem ext_suminf_alt_pos :
+    !f. (!n. 0 <= f n) ==>
+        (ext_suminf f = sup (IMAGE (\n. SIGMA f (count n)) UNIV))
+Proof
+    RW_TAC std_ss [GSYM le_antisym]
+ >| [ (* goal 1 (of 2), easy *)
+      RW_TAC std_ss [ext_suminf_alt, sup_le', IN_IMAGE, IN_DELETE, IN_UNIV] \\
+      RW_TAC std_ss [le_sup', IN_IMAGE, IN_UNIV] \\
+      POP_ASSUM MATCH_MP_TAC \\
+      Q.EXISTS_TAC `n` >> REWRITE_TAC [],
+      (* goal 2 (of 2), hard *)
+      RW_TAC std_ss [ext_suminf_def, sup_le', IN_IMAGE, IN_UNIV] \\
+      RW_TAC std_ss [le_sup', IN_IMAGE, IN_DELETE, IN_UNIV] \\
+      Reverse (Cases_on `n`)
+      >- (POP_ASSUM MATCH_MP_TAC >> Q.EXISTS_TAC `n'` >> REWRITE_TAC []) \\
+      REWRITE_TAC [COUNT_ZERO, EXTREAL_SUM_IMAGE_EMPTY] \\
+      POP_ASSUM (MP_TAC o (Q.SPEC `SIGMA f (count (SUC 0))`)) \\
+      Know `?n. SIGMA f (count (SUC 0)) = SIGMA f (count (SUC n))`
+      >- (Q.EXISTS_TAC `0` >> REWRITE_TAC []) \\
+      RW_TAC std_ss [COUNT_SUC, COUNT_ZERO, EXTREAL_SUM_IMAGE_SING] \\
+      MATCH_MP_TAC le_trans \\
+      Q.EXISTS_TAC `f 0` >> art [] ]
+QED
+
+Theorem ext_suminf_add :
+    !f g. (!n. 0 <= f n /\ 0 <= g n) ==>
+          (ext_suminf (\n. f n + g n) = ext_suminf f + ext_suminf g)
+Proof
+    RW_TAC std_ss [ext_suminf_def, sup_eq]
+ >- (POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) \\
+     RW_TAC std_ss [IN_IMAGE, IN_UNIV, SPECIFICATION] \\
+    `!n. f n <> NegInf /\ g n <> NegInf`
+       by METIS_TAC [lt_infty, lte_trans, num_not_infty] \\
+     RW_TAC std_ss [FINITE_COUNT, EXTREAL_SUM_IMAGE_ADD] \\
+     MATCH_MP_TAC le_add2 \\
+     RW_TAC std_ss [le_sup] \\
+     POP_ASSUM MATCH_MP_TAC \\
+     ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+     RW_TAC std_ss [IN_IMAGE, IN_UNIV] \\
+     Q.EXISTS_TAC `n` >> REWRITE_TAC [])
+ >> Know `!n. SIGMA (\n. f n + g n) (count (SUC n)) <= y`
+ >- (RW_TAC std_ss [] >> POP_ASSUM MATCH_MP_TAC \\
+     ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+     RW_TAC std_ss [IN_IMAGE, IN_UNIV] \\
+     Q.EXISTS_TAC `n` >> REWRITE_TAC []) >> DISCH_TAC
+ >> `!n. f n <> NegInf /\ g n <> NegInf`
+       by METIS_TAC [lt_infty, lte_trans, num_not_infty]
+ >> `!n. SIGMA (\n. f n + g n) (count (SUC n)) =
+         SIGMA f (count (SUC n)) + SIGMA g (count (SUC n))`
+       by METIS_TAC [EXTREAL_SUM_IMAGE_ADD, FINITE_COUNT]
+ >> `!n. SIGMA f (count (SUC n)) + SIGMA g (count (SUC n)) <= y`
+       by FULL_SIMP_TAC std_ss []
+ >> Know `!n m. SIGMA f (count (SUC n)) + SIGMA g (count (SUC m)) <= y`
+ >- (RW_TAC std_ss [] \\
+     Cases_on `n <= m`
+     >- (MATCH_MP_TAC le_trans \\
+         Q.EXISTS_TAC `SIGMA f (count (SUC m)) + SIGMA g (count (SUC m))` \\
+         RW_TAC std_ss [] \\
+         MATCH_MP_TAC le_radd_imp \\
+         MATCH_MP_TAC EXTREAL_SUM_IMAGE_MONO_SET \\
+         RW_TAC std_ss [FINITE_COUNT, SUBSET_DEF, IN_COUNT] \\
+         DECIDE_TAC) \\
+     MATCH_MP_TAC le_trans \\
+     Q.EXISTS_TAC `SIGMA f (count (SUC n)) + SIGMA g (count (SUC n))` \\
+     RW_TAC std_ss [] \\
+     MATCH_MP_TAC le_ladd_imp \\
+     MATCH_MP_TAC EXTREAL_SUM_IMAGE_MONO_SET \\
+     RW_TAC std_ss [FINITE_COUNT, SUBSET_DEF, IN_COUNT] \\
+     DECIDE_TAC) >> DISCH_TAC
+ >> Cases_on `y = PosInf` >- RW_TAC std_ss [le_infty]
+ >> `!n. SIGMA f (count (SUC n)) <> NegInf`
+       by METIS_TAC [EXTREAL_SUM_IMAGE_NOT_INFTY, FINITE_COUNT]
+ >> `!n. SIGMA g (count (SUC n)) <> NegInf`
+       by METIS_TAC [EXTREAL_SUM_IMAGE_NOT_INFTY, FINITE_COUNT]
+ >> `y <> NegInf` by METIS_TAC [lt_infty, add_not_infty, lte_trans]
+ >> FULL_SIMP_TAC std_ss [GSYM le_sub_eq2]
+ >> `!m. sup (IMAGE (\n. SIGMA f (count (SUC n))) univ(:num)) <=
+         y - SIGMA g (count (SUC m))`
+       by (RW_TAC std_ss [sup_le]
+           >> POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
+           >> RW_TAC std_ss [IN_IMAGE, IN_UNIV]
+           >> FULL_SIMP_TAC std_ss [])
+ >> Know `sup (IMAGE (\n. SIGMA f (count (SUC n))) univ(:num)) <> NegInf`
+ >- (RW_TAC std_ss [lt_infty, GSYM sup_lt] \\
+     Q.EXISTS_TAC `SIGMA f (count (SUC 0))` \\
+     Reverse (RW_TAC bool_ss []) >- FULL_SIMP_TAC std_ss [lt_infty] \\
+     ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+     RW_TAC bool_ss [IN_IMAGE, IN_UNIV] \\
+     Q.EXISTS_TAC `0` >> REWRITE_TAC []) >> DISCH_TAC
+ >> `!m. SIGMA g (count (SUC m)) +
+         sup (IMAGE (\n. SIGMA f (count (SUC n))) univ(:num)) <= y`
+       by METIS_TAC [le_sub_eq2, add_comm]
+ >> `!m. SIGMA g (count (SUC m)) <=
+         y - sup (IMAGE (\n. SIGMA f (count (SUC n))) univ(:num))`
+       by METIS_TAC [le_sub_eq2]
+ >> `!m. sup (IMAGE (\n. SIGMA g (count (SUC n))) univ(:num)) <=
+         y - sup (IMAGE (\n. SIGMA f (count (SUC n))) univ(:num))`
+       by (RW_TAC std_ss [sup_le]
+           >> POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
+           >> RW_TAC std_ss [IN_IMAGE, IN_UNIV]
+           >> FULL_SIMP_TAC std_ss [])
+ >> Know `sup (IMAGE (\n. SIGMA g (count (SUC n))) univ(:num)) <> NegInf`
+ >- (RW_TAC std_ss [lt_infty, GSYM sup_lt] \\
+     Q.EXISTS_TAC `SIGMA g (count (SUC 0))` \\
+     Reverse (RW_TAC bool_ss []) >- FULL_SIMP_TAC std_ss [lt_infty] \\
+     ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+     RW_TAC bool_ss [IN_IMAGE, IN_UNIV] \\
+     Q.EXISTS_TAC `0` >> REWRITE_TAC []) >> DISCH_TAC
+ >> METIS_TAC [le_sub_eq2, add_comm]
+QED
+
+Theorem ext_suminf_cmul :
+    !f c. 0 <= c /\ (!n. 0 <= f n) ==>
+         (ext_suminf (\n. c * f n) = c * ext_suminf f)
+Proof
+    RW_TAC std_ss [ext_suminf_def]
+ >> `c <> NegInf` by METIS_TAC [lt_infty, num_not_infty, lte_trans]
+ >> `!n. f n <> NegInf` by METIS_TAC [lt_infty, num_not_infty, lte_trans]
+ >> Reverse (Cases_on `c` >> (RW_TAC std_ss []))
+ >- (`!n. SIGMA (\n. Normal r * f n) (count (SUC n)) =
+          Normal r * SIGMA f (count (SUC n))`
+       by METIS_TAC [EXTREAL_SUM_IMAGE_CMUL, FINITE_COUNT] >> POP_ORW \\
+     METIS_TAC [sup_cmul, extreal_le_def, extreal_of_num_def])
+ >> Cases_on `!n. f n = 0`
+ >- (RW_TAC std_ss [extreal_mul_def, extreal_of_num_def, EXTREAL_SUM_IMAGE_0,
+                    FINITE_COUNT] \\
+    `sup (IMAGE (\n. Normal 0) univ(:num)) = 0`
+       by (MATCH_MP_TAC sup_const_alt >> RW_TAC std_ss []
+           >- (Q.EXISTS_TAC `Normal 0` \\
+               ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+               RW_TAC std_ss [IN_IMAGE, IN_UNIV]) \\
+           POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) \\
+           RW_TAC std_ss [IN_IMAGE, IN_UNIV, extreal_of_num_def]) \\
+     RW_TAC std_ss [extreal_of_num_def, extreal_mul_def])
+ >> FULL_SIMP_TAC std_ss []
+ >> `0 < f n` by METIS_TAC [lt_le]
+ >> Know `0 < sup (IMAGE (\n. SIGMA f (count (SUC n))) univ(:num))`
+ >- (RW_TAC std_ss [GSYM sup_lt] \\
+     Q.EXISTS_TAC `SIGMA f (count (SUC n))` \\
+     RW_TAC std_ss []
+     >- (ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+         RW_TAC std_ss [IN_IMAGE, IN_UNIV] \\
+         METIS_TAC []) \\
+    `f n <= SIGMA f (count (SUC n))`
+       by METIS_TAC [COUNT_SUC, IN_INSERT, FINITE_COUNT,
+                     EXTREAL_SUM_IMAGE_POS_MEM_LE] \\
+     METIS_TAC [lte_trans]) >> DISCH_TAC
+ >> `PosInf * f n <= SIGMA (\n. PosInf * f n) (count (SUC n))`
+       by (`!n. 0 <= PosInf * f n` by METIS_TAC [le_infty, le_mul] \\
+           `n IN count (SUC n)` by METIS_TAC [COUNT_SUC, IN_INSERT] \\
+           (MP_TAC o REWRITE_RULE [FINITE_COUNT] o
+            Q.ISPECL [`(\n:num. PosInf * f n)`, `count (SUC n)`])
+              EXTREAL_SUM_IMAGE_POS_MEM_LE \\
+           RW_TAC std_ss [])
+ >> `!x. 0 < x ==> (PosInf * x = PosInf)`
        by (Cases_on `x`
-           >| [METIS_TAC [lt_infty],RW_TAC std_ss [extreal_mul_def],
-               RW_TAC real_ss [extreal_lt_eq,extreal_of_num_def,extreal_mul_def]])
-  >> `PosInf * f n = PosInf`
+           >| [ METIS_TAC [lt_infty],
+                RW_TAC std_ss [extreal_mul_def],
+                RW_TAC real_ss [extreal_lt_eq, extreal_of_num_def,
+                                extreal_mul_def] ])
+ >> `PosInf * f n = PosInf`
        by ((Cases_on `f n` >> FULL_SIMP_TAC std_ss [extreal_mul_def])
            >- METIS_TAC []
-           >> METIS_TAC [extreal_lt_eq,extreal_of_num_def])
-  >> `SIGMA (\n. PosInf * f n) (count (SUC n)) = PosInf` by METIS_TAC [le_infty]
-  >> `SIGMA (\n. PosInf * f n) (count (SUC n)) <=
-         sup (IMAGE (\n. SIGMA (\n. PosInf * f n) (count n)) univ(:num))`
-        by (MATCH_MP_TAC le_sup_imp
-            >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-            >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-            >> METIS_TAC [])
-  >> `sup (IMAGE (\n. SIGMA (\n. PosInf * f n) (count n)) univ(:num)) = PosInf`
+           >> METIS_TAC [extreal_lt_eq, extreal_of_num_def])
+ >> `SIGMA (\n. PosInf * f n) (count (SUC n)) = PosInf` by METIS_TAC [le_infty]
+ >> `SIGMA (\n. PosInf * f n) (count (SUC n)) <=
+     sup (IMAGE (\n. SIGMA (\n. PosInf * f n) (count (SUC n))) univ(:num))`
+       by (MATCH_MP_TAC le_sup_imp \\
+           ONCE_REWRITE_TAC [GSYM SPECIFICATION] \\
+           RW_TAC std_ss [IN_IMAGE, IN_UNIV] \\
+           METIS_TAC [])
+ >> `sup (IMAGE (\n. SIGMA (\n. PosInf * f n) (count (SUC n))) univ(:num)) = PosInf`
        by METIS_TAC [le_infty]
-  >> METIS_TAC []);
+ >> METIS_TAC []
+QED
 
-val ext_suminf_cmul_alt = store_thm
-  ("ext_suminf_cmul_alt",
-  ``!f c. 0 <= c /\ ((!n. f n <> NegInf) \/ (!n. f n <> PosInf)) ==>
-         (ext_suminf (\n. (Normal c) * f n) = (Normal c) * ext_suminf f)``,
-  RW_TAC std_ss [ext_suminf_def]
-  >> `!n. SIGMA (\n. Normal c * f n) (count n) = (Normal c) * SIGMA f (count n)`
-       by METIS_TAC [EXTREAL_SUM_IMAGE_CMUL,FINITE_COUNT]
-  >> POP_ORW
-  >> RW_TAC std_ss [sup_cmul]);
+Theorem ext_suminf_cmul_alt :
+    !f c. 0 <= c /\ ((!n. f n <> NegInf) \/ (!n. f n <> PosInf)) ==>
+         (ext_suminf (\n. (Normal c) * f n) = (Normal c) * ext_suminf f)
+Proof
+    RW_TAC std_ss [ext_suminf_def]
+ >> `!n. SIGMA (\n. Normal c * f n) (count (SUC n)) =
+         (Normal c) * SIGMA f (count (SUC n))`
+       by METIS_TAC [EXTREAL_SUM_IMAGE_CMUL, FINITE_COUNT]
+ >> POP_ORW
+ >> RW_TAC std_ss [sup_cmul]
+QED
 
 (* Note: changed `ext_suminf f <> PosInf` to `ext_suminf f < PosInf` for
    easier applications. To get the original version, use "lt_infty". *)
-val ext_suminf_lt_infty = store_thm
-  ("ext_suminf_lt_infty",
-  ``!f. (!n. 0 <= f n) /\ ext_suminf f < PosInf ==> !n. f n < PosInf``,
+Theorem ext_suminf_lt_infty :
+    !f. (!n. 0 <= f n) /\ ext_suminf f < PosInf ==> !n. f n < PosInf
+Proof
     RW_TAC std_ss [ext_suminf_def]
- >> Know `!n. SIGMA f (count n) < PosInf`
+ >> Know `!n. SIGMA f (count (SUC n)) < PosInf`
  >- (GEN_TAC \\
-     `!n. SIGMA f (count n) IN IMAGE (\n. SIGMA f (count n)) UNIV`
-         by (RW_TAC std_ss [IN_IMAGE, IN_UNIV] >> METIS_TAC []) \\
+    `!n. SIGMA f (count (SUC n)) IN IMAGE (\n. SIGMA f (count (SUC n))) UNIV`
+       by (RW_TAC std_ss [IN_IMAGE, IN_UNIV] >> METIS_TAC []) \\
      METIS_TAC [sup_lt_infty, SPECIFICATION])
  >> DISCH_TAC
  >> Suff `f n <= SIGMA f (count (SUC n))` >- METIS_TAC [let_trans]
  >> `FINITE (count (SUC n))` by RW_TAC std_ss [FINITE_COUNT]
  >> `n IN (count (SUC n))` by RW_TAC real_ss [IN_COUNT]
- >> METIS_TAC [EXTREAL_SUM_IMAGE_POS_MEM_LE]);
+ >> METIS_TAC [EXTREAL_SUM_IMAGE_POS_MEM_LE]
+QED
 
+local val th =
+      SIMP_RULE std_ss [GSYM lt_infty]
+                       (ONCE_REWRITE_RULE [MONO_NOT_EQ] (Q.SPEC `f` ext_suminf_lt_infty))
+in
 val ext_suminf_posinf = store_thm
   ("ext_suminf_posinf",
   ``!f. (!n. 0 <= f n) /\ (?n. f n = PosInf) ==> (ext_suminf f = PosInf)``,
- let val th =
-     SIMP_RULE std_ss [GSYM lt_infty]
-                      (ONCE_REWRITE_RULE [MONO_NOT_EQ] (Q.SPEC `f` ext_suminf_lt_infty));
- in METIS_TAC [th] end);
+    METIS_TAC [th])
+end;
 
-val ext_suminf_suminf = store_thm
-  ("ext_suminf_suminf",
-  ``!r. (!n. 0 <= r n) /\ (ext_suminf (\n. Normal (r n)) <> PosInf) ==>
-        (ext_suminf (\n. Normal (r n)) = Normal (suminf r))``,
-  RW_TAC std_ss [ext_suminf_def]
+Theorem ext_suminf_suminf :
+    !r. (!n. 0 <= r n) /\ ext_suminf (\n. Normal (r n)) <> PosInf ==>
+        (ext_suminf (\n. Normal (r n)) = Normal (suminf r))
+Proof
+     GEN_TAC
+  >> Suff `(!n. 0 <= r n) ==> ext_suminf (\n. Normal (r n)) <> PosInf ==>
+           (ext_suminf (\n. Normal (r n)) = Normal (suminf r))` >- rw []
+  >> DISCH_TAC
+  >> Know `!n. 0 <= (\n. Normal (r n)) n`
+  >- (RW_TAC std_ss [extreal_of_num_def, extreal_le_eq])
+  >> DISCH_THEN (MP_TAC o (MATCH_MP ext_suminf_alt_pos)) >> Rewr'
+  >> RW_TAC std_ss []
   >> `!n. FINITE (count n)` by RW_TAC std_ss [FINITE_COUNT]
   >> RW_TAC std_ss [EXTREAL_SUM_IMAGE_NORMAL]
   >> `(\n. Normal (SIGMA r (count n))) = (\n. Normal ((\n. SIGMA r (count n)) n))` by METIS_TAC []
@@ -4728,7 +4800,8 @@ val ext_suminf_suminf = store_thm
   >> MATCH_MP_TAC SEQ_ICONV
   >> FULL_SIMP_TAC std_ss [GREATER_EQ,real_ge,mono_increasing_def]
   >> MATCH_MP_TAC SEQ_BOUNDED_2
-  >> METIS_TAC [REAL_SUM_IMAGE_POS]);
+  >> METIS_TAC [REAL_SUM_IMAGE_POS]
+QED
 
 (* another version with functional composition *)
 val ext_suminf_suminf' = store_thm
@@ -4736,6 +4809,8 @@ val ext_suminf_suminf' = store_thm
   ``!r. (!n. 0 <= r n) /\ (ext_suminf (Normal o r) < PosInf) ==>
         (ext_suminf (Normal o r) = Normal (suminf r))``,
     METIS_TAC [o_DEF, ext_suminf_suminf, lt_infty]);
+
+(* TODO *)
 
 val ext_suminf_mono = store_thm
   ("ext_suminf_mono",
@@ -5037,7 +5112,7 @@ val ext_suminf_sigma' = save_thm
 
 (* ------------------------------------------------------------------------- *)
 (*  Further theorems concerning the relationship of suminf and SIGMA         *)
-(*  Used by the new measureTheory. (proofs done by Chun Tian)                *)
+(*  Used by the new measureTheory. (Chun Tian)                               *)
 (* ------------------------------------------------------------------------- *)
 
 (* The extreal version of POS_SUMMABLE (util_probTheory) *)
@@ -5047,16 +5122,16 @@ val pos_summable = store_thm
     GEN_TAC >> STRIP_TAC
  (* 1. f is a normal extreal function *)
  >> Know `!n. f n <> PosInf`
- >- ( CCONTR_TAC >> FULL_SIMP_TAC bool_ss [] \\
-      Q.PAT_X_ASSUM `!n. SIGMA f (count n) <= Normal r`
+ >- (CCONTR_TAC >> FULL_SIMP_TAC bool_ss [] \\
+     Q.PAT_X_ASSUM `!n. SIGMA f (count n) <= Normal r`
         (MP_TAC o (REWRITE_RULE [COUNT_SUC]) o (Q.SPEC `SUC n`)) \\
-      `FINITE (count n)` by PROVE_TAC [FINITE_COUNT] \\
-      `!x. x IN (n INSERT (count n)) ==> f x <> NegInf` by PROVE_TAC [le_not_infty] \\
-      ASM_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_PROPERTY, GSYM extreal_lt_def] \\
-      Suff `SIGMA f (count n DELETE n) <> NegInf` >- RW_TAC std_ss [add_infty, lt_infty] \\
-      MATCH_MP_TAC EXTREAL_SUM_IMAGE_NOT_NEGINF \\
-      CONJ_TAC >- PROVE_TAC [FINITE_DELETE] \\
-      rpt STRIP_TAC >> PROVE_TAC [le_not_infty] )
+    `FINITE (count n)` by PROVE_TAC [FINITE_COUNT] \\
+    `!x. x IN (n INSERT (count n)) ==> f x <> NegInf` by PROVE_TAC [le_not_infty] \\
+     ASM_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_PROPERTY, GSYM extreal_lt_def] \\
+     Suff `SIGMA f (count n DELETE n) <> NegInf` >- RW_TAC std_ss [add_infty, lt_infty] \\
+     MATCH_MP_TAC EXTREAL_SUM_IMAGE_NOT_NEGINF \\
+     CONJ_TAC >- PROVE_TAC [FINITE_DELETE] \\
+     rpt STRIP_TAC >> PROVE_TAC [le_not_infty])
  >> DISCH_TAC
  (* 2. g is the real version of f, and `!n. 0 <= g n` *)
  >> Q.ABBREV_TAC `g = real o f`
@@ -5300,8 +5375,8 @@ val ext_suminf_2d = store_thm
   ("ext_suminf_2d",
   ``!(f :num -> num -> extreal) (g :num -> extreal) (h :num -> num # num).
       (!m n. 0 <= f m n) /\
-      (!n. ext_suminf (f n) = g n) /\                (* f n sums g n *)
-      (ext_suminf g < PosInf) /\                (* summable g *)
+      (!n. ext_suminf (f n) = g n) /\  (* f n sums g n *)
+      (ext_suminf g < PosInf) /\       (* summable g *)
       BIJ h UNIV (UNIV CROSS UNIV)
      ==>
       (ext_suminf (UNCURRY f o h) = ext_suminf g)``,
