@@ -5,10 +5,10 @@ This directory contains HOL4's Measure, Lebesgue integral and Probability theori
 ## Preliminaries
 
      sigma_algebraScript.sml      * Sigma algebra and other system of sets
-     extrealScript.sml            * The theory of Extended Real Numbers
+     extrealScript.sml            * The theory of extended reals
      real_topologyScript.sml      * Elementary Topology in Euclidean Space (from HOL Light)
 
-## Measure, Integral and Probability Theory defined on extended reals (new)
+## Measure, Integral and Probability Theory defined on extended reals
 
      measureScript.sml            * Measure Theory defined on extended reals
      borelScript.sml              * Borel sets and Borel measurable functions
@@ -16,7 +16,7 @@ This directory contains HOL4's Measure, Lebesgue integral and Probability theori
      martingaleScript.sml         * The theory of martingales based on σ-finite filtered measure space
      probabilityScript.sml        * Probability Theory based on extended reals
 
-## Measure, Integral and Probability Theory defined on reals (old)
+## Measure, Integral and Probability Theory defined on reals
 
      real_measureScript.sml       * Measure Theory defined on reals
      real_borelScript.sml         * Borel measurable sets generated from reals
