@@ -3304,41 +3304,52 @@ val pos_fn_integral_cmul_infty = store_thm
   >> RW_TAC std_ss [EXTENSION,IN_IMAGE,IN_ABS,IN_UNIV]
   >> METIS_TAC [extreal_of_num_def]);
 
-(* this is Corollary 9.9 of [1, p.73] *)
-val pos_fn_integral_suminf = store_thm
-  ("pos_fn_integral_suminf",
-  ``!m f. measure_space m /\ (!i x. 0 <= f i x) /\
-      (!i. f i IN measurable (m_space m,measurable_sets m) Borel) ==>
-      (pos_fn_integral m (\x. suminf (\i. f i x)) = suminf (\i. pos_fn_integral m (f i)))``,
-  RW_TAC std_ss [ext_suminf_def]
-  >> RW_TAC std_ss [GSYM pos_fn_integral_sum,FINITE_COUNT]
-  >> `(\n. pos_fn_integral m (\x. SIGMA (\i. f i x) (count n))) =
-      (\n. pos_fn_integral m ((\n. (\x. SIGMA (\i. f i x) (count n)))n))` by METIS_TAC []
-  >> POP_ORW
-  >> MATCH_MP_TAC lebesgue_monotone_convergence
-  >> CONJ_TAC >- RW_TAC std_ss []
-  >> CONJ_TAC
-  >- (RW_TAC std_ss []
-      >> (MATCH_MP_TAC o INST_TYPE [beta |-> ``:num``]) IN_MEASURABLE_BOREL_SUM
-      >> Q.EXISTS_TAC `f`
-      >> Q.EXISTS_TAC `count i`
-      >> RW_TAC std_ss [FINITE_COUNT]
-      >- FULL_SIMP_TAC std_ss [measure_space_def]
-      >> METIS_TAC [lt_infty,lte_trans,num_not_infty])
-  >> CONJ_TAC >- RW_TAC std_ss [FINITE_COUNT,EXTREAL_SUM_IMAGE_POS]
-  >> CONJ_TAC
-  >- (RW_TAC std_ss [FINITE_COUNT,EXTREAL_SUM_IMAGE_POS,le_sup]
-      >> MATCH_MP_TAC le_trans
-      >> Q.EXISTS_TAC `SIGMA (\i. f i x) (count 1)`
-      >> RW_TAC std_ss [FINITE_COUNT,EXTREAL_SUM_IMAGE_POS]
-      >> POP_ASSUM MATCH_MP_TAC
-      >> ONCE_REWRITE_TAC [GSYM SPECIFICATION]
-      >> RW_TAC std_ss [IN_IMAGE,IN_UNIV]
-      >> METIS_TAC [])
-  >> RW_TAC std_ss [ext_mono_increasing_def]
-  >> MATCH_MP_TAC EXTREAL_SUM_IMAGE_MONO_SET
-  >> RW_TAC std_ss [FINITE_COUNT,SUBSET_DEF,IN_COUNT]
-  >> DECIDE_TAC);
+(* Corollary 9.9 of [1, p.73] *)
+Theorem pos_fn_integral_suminf :
+    !m f. measure_space m /\ (!i x. 0 <= f i x) /\
+         (!i. f i IN measurable (m_space m,measurable_sets m) Borel) ==>
+         (pos_fn_integral m (\x. suminf (\i. f i x)) =
+          suminf (\i. pos_fn_integral m (f i)))
+Proof
+    rpt STRIP_TAC
+ >> Know `!n. 0 <= (\i. pos_fn_integral m (f i)) n`
+ >- (RW_TAC std_ss [] \\
+     MATCH_MP_TAC pos_fn_integral_pos >> art [])
+ >> DISCH_THEN (MP_TAC o (MATCH_MP ext_suminf_alt_pos)) >> Rewr'
+ >> Know `!x. suminf (\i. f i x) =
+              sup (IMAGE (\n. SIGMA (\i. f i x) (count n)) univ(:num))`
+ >- (GEN_TAC >> MATCH_MP_TAC ext_suminf_alt_pos \\
+     RW_TAC std_ss []) >> Rewr'
+ >> Know `!n. SIGMA (\i. pos_fn_integral m (f i)) (count n) =
+              pos_fn_integral m (\x. SIGMA (\i. f i x) (count n))`
+ >- (GEN_TAC >> MATCH_MP_TAC EQ_SYM \\
+     MATCH_MP_TAC pos_fn_integral_sum >> rw [FINITE_COUNT]) >> Rewr'
+ >> `(\n. pos_fn_integral m (\x. SIGMA (\i. f i x) (count n))) =
+     (\n. pos_fn_integral m ((\n. (\x. SIGMA (\i. f i x) (count n))) n))`
+      by METIS_TAC [] >> POP_ORW
+ >> MATCH_MP_TAC lebesgue_monotone_convergence
+ >> CONJ_TAC >- RW_TAC std_ss []
+ >> CONJ_TAC
+ >- (RW_TAC std_ss [] \\
+     (MATCH_MP_TAC o INST_TYPE [beta |-> ``:num``]) IN_MEASURABLE_BOREL_SUM \\
+      take [`f`, `count i`] \\
+      RW_TAC std_ss [FINITE_COUNT]
+      >- FULL_SIMP_TAC std_ss [measure_space_def] \\
+      METIS_TAC [lt_infty, lte_trans, num_not_infty])
+ >> CONJ_TAC >- RW_TAC std_ss [FINITE_COUNT, EXTREAL_SUM_IMAGE_POS]
+ >> CONJ_TAC
+ >- (RW_TAC std_ss [FINITE_COUNT, EXTREAL_SUM_IMAGE_POS, le_sup',
+                    IN_IMAGE, IN_UNIV] \\
+     MATCH_MP_TAC le_trans \\
+     Q.EXISTS_TAC `SIGMA (\i. f i x) (count 1)` \\
+     RW_TAC std_ss [FINITE_COUNT, EXTREAL_SUM_IMAGE_POS] \\
+     POP_ASSUM MATCH_MP_TAC \\
+     Q.EXISTS_TAC `1` >> REWRITE_TAC [])
+ >> RW_TAC std_ss [ext_mono_increasing_def]
+ >> MATCH_MP_TAC EXTREAL_SUM_IMAGE_MONO_SET
+ >> RW_TAC std_ss [FINITE_COUNT, SUBSET_DEF, IN_COUNT]
+ >> DECIDE_TAC
+QED
 
 (* ------------------------------------------------------------------------- *)
 (* Integral for arbitrary functions                                          *)

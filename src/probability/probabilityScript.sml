@@ -548,14 +548,21 @@ val PROB_SUBADDITIVE = store_thm
    >> MATCH_MP_TAC PROB_INCREASING
    >> RW_TAC std_ss [DIFF_DEF, SUBSET_DEF, GSPECIFICATION]);
 
-val PROB_COUNTABLY_SUBADDITIVE = store_thm
-  ("PROB_COUNTABLY_SUBADDITIVE",
-  ``!p f. prob_space p /\ (IMAGE f UNIV) SUBSET events p ==>
-          prob p (BIGUNION (IMAGE f UNIV)) <= suminf (prob p o f)``,
-  RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV, ext_suminf_def]
-  >> Suff `prob p (BIGUNION (IMAGE f UNIV)) =
+Theorem PROB_COUNTABLY_SUBADDITIVE :
+    !p f. prob_space p /\ (IMAGE f UNIV) SUBSET events p ==>
+          prob p (BIGUNION (IMAGE f UNIV)) <= suminf (prob p o f)
+Proof
+    RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV]
+ >> Know `!n. 0 <= (prob p o f) n`
+ >- (RW_TAC std_ss [o_DEF] \\
+     POP_ASSUM (ASSUME_TAC o (Q.SPEC `(f :num -> 'a -> bool) n`)) \\
+     MATCH_MP_TAC PROB_POSITIVE >> art [] \\
+     POP_ASSUM MATCH_MP_TAC \\
+     Q.EXISTS_TAC `n` >> art [])
+ >> DISCH_THEN (MP_TAC o (MATCH_MP ext_suminf_alt_pos)) >> Rewr'
+ >> Suff `prob p (BIGUNION (IMAGE f UNIV)) =
                   sup (IMAGE (prob p o (\n. BIGUNION (IMAGE f (count n)))) UNIV)`
-  >- (RW_TAC std_ss []
+ >- (RW_TAC std_ss []
       >> MATCH_MP_TAC sup_mono
       >> RW_TAC std_ss [o_DEF]
       >> Induct_on `n`
@@ -579,50 +586,52 @@ val PROB_COUNTABLY_SUBADDITIVE = store_thm
               >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_COUNT, image_countable,
                      COUNTABLE_COUNT]
               >> METIS_TAC [])
-      >> METIS_TAC [le_ladd_imp,le_trans])
-  >> (MP_TAC o Q.SPECL [`p`,`(\n. BIGUNION (IMAGE f (count n)))`]) PROB_INCREASING_UNION
-  >> RW_TAC std_ss []
-  >> `BIGUNION (IMAGE (\n. BIGUNION (IMAGE f (count n))) UNIV) = BIGUNION (IMAGE f UNIV)`
+      >> METIS_TAC [le_ladd_imp, le_trans])
+ >> (MP_TAC o Q.SPECL [`p`,`(\n. BIGUNION (IMAGE f (count n)))`]) PROB_INCREASING_UNION
+ >> RW_TAC std_ss []
+ >> `BIGUNION (IMAGE (\n. BIGUNION (IMAGE f (count n))) UNIV) = BIGUNION (IMAGE f UNIV)`
        by (RW_TAC std_ss [EXTENSION,IN_BIGUNION_IMAGE,IN_UNIV,IN_COUNT]
            >> METIS_TAC [DECIDE ``x < SUC x``])
-  >> FULL_SIMP_TAC std_ss []
-  >> POP_ASSUM (K ALL_TAC)
-  >> POP_ASSUM (MATCH_MP_TAC o GSYM)
-  >> RW_TAC std_ss [IN_FUNSET,IN_UNIV]
-  >- (MATCH_MP_TAC EVENTS_COUNTABLE_UNION
-      >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_COUNT, image_countable, COUNTABLE_COUNT]
-      >> METIS_TAC [])
-  >> RW_TAC std_ss [SUBSET_DEF, IN_BIGUNION_IMAGE, IN_COUNT]
-  >> METIS_TAC [DECIDE ``n < SUC n``, LESS_TRANS]);
+ >> FULL_SIMP_TAC std_ss []
+ >> POP_ASSUM (K ALL_TAC)
+ >> POP_ASSUM (MATCH_MP_TAC o GSYM)
+ >> RW_TAC std_ss [IN_FUNSET,IN_UNIV]
+ >- (MATCH_MP_TAC EVENTS_COUNTABLE_UNION
+     >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_COUNT, image_countable, COUNTABLE_COUNT]
+     >> METIS_TAC [])
+ >> RW_TAC std_ss [SUBSET_DEF, IN_BIGUNION_IMAGE, IN_COUNT]
+ >> METIS_TAC [DECIDE ``n < SUC n``, LESS_TRANS]
+QED
 
-val PROB_COUNTABLY_ZERO = store_thm
-  ("PROB_COUNTABLY_ZERO",
-   ``!p c.
-       prob_space p /\ countable c /\ c SUBSET events p /\
-       (!x. x IN c ==> (prob p x = 0)) ==>
-       (prob p (BIGUNION c) = 0)``,
-  RW_TAC std_ss [COUNTABLE_ENUM]
-  >- RW_TAC std_ss [BIGUNION_EMPTY, PROB_EMPTY]
-  >> Know `(!n. prob p (f n) = 0) /\ (!n. f n IN events p)`
-  >- (FULL_SIMP_TAC std_ss [IN_IMAGE, IN_UNIV, SUBSET_DEF]
-      >> PROVE_TAC [])
-  >> NTAC 2 (POP_ASSUM K_TAC)
-  >> STRIP_TAC
-  >> ONCE_REWRITE_TAC [GSYM le_antisym]
-  >> Reverse CONJ_TAC
-  >- (MATCH_MP_TAC PROB_POSITIVE
-      >> RW_TAC std_ss []
-      >> MATCH_MP_TAC EVENTS_COUNTABLE_UNION
-      >> RW_TAC std_ss [COUNTABLE_IMAGE_NUM, SUBSET_DEF, IN_IMAGE, IN_UNIV]
-      >> RW_TAC std_ss [])
-  >> Know `suminf (prob p o f) = 0`
-  >- RW_TAC std_ss [ext_suminf_def, o_DEF, EXTREAL_SUM_IMAGE_ZERO, FINITE_COUNT,
-                    sup_const_over_set, UNIV_NOT_EMPTY]
-  >> RW_TAC std_ss []
-  >> POP_ASSUM (REWRITE_TAC o wrap o SYM)
-  >> MATCH_MP_TAC PROB_COUNTABLY_SUBADDITIVE
-  >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV]
-  >> RW_TAC std_ss []);
+Theorem PROB_COUNTABLY_ZERO :
+    !p c. prob_space p /\ countable c /\ c SUBSET events p /\
+          (!x. x IN c ==> (prob p x = 0)) ==> (prob p (BIGUNION c) = 0)
+Proof
+    RW_TAC std_ss [COUNTABLE_ENUM]
+ >- RW_TAC std_ss [BIGUNION_EMPTY, PROB_EMPTY]
+ >> Know `(!n. prob p (f n) = 0) /\ (!n. f n IN events p)`
+ >- (FULL_SIMP_TAC std_ss [IN_IMAGE, IN_UNIV, SUBSET_DEF] \\
+     PROVE_TAC [])
+ >> NTAC 2 (POP_ASSUM K_TAC)
+ >> STRIP_TAC
+ >> ONCE_REWRITE_TAC [GSYM le_antisym]
+ >> Reverse CONJ_TAC
+ >- (MATCH_MP_TAC PROB_POSITIVE \\
+     RW_TAC std_ss [] \\
+     MATCH_MP_TAC EVENTS_COUNTABLE_UNION \\
+     RW_TAC std_ss [COUNTABLE_IMAGE_NUM, SUBSET_DEF, IN_IMAGE, IN_UNIV] \\
+     RW_TAC std_ss [])
+ >> Know `!n. 0 <= (prob p o f) n`
+ >- RW_TAC std_ss [o_DEF, le_refl] >> DISCH_TAC
+ >> Know `suminf (prob p o f) = 0`
+ >- RW_TAC std_ss [ext_suminf_alt_pos, o_DEF, EXTREAL_SUM_IMAGE_ZERO, FINITE_COUNT,
+                   sup_const_over_set, UNIV_NOT_EMPTY]
+ >> RW_TAC std_ss []
+ >> POP_ASSUM (REWRITE_TAC o wrap o SYM)
+ >> MATCH_MP_TAC PROB_COUNTABLY_SUBADDITIVE
+ >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV]
+ >> RW_TAC std_ss []
+QED
 
 val PROB_EXTREAL_SUM_IMAGE = store_thm
   ("PROB_EXTREAL_SUM_IMAGE",
@@ -3703,8 +3712,9 @@ val Borel_Cantelli_Lemma2p = store_thm
      RW_TAC std_ss [le_sup', IN_IMAGE, IN_UNIV] \\
      POP_ASSUM MATCH_MP_TAC >> Q.EXISTS_TAC `n` >> REWRITE_TAC []) >> DISCH_TAC
  >> Know `!x. suminf (\n. X n x) = S' x`
- >- (GEN_TAC >> Q.UNABBREV_TAC `S'` >> Q.UNABBREV_TAC `S` \\
-     SIMP_TAC std_ss [ext_suminf_def])
+ >- (GEN_TAC >> Q.UNABBREV_TAC `S'` >> Q.UNABBREV_TAC `S` >> BETA_TAC \\
+     MATCH_MP_TAC ext_suminf_alt_pos \\
+     Q.UNABBREV_TAC `X` >> RW_TAC std_ss [INDICATOR_FN_POS])
  >> DISCH_TAC >> fs []
  (* S' is also Borel-measurable (needed later) *)
  >> Know `S' IN measurable (p_space p,events p) Borel`
@@ -3727,7 +3737,11 @@ val Borel_Cantelli_Lemma2p = store_thm
  >> Q.UNABBREV_TAC `s`
  >> Know `sup (IMAGE (\n. M n) univ(:num)) = PosInf`
  >- (Q.PAT_X_ASSUM `!n. M n = P` (ONCE_REWRITE_TAC o wrap) \\
-     art [GSYM ext_suminf_def])
+     Suff `suminf (prob p o E) =
+           sup (IMAGE (\n. SIGMA (prob p o E) (count n)) univ(:num))` >- rw [] \\
+     MATCH_MP_TAC ext_suminf_alt_pos \\
+     GEN_TAC >> SIMP_TAC std_ss [o_DEF] \\
+     MATCH_MP_TAC PROB_POSITIVE >> art [])
  >> REWRITE_TAC [ETA_THM] >> DISCH_TAC
  (* M n can be larger than any given positive real *)
  >> Know `!e. 0 < e /\ e <> PosInf ==> ?m. e <= M m`

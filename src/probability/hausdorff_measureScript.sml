@@ -7,7 +7,8 @@
 
 open HolKernel Parse boolLib bossLib;
 
-open pred_setTheory fcpTheory topologyTheory metricTheory real_topologyTheory;
+open pred_setTheory combinTheory fcpTheory topologyTheory metricTheory
+     real_topologyTheory;
 
 open hurdUtils util_probTheory extrealTheory sigma_algebraTheory measureTheory
      borelTheory;
@@ -64,6 +65,18 @@ val rich_system_def = Define
    `rich_system sp sts (d :'a metric) <=>
       subset_class sp sts /\ {} IN sts /\
       !x e. x IN sp /\ 0 < e ==> ?s. x IN s /\ s IN sts /\ diameter d s < e`;
+
+Theorem OUTER_MEASURE_EMPTY :
+    !mu sts d e. outer_measure mu (countable_e_covers sts d e) {} = 0
+Proof
+    RW_TAC std_ss [outer_measure_def]
+ >> ONCE_REWRITE_TAC [GSYM le_antisym]
+ >> Reverse CONJ_TAC
+ >- (REWRITE_TAC [le_inf'] \\
+     RW_TAC std_ss [GSPECIFICATION] \\
+     cheat)
+ >> cheat
+QED
 
 Theorem METRIC_OUTER_MEASURE_EMPTY :
     !d m. metric_outer_measure d m {} = 0
