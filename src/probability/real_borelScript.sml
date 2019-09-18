@@ -11,7 +11,7 @@ open HolKernel Parse boolLib bossLib metisLib arithmeticTheory pred_setTheory
 open hurdUtils util_probTheory sigma_algebraTheory real_measureTheory;
 
 (* ------------------------------------------------------------------------- *)
-(* Start a new theory called "borel" (now "real_borel")                      *)
+(* Start a new theory called "borel" (renamed to "real_borel")               *)
 (* ------------------------------------------------------------------------- *)
 
 val _ = new_theory "real_borel";
@@ -20,8 +20,7 @@ val _ = new_theory "real_borel";
 (* Basic Definitions                                                         *)
 (* ************************************************************************* *)
 
-val borel_def = Define
-   `borel = sigma univ(:real) (IMAGE (\a:real. {x:real | x <= a}) univ(:real))`;
+(* borel_def has been moved to the shared sigma_algebraheory. *)
 
 val _ = overload_on ("borel_measurable", ``\a. measurable a borel``);
 
