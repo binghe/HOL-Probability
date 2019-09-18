@@ -27,9 +27,6 @@ open numTheory numLib unwindLib tautLib Arith prim_recTheory
      seqTheory limTheory transcTheory realLib topologyTheory;
 
 open wellorderTheory cardinalTheory hurdUtils util_probTheory;
-
-(* these two theories must be loaded at last, because they may have redefined
-   something in real theories, e.g. "inf" *)
 open iterateTheory productTheory;
 
 val _ = new_theory "real_topology";

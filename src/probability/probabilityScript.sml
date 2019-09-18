@@ -1161,7 +1161,7 @@ val finite_marginal_product_space_POW3 = store_thm
   ("finite_marginal_product_space_POW3",
   ``!p s1 s2 s3 X Y Z.
        prob_space p /\ FINITE (p_space p) /\ (POW (p_space p) = events p) /\
-       random_variable X p (s1, POW s1) /\ 
+       random_variable X p (s1, POW s1) /\
        random_variable Y p (s2, POW s2) /\
        random_variable Z p (s3, POW s3) /\
        FINITE s1 /\ FINITE s2 /\ FINITE s3 ==>
@@ -2688,7 +2688,8 @@ val Kolmogorov_0_1_Law = store_thm
      >- METIS_TAC [SUBSET_DEF] \\
      MATCH_MP_TAC SIGMA_SUBSET_EVENTS >> art [] \\
      RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV] >> art []) >> DISCH_TAC
- >> Know `!n. indep_events p (\x. if x IN (count n) then E x else e) (n INSERT count n)`
+ >> Know `!n. indep_events p (\x. if x IN (count n) then E x else e)
+                             (n INSERT count n)`
  >- (GEN_TAC >> Cases_on `n = 0`
      >- (ASM_SIMP_TAC std_ss [COUNT_ZERO, indep_events_def, IN_SING, NOT_IN_EMPTY] \\
          RW_TAC std_ss [SUBSET_DEF, IN_SING, NOT_IN_EMPTY] \\
@@ -2703,14 +2704,15 @@ val Kolmogorov_0_1_Law = store_thm
                   RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV] >> art []) \\
      CONJ_TAC >- (RW_TAC arith_ss [IN_FROM]) \\
      PROVE_TAC [COUNT_NOT_EMPTY]) >> DISCH_TAC
- >> Know `indep_events p (\x. if EVEN x then E (DIV2 x) else e) (1 INSERT {2 * n | T})`
+ >> Know `indep_events p (\x. if EVEN x then E (DIV2 x) else e)
+                         (1 INSERT {2 * n | T})`
  >- (RW_TAC std_ss [indep_events_def, IN_INSERT, GSPECIFICATION] >| (* 3 subgoals *)
      [ (* goal 1 (of 3) *)
-       `~EVEN 1` by RW_TAC arith_ss [] >> POP_ASSUM (ASM_SIMP_TAC std_ss o wrap),
+      `~EVEN 1` by RW_TAC arith_ss [] >> POP_ASSUM (ASM_SIMP_TAC std_ss o wrap),
        (* goal 2 (of 3) *)
        SIMP_TAC arith_ss [EVEN_DOUBLE, DIV2_DOUBLE] \\
        Q.PAT_X_ASSUM `indep_events p E UNIV`
-           (STRIP_ASSUME_TAC o (REWRITE_RULE [indep_events_def, IN_UNIV])) \\
+          (STRIP_ASSUME_TAC o (REWRITE_RULE [indep_events_def, IN_UNIV])) \\
        RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV] >> art [],
        (* goal 3 (of 3) *)
        Cases_on `1 NOTIN N` (* easier case *)
@@ -2730,9 +2732,11 @@ val Kolmogorov_0_1_Law = store_thm
                  (* goal 3.2 (of 2) *)
                 `EVEN x'` by PROVE_TAC [] \\
                  Q.EXISTS_TAC `x'` >> art [] ]) >> Rewr' \\
-           Know `PI (prob p o (\x. if EVEN x then E (DIV2 x) else e)) N = PI ((prob p o E) o DIV2) N`
+           Know `PI (prob p o (\x. if EVEN x then E (DIV2 x) else e)) N =
+                 PI ((prob p o E) o DIV2) N`
            >- (irule EXTREAL_PROD_IMAGE_EQ >> RW_TAC std_ss [o_DEF]) >> Rewr' \\
-          `IMAGE (E o DIV2) N = IMAGE E (IMAGE DIV2 N)` by PROVE_TAC [IMAGE_IMAGE] >> POP_ORW \\
+          `IMAGE (E o DIV2) N = IMAGE E (IMAGE DIV2 N)`
+             by PROVE_TAC [IMAGE_IMAGE] >> POP_ORW \\
            Know `PI ((prob p o E) o DIV2) N = PI (prob p o E) (IMAGE DIV2 N)`
            >- (MATCH_MP_TAC EQ_SYM >> irule EXTREAL_PROD_IMAGE_IMAGE >> art [] \\
                MATCH_MP_TAC INJ_IMAGE >> Q.EXISTS_TAC `IMAGE DIV2 N` \\
@@ -2829,9 +2833,10 @@ val Kolmogorov_0_1_Law = store_thm
        Suff `DIV2 x' < n` >- PROVE_TAC [] \\
        PROVE_TAC [] ]) >> DISCH_TAC
  (* applying INDEP_FAMILIES_SIGMA_lemma1 *)
- >> Know `!a. a IN subsets (sigma (p_space p)
-                                  (IMAGE (\x. if EVEN x then E (DIV2 x) else e) {2 * n | T})) ==>
-              indep p ((\x. if EVEN x then E (DIV2 x) else e) 1) a`
+ >> Know `!a. a IN subsets
+                     (sigma (p_space p)
+                            (IMAGE (\x. if EVEN x then E (DIV2 x) else e) {2 * n | T}))
+          ==> indep p ((\x. if EVEN x then E (DIV2 x) else e) 1) a`
  >- (rpt STRIP_TAC >> irule INDEP_FAMILIES_SIGMA_lemma1 >> art [] \\
      Q.EXISTS_TAC `{2 * n | T}` >> art [] \\
     `ODD 1` by RW_TAC arith_ss [] \\
