@@ -1178,14 +1178,25 @@ val IN_MEASURE_PRESERVING = store_thm
          (measure m1 ((PREIMAGE f s)INTER(m_space m1)) = measure m2 s)``,
    RW_TAC std_ss [measure_preserving_def, GSPECIFICATION]);
 
-(* TODO
-val MEASURE_PRESERVING_LIFT = store_thm
-  ("MEASURE_PRESERVING_LIFT",
-  ``!m1 m2 a f.
+(* The old definition of `measure_preserving m1 m2` requires that both
+  `m1` and `m2` must be measure_space. Now they're removed, and we must add
+  `measure_space (m_space m2,a,measure m2)` into the antecedents, which cannot
+   be derived from other conditions, since we don't know if `a` (for sure 
+   smaller than `measurable_sets m2`, as a generator) is countably_additive.
+
+   Furthermore, due to the changes to [0,+inf]-measure, now the theorem requires
+   that both m1 and m2 are finite measure spaces.
+ *)
+Theorem MEASURE_PRESERVING_LIFT :
+    !m1 m2 a f.
        measure_space m1 /\ measure_space m2 /\
-       (measurable_sets m2 = subsets (sigma (m_space m2) a)) /\
-       f IN measure_preserving m1 (m_space m2, a, measure m2) ==>
-       f IN measure_preserving m1 m2``,
+       measure_space (m_space m2,a,measure m2) /\
+       measure m1 (m_space m1) <> PosInf /\
+       measure m2 (m_space m2) <> PosInf /\
+      (measurable_sets m2 = subsets (sigma (m_space m2) a)) /\      
+       f IN measure_preserving m1 (m_space m2,a,measure m2) ==>
+       f IN measure_preserving m1 m2
+Proof
     RW_TAC std_ss []
  >> Reverse (Cases_on `algebra (m_space m2,a)`)
  >- FULL_SIMP_TAC std_ss [IN_MEASURE_PRESERVING, IN_MEASURABLE, m_space_def,
@@ -1214,95 +1225,107 @@ val MEASURE_PRESERVING_LIFT = store_thm
      >> ASM_REWRITE_TAC [])
  >> Q.PAT_X_ASSUM `f IN X` K_TAC
  >> REWRITE_TAC [IN_MEASURABLE, space_def, subsets_def]
-
  >> STRIP_TAC
  >> ASM_REWRITE_TAC []
- >> CONJ_TAC
- >- (Q.PAT_X_ASSUM `measurable_sets m2 = subsets (sigma (m_space m2) a)` (MP_TAC o GSYM)
-     >> RW_TAC std_ss [MEASURE_SPACE_REDUCE])
+ (* stage work *)
  >> Suff `subsets (sigma (m_space m2) a) SUBSET
                  {s | measure m1 ((PREIMAGE f s) INTER (m_space m1)) = measure m2 s}`
-   >- RW_TAC std_ss [SUBSET_DEF, GSPECIFICATION]
-   >> MATCH_MP_TAC SIGMA_PROPERTY_DISJOINT
-   >> RW_TAC std_ss [GSPECIFICATION, SUBSET_DEF, IN_INTER, IN_FUNSET,
-                     IN_UNIV, PREIMAGE_COMPL, PREIMAGE_BIGUNION, IMAGE_IMAGE,
-                     MEASURE_COMPL] >|
-   [Q.PAT_X_ASSUM `measure m1 (PREIMAGE f s INTER m_space m1) = measure m2 s`
-                (fn thm => ONCE_REWRITE_TAC [GSYM thm])
-    >> Know `m_space m2 IN a` >- PROVE_TAC [ALGEBRA_SPACE, subsets_def, space_def]
-    >> STRIP_TAC
-    >> Q.PAT_X_ASSUM `!s. s IN a ==> (measure m1 (PREIMAGE f s INTER m_space m1) = measure m2 s)`
-        ((fn thm => ONCE_REWRITE_TAC [GSYM thm]) o UNDISCH o Q.SPEC `m_space m2`)
-    >> Know `PREIMAGE f (m_space m2) INTER m_space m1 = m_space m1`
-    >- (FULL_SIMP_TAC std_ss [Once EXTENSION, IN_INTER, IN_PREIMAGE, IN_FUNSET] >> METIS_TAC [])
-    >> RW_TAC std_ss [PREIMAGE_DIFF]
-    >> `((PREIMAGE f (m_space m2) DIFF PREIMAGE f s) INTER m_space m1) =
-        ((PREIMAGE f (m_space m2) INTER m_space m1) DIFF (PREIMAGE f s INTER m_space m1))`
-        by (RW_TAC std_ss [Once EXTENSION, IN_INTER, IN_DIFF, IN_PREIMAGE] >> DECIDE_TAC)
-    >> RW_TAC std_ss [MEASURE_COMPL],
-    `BIGUNION (IMAGE (PREIMAGE f o f') UNIV) INTER m_space m1 =
-     BIGUNION (IMAGE (\x:num. (PREIMAGE f o f') x INTER m_space m1) UNIV)`
+ >- RW_TAC std_ss [SUBSET_DEF, GSPECIFICATION]
+ >> MATCH_MP_TAC SIGMA_PROPERTY_DISJOINT
+ >> Know `!s. s IN subsets (sigma (m_space m2) a) ==> measure m2 s <> PosInf`
+ >- (NTAC 2 STRIP_TAC \\
+    `s IN measurable_sets m2` by PROVE_TAC [] \\
+     MATCH_MP_TAC MEASURE_SPACE_FINITE_MEASURE >> art [])
+ >> RW_TAC std_ss [GSPECIFICATION, SUBSET_DEF, IN_INTER, IN_FUNSET,
+                   IN_UNIV, PREIMAGE_COMPL, PREIMAGE_BIGUNION, IMAGE_IMAGE,
+                   MEASURE_SPACE_FINITE_DIFF] (* 3 subgoals *)
+ >| [ (* goal 1 (of 3) *)
+      Q.PAT_X_ASSUM `measure m1 (PREIMAGE f s INTER m_space m1) = measure m2 s`
+                    (fn thm => ONCE_REWRITE_TAC [GSYM thm]) \\
+      Know `m_space m2 IN a` >- PROVE_TAC [ALGEBRA_SPACE, subsets_def, space_def] \\
+      STRIP_TAC \\
+      Q.PAT_X_ASSUM `!s. s IN a ==> (measure m1 (PREIMAGE f s INTER m_space m1) = measure m2 s)`
+        ((fn thm => ONCE_REWRITE_TAC [GSYM thm]) o UNDISCH o Q.SPEC `m_space m2`) \\
+      Know `PREIMAGE f (m_space m2) INTER m_space m1 = m_space m1`
+      >- (FULL_SIMP_TAC std_ss [Once EXTENSION, IN_INTER, IN_PREIMAGE, IN_FUNSET] \\
+          METIS_TAC []) \\
+      RW_TAC std_ss [PREIMAGE_DIFF] \\
+     `(PREIMAGE f (m_space m2) DIFF PREIMAGE f s) INTER m_space m1 =
+      (PREIMAGE f (m_space m2) INTER m_space m1) DIFF (PREIMAGE f s INTER m_space m1)`
+         by (RW_TAC std_ss [Once EXTENSION, IN_INTER, IN_DIFF, IN_PREIMAGE] \\
+             DECIDE_TAC) >> POP_ORW \\
+      POP_ORW \\
+     `measure m1 (PREIMAGE f s INTER m_space m1) <> PosInf`
+        by METIS_TAC [MEASURE_SPACE_FINITE_MEASURE] \\
+      RW_TAC std_ss [MEASURE_SPACE_FINITE_DIFF],
+      (* goal 2 (of 3) *)
+     `BIGUNION (IMAGE (PREIMAGE f o f') UNIV) INTER m_space m1 =
+      BIGUNION (IMAGE (\x:num. (PREIMAGE f o f') x INTER m_space m1) UNIV)`
+        by (RW_TAC std_ss [Once EXTENSION, IN_BIGUNION, IN_INTER, IN_IMAGE, IN_UNIV] \\
+            FULL_SIMP_TAC std_ss [IN_FUNSET] \\
+            EQ_TAC
+            >- (RW_TAC std_ss [] \\
+                Q.EXISTS_TAC `PREIMAGE f (f' x') INTER m_space m1` \\
+                ASM_REWRITE_TAC [IN_INTER] \\
+                Q.EXISTS_TAC `x'` >>  RW_TAC std_ss []) \\
+            RW_TAC std_ss [] >> METIS_TAC [IN_PREIMAGE, IN_INTER]) \\
+      POP_ASSUM (fn thm => ONCE_REWRITE_TAC [thm]) \\
+      Suff
+       `sup (IMAGE (measure m2 o f') univ(:num)) = measure m2 (BIGUNION (IMAGE f' UNIV)) /\
+        sup (IMAGE (measure m2 o f') univ(:num)) =
+            measure m1 (BIGUNION (IMAGE (\x. (PREIMAGE f o f') x INTER m_space m1) UNIV))`
+      >- PROVE_TAC [] \\
+      CONJ_TAC >- (MATCH_MP_TAC MEASURE_COUNTABLE_INCREASING \\
+                   RW_TAC std_ss [IN_FUNSET, IN_UNIV, SUBSET_DEF]) \\
+      Know `measure m2 o f' = measure m1 o (\x. (PREIMAGE f o f') x INTER m_space m1)`
+      >- (RW_TAC std_ss [FUN_EQ_THM] >> RW_TAC std_ss [o_THM]) \\
+      DISCH_THEN (ONCE_REWRITE_TAC o wrap) \\
+      MATCH_MP_TAC MEASURE_COUNTABLE_INCREASING \\
+      RW_TAC std_ss [IN_FUNSET, IN_UNIV, o_THM, PREIMAGE_EMPTY, INTER_EMPTY] \\
+      Suff `PREIMAGE f (f' n) SUBSET PREIMAGE f (f' (SUC n))`
+      >- RW_TAC std_ss [SUBSET_DEF, IN_INTER] \\
+      MATCH_MP_TAC PREIMAGE_SUBSET \\
+      RW_TAC std_ss [SUBSET_DEF],
+      (* goal 3 of 3 *)
+     `BIGUNION (IMAGE (PREIMAGE f o f') UNIV) INTER m_space m1 =
+      BIGUNION (IMAGE (\x:num. (PREIMAGE f o f') x INTER m_space m1) UNIV)`
         by (RW_TAC std_ss [Once EXTENSION, IN_BIGUNION, IN_INTER, IN_IMAGE, IN_UNIV]
             >> FULL_SIMP_TAC std_ss [IN_FUNSET]
             >> EQ_TAC
             >- (RW_TAC std_ss [] >> Q.EXISTS_TAC `PREIMAGE f (f' x') INTER m_space m1`
                 >> ASM_REWRITE_TAC [IN_INTER] >> Q.EXISTS_TAC `x'` >> RW_TAC std_ss [])
-            >> RW_TAC std_ss [] >> METIS_TAC [IN_PREIMAGE, IN_INTER])
-    >> POP_ASSUM (fn thm => ONCE_REWRITE_TAC [thm])
-    >> Suff
-    `(measure m2 o f') --> measure m2 (BIGUNION (IMAGE f' UNIV)) /\
-     (measure m2 o f') -->
-     measure m1 (BIGUNION (IMAGE (\x. (PREIMAGE f o f') x INTER m_space m1) UNIV))`
-    >- PROVE_TAC [SEQ_UNIQ]
-    >> CONJ_TAC
-    >- (MATCH_MP_TAC MEASURE_COUNTABLE_INCREASING
-        >> RW_TAC std_ss [IN_FUNSET, IN_UNIV, SUBSET_DEF])
-    >> Know `measure m2 o f' = measure m1 o (\x. (PREIMAGE f o f') x INTER m_space m1)`
-    >- (RW_TAC std_ss [FUN_EQ_THM]
-        >> RW_TAC std_ss [o_THM])
-    >> DISCH_THEN (ONCE_REWRITE_TAC o wrap)
-    >> MATCH_MP_TAC MEASURE_COUNTABLE_INCREASING
-    >> RW_TAC std_ss [IN_FUNSET, IN_UNIV, o_THM, PREIMAGE_EMPTY, INTER_EMPTY]
-    >> Suff `PREIMAGE f (f' n) SUBSET PREIMAGE f (f' (SUC n))`
-    >- RW_TAC std_ss [SUBSET_DEF, IN_INTER]
-    >> MATCH_MP_TAC PREIMAGE_SUBSET
-    >> RW_TAC std_ss [SUBSET_DEF],
-    `BIGUNION (IMAGE (PREIMAGE f o f') UNIV) INTER m_space m1 =
-     BIGUNION (IMAGE (\x:num. (PREIMAGE f o f') x INTER m_space m1) UNIV)`
-        by (RW_TAC std_ss [Once EXTENSION, IN_BIGUNION, IN_INTER, IN_IMAGE, IN_UNIV]
-            >> FULL_SIMP_TAC std_ss [IN_FUNSET]
-            >> EQ_TAC
-            >- (RW_TAC std_ss [] >> Q.EXISTS_TAC `PREIMAGE f (f' x') INTER m_space m1`
-                >> ASM_REWRITE_TAC [IN_INTER] >> Q.EXISTS_TAC `x'` >> RW_TAC std_ss [])
-            >> RW_TAC std_ss [] >> METIS_TAC [IN_PREIMAGE, IN_INTER])
-    >> POP_ASSUM (fn thm => ONCE_REWRITE_TAC [thm])
-    >> Suff
-    `(measure m2 o f') sums measure m2 (BIGUNION (IMAGE f' UNIV)) /\
-     (measure m2 o f') sums
-     measure m1 (BIGUNION (IMAGE (\x. (PREIMAGE f o f') x INTER m_space m1) UNIV))`
-    >- PROVE_TAC [SUM_UNIQ]
-    >> CONJ_TAC
-    >- (MATCH_MP_TAC MEASURE_COUNTABLY_ADDITIVE
-        >> RW_TAC std_ss [IN_FUNSET, IN_UNIV])
-    >> Know `measure m2 o f' = measure m1 o (\x. (PREIMAGE f o f') x INTER m_space m1)`
-    >- (RW_TAC std_ss [FUN_EQ_THM]
-        >> RW_TAC std_ss [o_THM])
-    >> DISCH_THEN (ONCE_REWRITE_TAC o wrap)
-    >> MATCH_MP_TAC MEASURE_COUNTABLY_ADDITIVE
-    >> RW_TAC std_ss [IN_FUNSET, IN_UNIV, o_THM, IN_DISJOINT, PREIMAGE_DISJOINT, IN_INTER]
-    >> METIS_TAC [IN_DISJOINT, PREIMAGE_DISJOINT]]);
+            >> RW_TAC std_ss [] >> METIS_TAC [IN_PREIMAGE, IN_INTER]) \\
+      POP_ASSUM (fn thm => ONCE_REWRITE_TAC [thm]) \\
+      Suff
+       `suminf (measure m2 o f') = measure m2 (BIGUNION (IMAGE f' UNIV)) /\
+        suminf (measure m2 o f') =
+          measure m1 (BIGUNION (IMAGE (\x. (PREIMAGE f o f') x INTER m_space m1) UNIV))`
+      >- PROVE_TAC [] \\
+      CONJ_TAC >- (MATCH_MP_TAC MEASURE_COUNTABLY_ADDITIVE \\
+                   RW_TAC std_ss [IN_FUNSET, IN_UNIV]) \\
+      Know `measure m2 o f' = measure m1 o (\x. (PREIMAGE f o f') x INTER m_space m1)`
+      >- (RW_TAC std_ss [FUN_EQ_THM] >> RW_TAC std_ss [o_THM]) \\
+      DISCH_THEN (ONCE_REWRITE_TAC o wrap) \\
+      MATCH_MP_TAC MEASURE_COUNTABLY_ADDITIVE \\
+      RW_TAC std_ss [IN_FUNSET, IN_UNIV, o_THM, IN_DISJOINT, PREIMAGE_DISJOINT, IN_INTER] \\
+      METIS_TAC [IN_DISJOINT, PREIMAGE_DISJOINT] ]
+QED
 
+(* added the same more requirements as for MEASURE_PRESERVING_LIFT *)
 val MEASURE_PRESERVING_SUBSET = store_thm
   ("MEASURE_PRESERVING_SUBSET",
    ``!m1 m2 a.
        measure_space m1 /\ measure_space m2 /\
+       measure_space (m_space m2,a,measure m2) /\
+       measure m1 (m_space m1) <> PosInf /\
+       measure m2 (m_space m2) <> PosInf /\
        (measurable_sets m2 = subsets (sigma (m_space m2) a)) ==>
        measure_preserving m1 (m_space m2, a, measure m2) SUBSET
        measure_preserving m1 m2``,
    RW_TAC std_ss [SUBSET_DEF]
    >> MATCH_MP_TAC MEASURE_PRESERVING_LIFT
    >> PROVE_TAC []);
-*)
+
 val MEASURABLE_I = store_thm
   ("MEASURABLE_I",
    ``!a. sigma_algebra a ==> I IN measurable a a``,

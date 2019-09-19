@@ -90,15 +90,6 @@ val dynkin_system_def = Define
 val dynkin_def = Define
    `dynkin sp sts = (sp, BIGINTER {d | sts SUBSET d /\ dynkin_system (sp, d)})`;
 
-(* NOTE: this is the (real) Borel set $\mathscr{B}$ generated from open sets
-   in R^1 without using any extended reals.
-
-   It's moved here from real_borelTheory, so that borelTheory can also
-   access to it. (c.f. borelTheory.Borel_def)
- *)
-val borel_def = Define
-   `borel = sigma univ(:real) (IMAGE (\a:real. {x:real | x <= a}) univ(:real))`;
-
 val _ = TeX_notation {hol = "borel", TeX = ("\\ensuremath{\\mathscr{B}}", 1)};
 
 (* ------------------------------------------------------------------------- *)

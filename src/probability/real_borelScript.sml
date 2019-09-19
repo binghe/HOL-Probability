@@ -20,7 +20,8 @@ val _ = new_theory "real_borel";
 (* Basic Definitions                                                         *)
 (* ************************************************************************* *)
 
-(* borel_def has been moved to the shared sigma_algebraheory. *)
+val borel_def = Define
+   `borel = sigma univ(:real) (IMAGE (\a:real. {x:real | x <= a}) univ(:real))`;
 
 val _ = overload_on ("borel_measurable", ``\a. measurable a borel``);
 

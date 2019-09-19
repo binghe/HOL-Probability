@@ -3146,12 +3146,11 @@ val measure_space_finite_prod_measure_POW2 = store_thm
         METIS_TAC [SND],
         ONCE_REWRITE_TAC [EXTENSION] >> RW_TAC std_ss [IN_UNION, IN_PREIMAGE] ]);
 
-val countable_space_integral_reduce = store_thm
-  ("countable_space_integral_reduce",
-  ``!m f p n. measure_space m /\
-             positive m /\
-             f IN borel_measurable (m_space m, measurable_sets m) /\
-             countable (IMAGE f (m_space m)) /\
+(* from examples/diningcryptos *)
+Theorem countable_space_integral_reduce :
+    !m f p n. measure_space m /\ positive m /\
+              f IN borel_measurable (m_space m, measurable_sets m) /\
+              countable (IMAGE f (m_space m)) /\
              ~(FINITE (IMAGE (fn_plus f) (m_space m))) /\
              ~(FINITE (IMAGE (fn_minus f) (m_space m))) /\
              (\r. r *
@@ -3160,33 +3159,36 @@ val countable_space_integral_reduce = store_thm
              (\r. r *
                   measure m (PREIMAGE (fn_plus f) {r} INTER m_space m)) o
                 enumerate ((IMAGE (fn_plus f) (m_space m))) sums p ==>
-             (integral m f = p - n)``,
-   RW_TAC std_ss [integral_def]
-   >> Suff `((@i. i IN nnfis m (fn_plus f)) = p) /\ ((@i. i IN nnfis m (fn_minus f)) = n)`
-   >- RW_TAC std_ss []
-   >> (CONJ_TAC >> MATCH_MP_TAC SELECT_UNIQUE >> RW_TAC std_ss [])
-   >- (Suff `p IN nnfis m (fn_plus f)` >- METIS_TAC [nnfis_unique]
-       >> MATCH_MP_TAC nnfis_mon_conv
-       >> Know `BIJ (enumerate(IMAGE (fn_plus f) (m_space m))) UNIV (IMAGE (fn_plus f) (m_space m))`
-       >- ( `countable (IMAGE (fn_plus f) (m_space m))`
-                        by (MATCH_MP_TAC COUNTABLE_SUBSET
-                            >> Q.EXISTS_TAC `0 INSERT (IMAGE f (m_space m))`
-                            >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, fn_plus_def, countable_INSERT, IN_INSERT]
-                            >> METIS_TAC [])
-            >> METIS_TAC [COUNTABLE_ALT_BIJ] )
-       >> DISCH_TAC
-       >> FULL_SIMP_TAC std_ss [sums, BIJ_DEF, INJ_DEF, SURJ_DEF, IN_UNIV]
-       >> Q.EXISTS_TAC `(\n t. if t IN m_space m /\ fn_plus f t IN IMAGE (enumerate (IMAGE (fn_plus f) (m_space m)))
-                        (pred_set$count n) then fn_plus f t else 0)`
-       >> Q.EXISTS_TAC `(\n.
+             (integral m f = p - n)
+Proof
+    RW_TAC std_ss [integral_def]
+ >> Suff `((@i. i IN nnfis m (fn_plus f)) = p) /\ ((@i. i IN nnfis m (fn_minus f)) = n)`
+ >- RW_TAC std_ss []
+ >> (CONJ_TAC >> MATCH_MP_TAC SELECT_UNIQUE >> RW_TAC std_ss [])
+ >- (Suff `p IN nnfis m (fn_plus f)` >- METIS_TAC [nnfis_unique]
+     >> MATCH_MP_TAC nnfis_mon_conv
+     >> Know `BIJ (enumerate(IMAGE (fn_plus f) (m_space m))) UNIV (IMAGE (fn_plus f) (m_space m))`
+     >- (`countable (IMAGE (fn_plus f) (m_space m))`
+           by (MATCH_MP_TAC COUNTABLE_SUBSET
+               >> Q.EXISTS_TAC `0 INSERT (IMAGE f (m_space m))`
+               >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, fn_plus_def, countable_INSERT, IN_INSERT]
+               >> METIS_TAC [])
+         >> METIS_TAC [COUNTABLE_ALT_BIJ])
+     >> DISCH_TAC
+     >> FULL_SIMP_TAC std_ss [sums, BIJ_DEF, INJ_DEF, SURJ_DEF, IN_UNIV]
+     >> Q.EXISTS_TAC `(\n t. if t IN m_space m /\
+                                fn_plus f t IN IMAGE (enumerate (IMAGE (fn_plus f) (m_space m)))
+                                               (pred_set$count n)
+                             then fn_plus f t else 0)`
+     >> Q.EXISTS_TAC `(\n.
          sum (0,n)
            ((\r.
                r *
                measure m (PREIMAGE (fn_plus f) {r} INTER m_space m)) o
             enumerate (IMAGE (fn_plus f) (m_space m))))`
-       >> ASM_SIMP_TAC std_ss []
-       >> CONJ_TAC
-       >- (RW_TAC std_ss [mono_convergent_def]
+     >> ASM_SIMP_TAC std_ss []
+     >> CONJ_TAC
+     >- (RW_TAC std_ss [mono_convergent_def]
            >- (RW_TAC real_ss [IN_IMAGE, pred_setTheory.IN_COUNT, fn_plus_def] >> METIS_TAC [LESS_LESS_EQ_TRANS])
            >> RW_TAC std_ss [SEQ]
            >> `?N. enumerate (IMAGE (fn_plus f) (m_space m)) N = (fn_plus f) t`
@@ -3195,9 +3197,9 @@ val countable_space_integral_reduce = store_thm
            >> RW_TAC real_ss [GREATER_EQ, real_ge, IN_IMAGE, REAL_SUB_LZERO]
            >> FULL_SIMP_TAC std_ss [pred_setTheory.IN_COUNT]
            >> METIS_TAC [DECIDE ``!n:num. n < SUC n``, LESS_LESS_EQ_TRANS, fn_plus_def])
-       >> STRIP_TAC >> MATCH_MP_TAC psfis_nnfis
-       >> ASM_SIMP_TAC std_ss [GSYM REAL_SUM_IMAGE_COUNT]
-       >> `(\t. (if t IN m_space m /\ fn_plus f t IN IMAGE (enumerate (IMAGE (fn_plus f) (m_space m))) (pred_set$count n')
+     >> STRIP_TAC >> MATCH_MP_TAC psfis_nnfis
+     >> ASM_SIMP_TAC std_ss [GSYM REAL_SUM_IMAGE_COUNT]
+     >> `(\t. (if t IN m_space m /\ fn_plus f t IN IMAGE (enumerate (IMAGE (fn_plus f) (m_space m))) (pred_set$count n')
                  then fn_plus f t else  0)) =
                 (\t. SIGMA (\i. (\i. enumerate (IMAGE (fn_plus f) (m_space m)) i) i *
                         indicator_fn ((\i. PREIMAGE (fn_plus f) {enumerate (IMAGE (fn_plus f) (m_space m)) i}
@@ -3230,8 +3232,8 @@ val countable_space_integral_reduce = store_thm
                         by (RW_TAC std_ss [FUN_EQ_THM] >> RW_TAC real_ss [] >> METIS_TAC [])
                     >> POP_ORW
                     >> RW_TAC real_ss [REAL_SUM_IMAGE_0, pred_setTheory.FINITE_COUNT])
-       >> POP_ORW
-       >> `((\r. r * measure m (PREIMAGE (fn_plus f) {r} INTER m_space m)) o
+     >> POP_ORW
+     >> `((\r. r * measure m (PREIMAGE (fn_plus f) {r} INTER m_space m)) o
                 enumerate (IMAGE (fn_plus f) (m_space m))) =
                 (\i. (\i. enumerate (IMAGE (fn_plus f) (m_space m)) i) i *
                         measure m ((\i.
@@ -3239,43 +3241,43 @@ val countable_space_integral_reduce = store_thm
                   {enumerate (IMAGE (fn_plus f) (m_space m)) i} INTER
                 m_space m) i))`
                 by (RW_TAC std_ss [FUN_EQ_THM, o_DEF] >> RW_TAC real_ss [])
-       >> POP_ORW
-       >> MATCH_MP_TAC psfis_intro
-       >> ASM_SIMP_TAC std_ss [pred_setTheory.FINITE_COUNT]
-       >> Reverse CONJ_TAC
-       >- (FULL_SIMP_TAC real_ss [IN_IMAGE, fn_plus_def]
-               >> METIS_TAC [REAL_LE_REFL])
-       >> `(fn_plus f) IN borel_measurable (m_space m, measurable_sets m)`
+     >> POP_ORW
+     >> MATCH_MP_TAC psfis_intro
+     >> ASM_SIMP_TAC std_ss [pred_setTheory.FINITE_COUNT]
+     >> Reverse CONJ_TAC
+     >- (FULL_SIMP_TAC real_ss [IN_IMAGE, fn_plus_def]
+         >> METIS_TAC [REAL_LE_REFL])
+     >> `(fn_plus f) IN borel_measurable (m_space m, measurable_sets m)`
                 by METIS_TAC [fn_plus_fn_minus_borel_measurable]
-       >> rpt STRIP_TAC
-       >> `PREIMAGE (fn_plus f) {enumerate (IMAGE (fn_plus f) (m_space m)) i} INTER m_space m =
+     >> rpt STRIP_TAC
+     >> `PREIMAGE (fn_plus f) {enumerate (IMAGE (fn_plus f) (m_space m)) i} INTER m_space m =
                 {w | w IN m_space m /\ ((fn_plus f) w = (\w. enumerate (IMAGE (fn_plus f) (m_space m)) i) w)}`
                 by (ONCE_REWRITE_TAC [EXTENSION] >> RW_TAC std_ss [GSPECIFICATION, IN_INTER, IN_PREIMAGE, IN_SING]
                     >> DECIDE_TAC)
-       >> POP_ORW
-       >> MATCH_MP_TAC borel_measurable_eq_borel_measurable
-       >> METIS_TAC [borel_measurable_const, measure_space_def])
-   >> Suff `n IN nnfis m (fn_minus f)` >- METIS_TAC [nnfis_unique]
-   >> MATCH_MP_TAC nnfis_mon_conv
-   >> `BIJ (enumerate(IMAGE (fn_minus f) (m_space m))) UNIV (IMAGE (fn_minus f) (m_space m))`
+     >> POP_ORW
+     >> MATCH_MP_TAC borel_measurable_eq_borel_measurable
+     >> METIS_TAC [borel_measurable_const, measure_space_def])
+ >> Suff `n IN nnfis m (fn_minus f)` >- METIS_TAC [nnfis_unique]
+ >> MATCH_MP_TAC nnfis_mon_conv
+ >> `BIJ (enumerate(IMAGE (fn_minus f) (m_space m))) UNIV (IMAGE (fn_minus f) (m_space m))`
                 by (`countable (IMAGE (fn_minus f) (m_space m))`
                         by (MATCH_MP_TAC COUNTABLE_SUBSET
                             >> Q.EXISTS_TAC `0 INSERT (IMAGE abs (IMAGE f (m_space m)))`
                             >> RW_TAC std_ss [SUBSET_DEF, IN_IMAGE, abs, fn_minus_def, countable_INSERT, IN_INSERT, image_countable]
                             >> METIS_TAC [])
                      >> METIS_TAC [COUNTABLE_ALT_BIJ])
-   >> FULL_SIMP_TAC std_ss [sums, BIJ_DEF, INJ_DEF, SURJ_DEF, IN_UNIV]
-   >> Q.EXISTS_TAC `(\n t. if t IN m_space m /\ fn_minus f t IN IMAGE (enumerate (IMAGE (fn_minus f) (m_space m)))
+ >> FULL_SIMP_TAC std_ss [sums, BIJ_DEF, INJ_DEF, SURJ_DEF, IN_UNIV]
+ >> Q.EXISTS_TAC `(\n t. if t IN m_space m /\ fn_minus f t IN IMAGE (enumerate (IMAGE (fn_minus f) (m_space m)))
                         (pred_set$count n) then fn_minus f t else 0)`
-   >> Q.EXISTS_TAC `(\n.
+ >> Q.EXISTS_TAC `(\n.
          sum (0,n)
            ((\r.
                r *
                measure m (PREIMAGE (fn_minus f) {r} INTER m_space m)) o
             enumerate (IMAGE (fn_minus f) (m_space m))))`
-   >> ASM_SIMP_TAC std_ss []
-   >> CONJ_TAC
-   >- (RW_TAC std_ss [mono_convergent_def]
+ >> ASM_SIMP_TAC std_ss []
+ >> CONJ_TAC
+ >- (RW_TAC std_ss [mono_convergent_def]
            >- (RW_TAC real_ss [IN_IMAGE, pred_setTheory.IN_COUNT, fn_minus_def] >> METIS_TAC [LESS_LESS_EQ_TRANS, REAL_LE_NEGTOTAL])
            >> RW_TAC std_ss [SEQ]
            >> `?N. enumerate (IMAGE (fn_minus f) (m_space m)) N = (fn_minus f) t`
@@ -3284,9 +3286,9 @@ val countable_space_integral_reduce = store_thm
            >> RW_TAC real_ss [GREATER_EQ, real_ge, IN_IMAGE, REAL_SUB_LZERO]
            >> FULL_SIMP_TAC std_ss [pred_setTheory.IN_COUNT]
            >> METIS_TAC [DECIDE ``!n:num. n < SUC n``, LESS_LESS_EQ_TRANS, fn_minus_def])
-   >> STRIP_TAC >> MATCH_MP_TAC psfis_nnfis
-   >> ASM_SIMP_TAC std_ss [GSYM REAL_SUM_IMAGE_COUNT]
-   >> `(\t. (if t IN m_space m /\ fn_minus f t IN IMAGE (enumerate (IMAGE (fn_minus f) (m_space m))) (pred_set$count n')
+ >> STRIP_TAC >> MATCH_MP_TAC psfis_nnfis
+ >> ASM_SIMP_TAC std_ss [GSYM REAL_SUM_IMAGE_COUNT]
+ >> `(\t. (if t IN m_space m /\ fn_minus f t IN IMAGE (enumerate (IMAGE (fn_minus f) (m_space m))) (pred_set$count n')
              then fn_minus f t else  0)) =
                 (\t. SIGMA (\i. (\i. enumerate (IMAGE (fn_minus f) (m_space m)) i) i *
                         indicator_fn ((\i. PREIMAGE (fn_minus f) {enumerate (IMAGE (fn_minus f) (m_space m)) i}
@@ -3319,8 +3321,8 @@ val countable_space_integral_reduce = store_thm
                         by (RW_TAC std_ss [FUN_EQ_THM] >> RW_TAC real_ss [] >> METIS_TAC [])
                     >> POP_ORW
                     >> RW_TAC real_ss [REAL_SUM_IMAGE_0, pred_setTheory.FINITE_COUNT])
-   >> POP_ORW
-   >> `((\r. r * measure m (PREIMAGE (fn_minus f) {r} INTER m_space m)) o
+ >> POP_ORW
+ >> `((\r. r * measure m (PREIMAGE (fn_minus f) {r} INTER m_space m)) o
                 enumerate (IMAGE (fn_minus f) (m_space m))) =
                 (\i. (\i. enumerate (IMAGE (fn_minus f) (m_space m)) i) i *
                         measure m ((\i.
@@ -3328,21 +3330,22 @@ val countable_space_integral_reduce = store_thm
                   {enumerate (IMAGE (fn_minus f) (m_space m)) i} INTER
                 m_space m) i))`
                 by (RW_TAC std_ss [FUN_EQ_THM, o_DEF] >> RW_TAC real_ss [])
-   >> POP_ORW
-   >> MATCH_MP_TAC psfis_intro
-   >> ASM_SIMP_TAC std_ss [pred_setTheory.FINITE_COUNT]
-   >> Reverse CONJ_TAC
-   >- (FULL_SIMP_TAC real_ss [IN_IMAGE, fn_minus_def]
-       >> METIS_TAC [REAL_LE_REFL, REAL_LE_NEGTOTAL])
-   >> `(fn_minus f) IN borel_measurable (m_space m, measurable_sets m)`
+ >> POP_ORW
+ >> MATCH_MP_TAC psfis_intro
+ >> ASM_SIMP_TAC std_ss [pred_setTheory.FINITE_COUNT]
+ >> Reverse CONJ_TAC
+ >- (FULL_SIMP_TAC real_ss [IN_IMAGE, fn_minus_def]
+     >> METIS_TAC [REAL_LE_REFL, REAL_LE_NEGTOTAL])
+ >> `(fn_minus f) IN borel_measurable (m_space m, measurable_sets m)`
         by METIS_TAC [fn_plus_fn_minus_borel_measurable]
-   >> rpt STRIP_TAC
-   >> `PREIMAGE (fn_minus f) {enumerate (IMAGE (fn_minus f) (m_space m)) i} INTER m_space m =
+ >> rpt STRIP_TAC
+ >> `PREIMAGE (fn_minus f) {enumerate (IMAGE (fn_minus f) (m_space m)) i} INTER m_space m =
                 {w | w IN m_space m /\ ((fn_minus f) w = (\w. enumerate (IMAGE (fn_minus f) (m_space m)) i) w)}`
                 by (ONCE_REWRITE_TAC [EXTENSION] >> RW_TAC std_ss [GSPECIFICATION, IN_INTER, IN_PREIMAGE, IN_SING]
                     >> DECIDE_TAC)
-   >> POP_ORW
-   >> MATCH_MP_TAC borel_measurable_eq_borel_measurable
-   >> METIS_TAC [borel_measurable_const, measure_space_def]);
+ >> POP_ORW
+ >> MATCH_MP_TAC borel_measurable_eq_borel_measurable
+ >> METIS_TAC [borel_measurable_const, measure_space_def]
+QED
 
 val _ = export_theory ();

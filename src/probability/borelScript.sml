@@ -603,6 +603,15 @@ val nonneg_fn_minus = store_thm
 (*    Borel Space and Measurable functions     *)
 (* ******************************************* *)
 
+(* NOTE: this is the (real) Borel set $\mathscr{B}$ generated from open sets
+   in R^1 without using any extended reals.
+
+   It's moved here from real_borelTheory, so that borelTheory can also
+   access to it. (c.f. borelTheory.Borel_def)
+ *)
+val borel_def = Define
+   `borel = sigma univ(:real) (IMAGE (\a:real. {x:real | x <= a}) univ(:real))`;
+
 (* This is actually the (extended) Borel set $\overline{\mathscr{B}}$ generated
    by extended open sets, c.f. Lemma 8.3 [1', p.61].
    Named after Emile Borel [7], a French mathematician and politician.
