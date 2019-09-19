@@ -2498,7 +2498,7 @@ val outer_measure_space_def = Define `
      {} IN (measurable_sets m) /\
      positive m /\ increasing m /\ countably_subadditive m`;
 
-(* Defition 18.1 of [1']: the family of countable S-covers
+(* Defition 18.1 of [1]: the family of countable S-covers
 
    Notice that `BIGUNION (IMAGE f UNIV)` needs not be disjoint or in `sts`
  *)
@@ -2506,13 +2506,13 @@ val countable_covers_def = Define
    `countable_covers (sts :'a set set) =
       \a. {f | f IN (univ(:num) -> sts) /\ a SUBSET (BIGUNION (IMAGE f UNIV))}`;
 
-(* Defition 18.1 of [1']: outer measure of the set-function m for C (covering),
+(* Defition 18.1 of [1]: outer measure of the set-function m for C (covering),
    which could be `coutable_covers sts`. *)
 val outer_measure_def = Define
    `outer_measure (m :'a measure) (C :('a set) -> (num -> 'a set) set) =
       \a. inf {r | ?f. f IN (C a) /\ (suminf (m o f) = r)}`;
 
-(* Defition 18.1 of [1']: m-measurable sets (caratheodory sets) of m *)
+(* Defition 18.1 of [1]: m-measurable sets (caratheodory sets) of m *)
 val caratheodory_sets_def = Define
    `caratheodory_sets (sp :'a set) (m :'a measure) =
       {a | a SUBSET sp /\ !q. q SUBSET sp ==> (m q = m (q INTER a) + m (q DIFF a))}`;
@@ -2892,7 +2892,7 @@ val ALGEBRA_PREMEASURE_COUNTABLY_SUBADDITIVE = store_thm
  >> MATCH_MP_TAC RING_PREMEASURE_COUNTABLY_SUBADDITIVE >> art []
  >> MATCH_MP_TAC ALGEBRA_IMP_RING >> art []);
 
-(* This is Corollary 4.6 of [1] *)
+(* Proposition 4.3 (viii) [1] *)
 val MEASURE_SPACE_COUNTABLY_SUBADDITIVE = store_thm
   ("MEASURE_SPACE_COUNTABLY_SUBADDITIVE",
   ``!m. measure_space m ==> countably_subadditive m``,
@@ -2950,7 +2950,7 @@ val MEASURE_SPACE_RESTRICTION = store_thm
  >> FIRST_X_ASSUM MATCH_MP_TAC >> art []
  >> PROVE_TAC [SUBSET_DEF]);
 
-(* Theorem 18.2 of [1']. Given (sp,sts,m) and u = outer_measure m (countable_covers sts):
+(* Theorem 18.2 of [1]. Given (sp,sts,m) and u = outer_measure m (countable_covers sts):
 
    (*1*) u is an outer measure such that u(x) <= m(x) for all x IN sts;
    (*2*) A (caratheodory_sets sp u) is a sigma-algebra and u|A is a measure;
@@ -3523,7 +3523,8 @@ Proof
  >> METIS_TAC [subset_class_def]
 QED
 
-(* The "semiring" version of Caratheodory's Extension Theorem [1, p.38-43]
+(* The "semiring" version of Caratheodory's Extension Theorem
+   (Theorem 6.1 of [1, p.38-45])
 
    named after Constantin Caratheodory, a Greek mathematician who spent most
    of his professional career in Germany. [9]
@@ -4812,9 +4813,8 @@ val _ = html_theory "measure";
 
 (* References:
 
-  [1] Schilling, R.L.: Measures, Integrals and Martingales. Cambridge University Press (2005).
-  [1'] Schilling, R.L.: Measures, Integrals and Martingales (Second Edition).
-       Cambridge University Press (2017).
+  [1] Schilling, R.L.: Measures, Integrals and Martingales (Second Edition).
+      Cambridge University Press (2017).
   [2] Mhamdi, T., Hasan, O., Tahar, S.: Formalization of Measure Theory and Lebesgue Integration
       for Probabilistic Analysis in HOL. ACM Trans. Embedded Comput. Syst. 12, 1--23 (2013).
   [4] Hurd, J.: Formal verification of probabilistic algorithms. University of Cambridge (2001).

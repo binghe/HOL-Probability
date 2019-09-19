@@ -127,7 +127,8 @@ val _ = overload_on ("<<", ``measure_absolutely_continuous``);
 (* The measure with density (function) f with respect to m,
    from HVG's lebesgue_measureScript.sml, simplified.
 
-   TODO: `density m f` is a measure on (m_space m, measurable_sets m) [1, p.79]
+   TODO: show `density m f` is a measure, i.e.
+   |- measure_space (m_space m, measurable_sets m, density m f) [1, p.81]
  *)
 val density_def = Define (* or `f * m` *)
    `density m f = \s. integral m (\x. f x * indicator_fn s x)`;
@@ -2388,9 +2389,9 @@ val lebesgue_monotone_convergence_lemma = store_thm
 (* LEBESGUE MONOTONE CONVERGENCE                            *)
 (************************************************************)
 
-(* NOTE: this is actually Theorem 9.6 (Beppo Levi) [1, p.70] for positive functions,
+(* NOTE: this is actually Theorem 9.6 (Beppo Levi) [1, p.75] for positive functions,
          the full version of "Monotone convergence" theroem for arbitrary integrable
-         functions (Theorem 11.1 [1, p.88]) is not proved yet.
+         functions (Theorem 12.1 [1, p.96]) is not formalized yet.
 
    TODO: use `!x i. x IN m_space m ==> 0 <= fi i x` &
              `!x. x IN m_space ==> 0 <= f x)` &
@@ -3304,7 +3305,7 @@ val pos_fn_integral_cmul_infty = store_thm
   >> RW_TAC std_ss [EXTENSION,IN_IMAGE,IN_ABS,IN_UNIV]
   >> METIS_TAC [extreal_of_num_def]);
 
-(* Corollary 9.9 of [1, p.73] *)
+(* Corollary 9.9 of [1, p.77] *)
 Theorem pos_fn_integral_suminf :
     !m f. measure_space m /\ (!i x. 0 <= f i x) /\
          (!i. f i IN measurable (m_space m,measurable_sets m) Borel) ==>
@@ -3472,7 +3473,10 @@ val integrable_infty_null = store_thm
   >> RW_TAC std_ss [EXTENSION,IN_INTER,GSPECIFICATION]
   >> METIS_TAC []);
 
-(* Corollary 10.13 of [1, p.84], TODO: extend it for NegInf *)
+(* Corollary 11.6 [1, p.91] (partial)
+
+   TODO: extend it to NegInf, so that f is almost everywhere R-valued.
+ *)
 val integrable_AE_normal = store_thm
   ("integrable_AE_normal",
   ``!m f. measure_space m /\ integrable m f ==> AE x::m. f x < PosInf``,
@@ -3572,7 +3576,7 @@ val integrable_zero = store_thm
  >> RW_TAC real_ss [integrable_def, fn_plus_def, fn_minus_def, lt_refl, neg_0,
                     pos_fn_integral_zero, num_not_infty]);
 
-(* c.f. [1, p.77, 10.3 (i) <=> (ii)] *)
+(* Theorem 10.3 (i) <-> (ii) [1, p.84] *)
 val integrable_plus_minus = store_thm
   ("integrable_plus_minus",
   ``!m f. measure_space m ==>
@@ -3610,7 +3614,7 @@ val integrable_add_pos = store_thm
  >> RW_TAC std_ss [pos_fn_integral_add]
  >> METIS_TAC [lt_add2, integrable_pos, lt_infty]);
 
-(* c.f. [1, p.77, 10.3 (i) => (iii)] *)
+(* Theorem 10.3 (i) => (iii) [1, p.84] *)
 val integrable_abs = store_thm (* new *)
   ("integrable_abs", ``!m f g. measure_space m /\ integrable m f ==> integrable m (abs o f)``,
     RW_TAC std_ss [FN_ABS']
@@ -3619,7 +3623,7 @@ val integrable_abs = store_thm (* new *)
  >> CONJ_TAC >- (MATCH_MP_TAC integrable_fn_plus >> art [])
  >> MATCH_MP_TAC integrable_fn_minus >> art []);
 
-(* c.f. [1, p.77, 10.3 (ii) => (iii)] *)
+(* Theorem 10.3 (ii) => (iii) [1, p.84] *)
 val integrable_abs_bound_exists = prove (
   ``!m u. measure_space m /\ integrable m (abs o u) ==>
           ?w. integrable m w /\ nonneg w /\ !x. abs (u x) <= w x``,
@@ -3627,7 +3631,7 @@ val integrable_abs_bound_exists = prove (
  >> Q.EXISTS_TAC `abs o u` >> art [nonneg_abs]
  >> RW_TAC std_ss [o_DEF, le_refl]);
 
-(* c.f. [1, p.77, 10.3 (i) => (iv)] *)
+(* Theorem 10.3 (i) => (iv) [1, p.84] *)
 val integrable_bound_exists = prove (
   ``!m u. measure_space m /\ integrable m u ==>
           ?w. integrable m w /\ nonneg w /\ !x. abs (u x) <= w x``,
@@ -3635,7 +3639,7 @@ val integrable_bound_exists = prove (
  >> MATCH_MP_TAC integrable_abs_bound_exists >> art []
  >> MATCH_MP_TAC integrable_abs >> art []);
 
-(* c.f. [1, p.77, 10.3 (iv) => (i)] *)
+(* Theorem 10.3 (iv) => (i) [1, p.84] *)
 val integrable_from_bound_exists = prove (
   ``!m u. measure_space m /\ u IN measurable (m_space m,measurable_sets m) Borel /\
           (?w. integrable m w /\ nonneg w /\ !x. abs (u x) <= w x) ==>
@@ -3660,7 +3664,7 @@ val integrable_from_bound_exists = prove (
       Q.EXISTS_TAC `abs (u x)` >> art [] \\
       REWRITE_TAC [FN_MINUS_LE_ABS] ]);
 
-(* c.f. [1, p.77, 10.3 (iii) => (i)] *)
+(* Theorem 10.3 (iii) => (i) [1, p.84] *)
 val integrable_from_abs = store_thm (* new *)
   ("integrable_from_abs",
   ``!m u. measure_space m /\ u IN measurable (m_space m,measurable_sets m) Borel /\
@@ -3668,21 +3672,6 @@ val integrable_from_abs = store_thm (* new *)
     RW_TAC std_ss []
  >> MATCH_MP_TAC integrable_from_bound_exists >> art []
  >> MATCH_MP_TAC integrable_abs_bound_exists >> art []);
-
-(* Theorem 10.3 [1, p.77] *)
-val integrable_conditions = store_thm
-  ("integrable_conditions",
-  ``!m f. measure_space m /\ f IN measurable (m_space m, measurable_sets m) Borel ==>
-         (integrable m f <=> integrable m (fn_plus f) /\ integrable m (fn_minus f)) /\
-         (integrable m f <=> integrable m (abs o f)) /\
-         (integrable m f <=> ?w. integrable m w /\ nonneg w /\ !x. abs (f x) <= w x)``,
-    RW_TAC std_ss [] (* 3 subgoals *)
- >| [ (* goal 1 (of 3) *)
-      PROVE_TAC [integrable_plus_minus],
-      (* goal 2 (of 3) *)
-      PROVE_TAC [integrable_abs, integrable_from_abs],
-      (* goal 3 (of 3) *)
-      PROVE_TAC [integrable_bound_exists, integrable_from_bound_exists] ]);
 
 val integrable_add_lemma = store_thm
   ("integrable_add_lemma",
@@ -5083,7 +5072,7 @@ val finite_space_POW_integral_reduce = store_thm
  >> PROVE_TAC [positive_def]);
 
 (* from (old) real_lebesgueScript.sml, a first result about `RN_deriv`,
-   for the first time, division (/) of extreals is used. (Normal 0 / Normal 0 is undefined)
+   for the first time, division (/) of extreals is used. (0 / 0 is undefined)
 
    added `measure m (m_space m) < PosInf /\ v (m_space m) < PosInf` into antecedents
 
@@ -5715,19 +5704,19 @@ val finite_prod_measure_space_POW3 = store_thm
 *)
 
 (* ------------------------------------------------------------------------- *)
-(*  The Function Spaces L^p and Important Inequalities [1', Chapter 13]      *)
+(*  The Function Spaces L^p and Important Inequalities [1, Chapter 13]      *)
 (* ------------------------------------------------------------------------- *)
 
-(* [1', p.116] *)
+(* [1, p.116] *)
 val norm_def = Define
    `norm m u p = if p < PosInf then
                      (integral m (\x. (abs (u x)) powr p)) powr (inv p)
                  else
                      inf {c | 0 < c /\ (measure m {x | c <= abs (u x)} = 0)}`;
 
-(* Proposition 10.12 of [1, p.83-84]
+(* Proposition 11.5 [1, p.91]
 
-   NOTE: "markov_ineq" in real_lebesgueTheory is a variant [1, p.86] that we shall
+   NOTE: "markov_ineq" in real_lebesgueTheory is a variant [1, p.93] that we shall
    prove latter as a corollary (in extreals).
  *)
 val MARKOV_INEQUALITY = store_thm
@@ -5857,7 +5846,7 @@ val MARKOV_INEQUALITY_MSPACE = store_thm
  >> BETA_TAC >> Rewr' >> art []);
 
 (* ------------------------------------------------------------------------- *)
-(*  Convergence theorems and their applications [1, Chapter 9 & 11]          *)
+(*  Convergence theorems and their applications [1, Chapter 9 & 12]         *)
 (* ------------------------------------------------------------------------- *)
 
 (* Another convergence theorem, named after P. Fatou, usually called Fatou's lemma,
@@ -5867,10 +5856,10 @@ val MARKOV_INEQUALITY_MSPACE = store_thm
    of any of the integrals may be infinite. (`!n. integrable m (u n)` is not needed)
 
    We use the more general statements from [6, p.223] involving both liminf/limsup.
-   Taking `f = \x. 0`, we get the simple version - Theorem 9.11 of [1, p.73].
+   Taking `f = \x. 0`, we get the simple version - Theorem 9.11 of [1, p.78].
 
-val Fatou_lemma_liminf = store_thm (* new *)
-  ("Fatou_lemma_liminf",
+val fatou_lemma_liminf = store_thm (* new *)
+  ("fatou_lemma_liminf",
   ``!m u f. measure_space m /\
          (!n. u n IN measurable (m_space m,measurable_sets m) Borel) /\
          (!x n. x IN m_space m ==> f x <= u n x) /\ NegInf < integral m f
@@ -5879,9 +5868,9 @@ val Fatou_lemma_liminf = store_thm (* new *)
          (integral m (\x. liminf (\n. u n x)) <= liminf (\n. integral m (u n)))``,
     cheat);
 
-(* This is also called Reverse Fatou Lemma, c.f. [1, p. 74] (taking `f = \x. 0`) *)
-val Fatou_lemma_limsup = store_thm (* new *)
-  ("Fatou_lemma_limsup",
+(* This is also called Reverse Fatou Lemma, c.f. [1, p. 80] (taking `f = \x. 0`) *)
+val fatou_lemma_limsup = store_thm (* new *)
+  ("fatou_lemma_limsup",
   ``!m u f. measure_space m /\
          (!n. u n IN measurable (m_space m,measurable_sets m) Borel) /\
          (!x n. x IN m_space m ==> u n x <= f x) /\ integral m f < PosInf
@@ -5890,8 +5879,8 @@ val Fatou_lemma_limsup = store_thm (* new *)
          (limsup (\n. integral m (u n)) <= integral m (\x. limsup (\n. u n x)))``,
     cheat);
 
-(* A generalization of Beppo Levi's theorem 9.6 [1, p.70] (lebesgue_monotone_convergence)
-   This is Theorem 11.1 (Monotone convergence) [1, p.88].
+(* A generalization of Beppo Levi's Theorem 9.6 (lebesgue_monotone_convergence)
+   This is Theorem 12.1 (monotone convergence) of [1, p.96].
  *)
 val integrable_monotone_convergence_sup = store_thm (* new *)
   ("integrable_monotone_convergence_sup",
@@ -5917,15 +5906,12 @@ val integrable_monotone_convergence_inf = store_thm (* new *)
         (integral m f = inf (IMAGE (\n. integral m (u n)) UNIV))``,
     cheat);
 
-(* Lebesgue's Dominated convergence (Theorem 11.2 [1, p.89])
+(* Lebesgue's dominated convergence (Theorem 12.2 [1, p.97])
 
   "Lebesgue`s theorem gives merely sufficient - but easily verifiable - conditions
    for the interchange of limits and integrals; the ultimate version for such a result
    with necessary and sufficient conditions will be given in the form of Vitali`s
-   convergence theorem 16.6" [1, p.90]
-
-  "The only obvious possibility to weaken (11.2) would be to require it to hold
-   only almost everywhere" [1, p.90]
+   convergence theorem."
  *)
 val uniformly_bounded_def = Define
    `uniformly_bounded m (u :num -> 'a -> extreal) =
@@ -5934,8 +5920,8 @@ val uniformly_bounded_def = Define
           (!x. x IN m_space m ==> 0 <= w x) /\
           (AE x::m. !n. abs (u n x) <= w x)`;
 
-val Lebesgue_dominated_convergence = store_thm (* new *)
-  ("Lebesgue_dominated_convergence",
+val lebesgue_dominated_convergence = store_thm (* new *)
+  ("lebesgue_dominated_convergence",
   ``!m w f u. measure_space m /\
         (!n. u n IN measurable (m_space m, measurable_sets m) Borel) /\
         (!n. integrable m (u n)) /\ uniformly_bounded m u /\
@@ -5955,13 +5941,13 @@ val uniformly_integrable_def = Define
                            (r = ((abs o u) * m) {x | w x < (abs o u) x})} < e`;
  *)
 
-(* Theorem 16.6 (Vitali) [1, p. 165], which generalizes Lebesgue`s dominated convergence
-   theorem 11.2 (Lebesgue_dominated_convergence).
+(* Theorem 22.7 (Vitali) [1, p. 262], which generalizes Lebesgue`s dominated
+   convergence theorem (Lebesgue_dominated_convergence).
 
    named after Giuseppe Vitali (1875-1932), an Italian mathematician [5].
 
-val Vitali_uniform_convergence = store_thm (* new *)
-  ("Vitali_uniform_convergence",
+val vitali_uniform_convergence = store_thm (* new *)
+  ("vitali_uniform_convergence",
   ``not expressible at this moment``,
     cheat);
  *)
@@ -5970,9 +5956,8 @@ val _ = export_theory ();
 
 (* References:
 
-  [1] Schilling, R.L.: Measures, Integrals and Martingales. Cambridge University Press (2005).
-  [1'] Schilling, R.L.: Measures, Integrals and Martingales (Second Edition).
-       Cambridge University Press (2017).
+  [1] Schilling, R.L.: Measures, Integrals and Martingales (Second Edition).
+      Cambridge University Press (2017).
   [2] Hunt, G. A., Martingales et processus de Markov, Paris: Dunod, Monogr.
       Soc. Math. France t. 1, 1966.
   [3] Wikipedia: https://en.wikipedia.org/wiki/Pierre_Fatou

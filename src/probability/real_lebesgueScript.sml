@@ -2788,24 +2788,24 @@ val finite_space_POW_integral_reduce = store_thm
             >> METIS_TAC [])
    >> RW_TAC std_ss []);
 
-val finite_POW_RN_deriv_reduce = store_thm
-  ("finite_POW_RN_deriv_reduce",
-  ``!m v. measure_space m /\
-             FINITE (m_space m) /\
-             measure_space (m_space m, measurable_sets m, v) /\
-             (POW (m_space m) = measurable_sets m) /\
-             (!x. (measure m {x} = 0) ==> (v {x} = 0)) ==>
-                (!x. x IN m_space m /\ ~ (measure m {x} = 0) ==> (RN_deriv m v x = v {x} / (measure m {x})))``,
-   RW_TAC std_ss [RN_deriv_def]
-   >> Suff `(\f. f x = v {x} / measure m {x})
-                (@f.f IN borel_measurable (m_space m,measurable_sets m) /\
-   !a.
-     a IN measurable_sets m ==>
-     (integral m (\x. f x * indicator_fn a x) = v a))`
-   >- RW_TAC std_ss []
-   >> MATCH_MP_TAC SELECT_ELIM_THM
-   >> RW_TAC std_ss []
-   >- (Q.EXISTS_TAC `\x. v {x} / (measure m {x})`
+Theorem finite_POW_RN_deriv_reduce :
+    !m v. measure_space m /\
+          FINITE (m_space m) /\
+          measure_space (m_space m, measurable_sets m, v) /\
+         (POW (m_space m) = measurable_sets m) /\
+         (!x. (measure m {x} = 0) ==> (v {x} = 0)) ==>
+         (!x. x IN m_space m /\ measure m {x} <> 0 ==>
+             (RN_deriv m v x = v {x} / (measure m {x})))
+Proof
+    RW_TAC std_ss [RN_deriv_def]
+ >> Suff `(\f. f x = v {x} / measure m {x})
+            (@f. f IN borel_measurable (m_space m,measurable_sets m) /\
+                 !a. a IN measurable_sets m ==>
+                    (integral m (\x. f x * indicator_fn a x) = v a))`
+ >- RW_TAC std_ss []
+ >> MATCH_MP_TAC SELECT_ELIM_THM
+ >> RW_TAC std_ss []
+ >- (Q.EXISTS_TAC `\x. v {x} / (measure m {x})`
        >> SIMP_TAC std_ss []
        >> STRONG_CONJ_TAC
        >- (Q.PAT_X_ASSUM `P = Q` (MP_TAC o GSYM)
@@ -2813,7 +2813,8 @@ val finite_POW_RN_deriv_reduce = store_thm
             >> RW_TAC std_ss [IN_POW, SUBSET_DEF, GSPECIFICATION])
        >> RW_TAC std_ss []
        >> (MP_TAC o Q.ISPECL [`(m :('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real))`,
-                              `\x':'a. v {x'} / measure m {x'} * indicator_fn a x'`]) finite_space_POW_integral_reduce
+                              `\x':'a. v {x'} / measure m {x'} * indicator_fn a x'`])
+             finite_space_POW_integral_reduce
        >> RW_TAC std_ss []
        >> ONCE_REWRITE_TAC [(UNDISCH o Q.SPEC `m_space m`) REAL_SUM_IMAGE_IN_IF]
        >> `(\x.
@@ -2835,7 +2836,8 @@ val finite_POW_RN_deriv_reduce = store_thm
        >> ASM_SIMP_TAC std_ss [GSYM REAL_SUM_IMAGE_IN_IF]
        >> `a SUBSET m_space m` by METIS_TAC [IN_POW]
        >> `m_space m = a UNION (m_space m DIFF a)`
-                by (ONCE_REWRITE_TAC [EXTENSION] >> RW_TAC std_ss [IN_DIFF, IN_UNION] >> METIS_TAC [SUBSET_DEF])
+                by (ONCE_REWRITE_TAC [EXTENSION] \\
+                    RW_TAC std_ss [IN_DIFF, IN_UNION] >> METIS_TAC [SUBSET_DEF])
        >> POP_ORW
        >> `DISJOINT a (m_space m DIFF a)`
                 by (RW_TAC std_ss [IN_DISJOINT, IN_DIFF] >> DECIDE_TAC)
@@ -2895,7 +2897,8 @@ val finite_POW_RN_deriv_reduce = store_thm
    >> ASM_SIMP_TAC real_ss [REAL_SUM_IMAGE_0]
    >> `0 < measure m {x}`
         by METIS_TAC [measure_space_def, positive_def, REAL_LE_LT]
-   >> ASM_SIMP_TAC real_ss [REAL_EQ_RDIV_EQ, indicator_fn_def, IN_SING]);
+   >> ASM_SIMP_TAC real_ss [REAL_EQ_RDIV_EQ, indicator_fn_def, IN_SING]
+QED
 
 val finite_POW_prod_measure_reduce = store_thm
   ("finite_POW_prod_measure_reduce",

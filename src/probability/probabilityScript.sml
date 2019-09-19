@@ -1960,8 +1960,7 @@ val Markov_inequality_pspace = store_thm
     RW_TAC std_ss [prob_space_def, p_space_def, prob_def, events_def, expectation_def]
  >> MATCH_MP_TAC MARKOV_INEQUALITY_MSPACE >> art []);
 
-(* Chebyshev's inequality (general version),
-   TODO: replace `finite_second_moments p X` with `integrable p X` *)
+(* Chebyshev's inequality (general version) *)
 val Chebyshev_inequality = store_thm
   ("Chebyshev_inequality",
   ``!p X a t c. prob_space p /\ real_random_variable X p /\
