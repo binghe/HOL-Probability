@@ -859,54 +859,63 @@ val PROB_DISCRETE_EVENTS_COUNTABLE = store_thm
           >> RW_TAC std_ss [EXTENSION,GSPECIFICATION,IN_IMAGE])
   >> METIS_TAC [EVENTS_COUNTABLE_UNION]);
 
-(* TODO:
 (* ************************************************************************* *)
 
-val marginal_joint_zero = store_thm
-  ("marginal_joint_zero",
-  ``!p X Y s t. prob_space p /\ (events p = POW (p_space p)) /\
+Theorem marginal_joint_zero :
+    !p X Y s t. prob_space p /\ (events p = POW (p_space p)) /\
                 ((distribution p X s = 0) \/ (distribution p Y t = 0))
-            ==> (joint_distribution p X Y (s CROSS t) = 0)``,
-    RW_TAC std_ss [joint_distribution_def,distribution_def]
- >- (`PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p SUBSET (PREIMAGE X s INTER p_space p)`
-      by RW_TAC std_ss [SUBSET_DEF,IN_PREIMAGE,IN_INTER,IN_CROSS]
- >> `prob p (PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p) <= prob p (PREIMAGE X s INTER p_space p)`
-       by METIS_TAC [PROB_INCREASING,INTER_SUBSET,IN_POW]
- >> METIS_TAC [PROB_POSITIVE,INTER_SUBSET,IN_POW,REAL_LE_ANTISYM])
- >> `PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p SUBSET (PREIMAGE Y t INTER p_space p)`
-      by RW_TAC std_ss [SUBSET_DEF,IN_PREIMAGE,IN_INTER,IN_CROSS]
- >> `prob p (PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p) <= prob p (PREIMAGE Y t INTER p_space p)`
-       by METIS_TAC [PROB_INCREASING, INTER_SUBSET, IN_POW]
- >> METIS_TAC [PROB_POSITIVE, INTER_SUBSET, IN_POW, REAL_LE_ANTISYM]);
-
-val marginal_joint_zero3 = store_thm
-  ("marginal_joint_zero3",
-  ``!p X Y Z s t u. prob_space p /\ (events p = POW (p_space p)) /\
-        ((distribution p X s = 0) \/ (distribution p Y t = 0) \/ (distribution p Z u = 0))
-    ==> (joint_distribution3 p X Y Z (s CROSS (t CROSS u)) = 0)``,
-    RW_TAC std_ss [joint_distribution3_def,distribution_def]
- >| [ `PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p
+            ==> (joint_distribution p X Y (s CROSS t) = 0)
+Proof
+    RW_TAC std_ss [joint_distribution_def, distribution_def]
+ >- (`PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p
         SUBSET (PREIMAGE X s INTER p_space p)`
-           by RW_TAC std_ss [SUBSET_DEF,IN_PREIMAGE,IN_INTER,IN_CROSS]
-       >> `prob p (PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p) <=
-           prob p (PREIMAGE X s INTER p_space p)`
-           by METIS_TAC [PROB_INCREASING,INTER_SUBSET,IN_POW]
-       >> METIS_TAC [PROB_POSITIVE,INTER_SUBSET,IN_POW,REAL_LE_ANTISYM],
-       `PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p
+           by RW_TAC std_ss [SUBSET_DEF, IN_PREIMAGE, IN_INTER, IN_CROSS] \\
+     `prob p (PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p) <=
+      prob p (PREIMAGE X s INTER p_space p)`
+           by METIS_TAC [PROB_INCREASING, INTER_SUBSET, IN_POW] \\
+     METIS_TAC [PROB_POSITIVE, INTER_SUBSET, IN_POW, le_antisym])
+ >> `(PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p)
         SUBSET (PREIMAGE Y t INTER p_space p)`
-           by RW_TAC std_ss [SUBSET_DEF,IN_PREIMAGE,IN_INTER,IN_CROSS]
-       >> `prob p (PREIMAGE (\x. (X x,Y x, Z x)) (s CROSS (t CROSS u)) INTER p_space p) <=
-           prob p (PREIMAGE Y t INTER p_space p)`
-           by METIS_TAC [PROB_INCREASING,INTER_SUBSET,IN_POW]
-       >> METIS_TAC [PROB_POSITIVE,INTER_SUBSET,IN_POW,REAL_LE_ANTISYM],
-       `PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p
+      by RW_TAC std_ss [SUBSET_DEF, IN_PREIMAGE, IN_INTER, IN_CROSS]
+ >> `prob p (PREIMAGE (\x. (X x,Y x)) (s CROSS t) INTER p_space p) <=
+     prob p (PREIMAGE Y t INTER p_space p)`
+       by METIS_TAC [PROB_INCREASING, INTER_SUBSET, IN_POW]
+ >> METIS_TAC [PROB_POSITIVE, INTER_SUBSET, IN_POW, le_antisym]
+QED
+
+Theorem marginal_joint_zero3 :
+    !p X Y Z s t u. prob_space p /\ (events p = POW (p_space p)) /\
+                   ((distribution p X s = 0) \/
+                    (distribution p Y t = 0) \/
+                    (distribution p Z u = 0))
+               ==> (joint_distribution3 p X Y Z (s CROSS (t CROSS u)) = 0)
+Proof
+    RW_TAC std_ss [joint_distribution3_def, distribution_def]
+ >| [ (* goal 1 (of 3) *)
+     `PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p
+        SUBSET (PREIMAGE X s INTER p_space p)`
+           by RW_TAC std_ss [SUBSET_DEF, IN_PREIMAGE, IN_INTER, IN_CROSS] \\
+     `prob p (PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p) <=
+      prob p (PREIMAGE X s INTER p_space p)`
+           by METIS_TAC [PROB_INCREASING, INTER_SUBSET, IN_POW] \\
+      METIS_TAC [PROB_POSITIVE, INTER_SUBSET, IN_POW, le_antisym],
+      (* goal 2 (of 3) *)
+     `PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p
+        SUBSET (PREIMAGE Y t INTER p_space p)`
+           by RW_TAC std_ss [SUBSET_DEF, IN_PREIMAGE, IN_INTER, IN_CROSS] \\
+     `prob p (PREIMAGE (\x. (X x,Y x, Z x)) (s CROSS (t CROSS u)) INTER p_space p) <=
+      prob p (PREIMAGE Y t INTER p_space p)`
+           by METIS_TAC [PROB_INCREASING, INTER_SUBSET, IN_POW] \\
+      METIS_TAC [PROB_POSITIVE, INTER_SUBSET, IN_POW, le_antisym],
+      (* goal 3 (of 3) *)
+     `PREIMAGE (\x. (X x,Y x,Z x)) (s CROSS (t CROSS u)) INTER p_space p
         SUBSET (PREIMAGE Z u INTER p_space p)`
-           by RW_TAC std_ss [SUBSET_DEF,IN_PREIMAGE,IN_INTER,IN_CROSS]
-       >> `prob p (PREIMAGE (\x. (X x,Y x, Z x)) (s CROSS (t CROSS u)) INTER p_space p) <=
-           prob p (PREIMAGE Z u INTER p_space p)`
-           by METIS_TAC [PROB_INCREASING,INTER_SUBSET,IN_POW]
-       >> METIS_TAC [PROB_POSITIVE,INTER_SUBSET,IN_POW,REAL_LE_ANTISYM]]);
- *)
+           by RW_TAC std_ss [SUBSET_DEF, IN_PREIMAGE, IN_INTER, IN_CROSS] \\
+     `prob p (PREIMAGE (\x. (X x,Y x, Z x)) (s CROSS (t CROSS u)) INTER p_space p) <=
+      prob p (PREIMAGE Z u INTER p_space p)`
+           by METIS_TAC [PROB_INCREASING, INTER_SUBSET, IN_POW] \\
+      METIS_TAC [PROB_POSITIVE, INTER_SUBSET, IN_POW, le_antisym] ]
+QED
 
 val distribution_pos = store_thm
   ("distribution_pos",
