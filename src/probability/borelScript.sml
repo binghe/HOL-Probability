@@ -59,7 +59,7 @@ val INDICATOR_FN_SING_0 = store_thm
   ("INDICATOR_FN_SING_0", ``!x y. x <> y ==> (indicator_fn {x} y = 0)``,
     RW_TAC std_ss [indicator_fn_def, IN_SING]);
 
-(* Properties of the indicator function [1, p.13] *)
+(* Properties of the indicator function [1, p.14] *)
 val INDICATOR_FN_INTER = store_thm (* new *)
   ("INDICATOR_FN_INTER",
   ``!A B. indicator_fn (A INTER B) = (\t. (indicator_fn A t) * (indicator_fn B t))``,
@@ -613,13 +613,13 @@ val borel_def = Define
    `borel = sigma univ(:real) (IMAGE (\a:real. {x:real | x <= a}) univ(:real))`;
 
 (* This is actually the (extended) Borel set $\overline{\mathscr{B}}$ generated
-   by extended open sets, c.f. Lemma 8.3 [1', p.61].
+   by extended open sets, c.f. Lemma 8.3 [1, p.61].
    Named after Emile Borel [7], a French mathematician and politician.
 
    The pure real version of Borel set is `borel` (sigma_algebraTheory).
 
    TODO: what's missing here is a proof showing that `Borel` is a sigma-algebra
-   whose trace w.r.t. univ(:real) is `borel`. (Lemma 8.2 [1', p.61])
+   whose trace w.r.t. univ(:real) is `borel`. (Lemma 8.2 [1, p.61])
  *)
 val Borel_def = Define
    `Borel = sigma univ(:extreal) (IMAGE (\a. {x | x < Normal a}) univ(:real))`;
@@ -3498,7 +3498,7 @@ val EXTREAL_HEINE_BOREL = store_thm
     cheat);
  *)
 
-(* Proposition 6.5 (limited to one-dimension case) of [1, p.54]
+(* Proposition 6.3 of [1, p.46]
 val lambda0_premeasure = store_thm
   ("lambda0_premeasure",
   ``premeasure (space half_open_intervals,subsets half_open_intervals,lambda0)``,
@@ -3602,7 +3602,7 @@ val AE_default = store_thm
   ("AE_default", ``!P. (AE x. P x) = (AE x::Lebesgue. P x)``,
     RW_TAC std_ss [AE_def]);
 
-val AE_ALT = store_thm (* [1, p.80] *)
+val AE_ALT = store_thm (* [1, p.89] *)
   ("AE_ALT", ``!m P. (AE x::m. P x) =
                      ?N. null_set m N /\ {x | x IN m_space m /\ ~P x} SUBSET N``,
     RW_TAC std_ss [AE_THM, almost_everywhere_def, SUBSET_DEF, GSPECIFICATION, IN_DIFF]
@@ -3733,7 +3733,7 @@ Proof
 QED
 
 (* ------------------------------------------------------------------------- *)
-(*  Fatou's lemma for measures (limsup and liminf) [1, p.74]                 *)
+(*  Fatou's lemma for measures (limsup and liminf) [1, p.78]                *)
 (* ------------------------------------------------------------------------- *)
 
 val set_limsup_def = Define (* "infinitely often" *)
@@ -4096,9 +4096,8 @@ val _ = html_theory "borel";
 
 (* References:
 
-  [1] Schilling, R.L.: Measures, Integrals and Martingales. Cambridge University Press (2005).
-  [1'] Schilling, R.L.: Measures, Integrals and Martingales (Second Edition).
-       Cambridge University Press (2017).
+  [1] Schilling, R.L.: Measures, Integrals and Martingales (Second Edition).
+      Cambridge University Press (2017).
   [2] Mhamdi, T., Hasan, O., Tahar, S.: Formalization of Measure Theory and
       Lebesgue Integration for Probabilistic Analysis in HOL.
       ACM Trans. Embedded Comput. Syst. 12, 1--23 (2013).
