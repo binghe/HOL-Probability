@@ -1269,12 +1269,12 @@ val mul_not_infty2 = store_thm
  >> RW_TAC std_ss [extreal_mul_def, extreal_not_infty]);
 
 (* two variants of mul_lt and mul_le *)
-val mul_lt' = store_thm
-  ("mul_lt'", ``!x y :extreal. x < 0 /\ 0 < y ==> x * y < 0``,
+val mul_lt2 = store_thm
+  ("mul_lt2", ``!x y :extreal. x < 0 /\ 0 < y ==> x * y < 0``,
     METIS_TAC [mul_comm, mul_lt]);
 
-val mul_le' = store_thm
-  ("mul_le'", ``!x y :extreal. x <= 0 /\ 0 <= y ==> x * y <= 0``,
+val mul_le2 = store_thm
+  ("mul_le2", ``!x y :extreal. x <= 0 /\ 0 <= y ==> x * y <= 0``,
     METIS_TAC [mul_comm, mul_le]);
 
 val add_ldistrib_pos = store_thm
@@ -1686,6 +1686,13 @@ Proof
  >> RW_TAC std_ss [extreal_div_def, extreal_inv_def, extreal_not_infty,
                    extreal_of_num_def, extreal_11]
  >> METIS_TAC [mul_not_infty2, extreal_not_infty]
+QED
+
+Theorem div_mul_refl :
+    !(x :extreal) r. r <> 0 ==> x = x / (Normal r) * (Normal r)
+Proof
+    RW_TAC std_ss [extreal_div_def, extreal_inv_def, GSYM mul_assoc, extreal_mul_def]
+ >> RW_TAC real_ss [REAL_MUL_LINV, GSYM extreal_of_num_def, mul_rone]
 QED
 
 (***************************)

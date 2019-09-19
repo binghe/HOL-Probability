@@ -421,7 +421,7 @@ val FN_PLUS_CMUL_full = store_thm
        (* goal 2 (of 4) *)
       `0 <= f x` by PROVE_TAC [extreal_lt_def] \\
       `NegInf <= 0` by PROVE_TAC [le_infty] \\
-      `NegInf * f x <= 0` by PROVE_TAC [mul_le'] \\
+      `NegInf * f x <= 0` by PROVE_TAC [mul_le2] \\
        PROVE_TAC [let_antisym],
        (* goal 3 (of 4) *)
       `NegInf < 0` by PROVE_TAC [lt_infty, extreal_of_num_def] \\
@@ -482,7 +482,7 @@ val FN_MINUS_CMUL_full = store_thm
        PROVE_TAC [let_antisym],
        (* goal 3 (of 4) *)
       `NegInf < 0` by PROVE_TAC [lt_infty, extreal_of_num_def] \\
-      `NegInf * f x < 0` by PROVE_TAC [mul_lt'],
+      `NegInf * f x < 0` by PROVE_TAC [mul_lt2],
        (* goal 4 (of 4) *)
        REWRITE_TAC [mul_rzero] ])
  >- (SIMP_TAC std_ss [le_infty, extreal_not_infty, extreal_of_num_def] \\

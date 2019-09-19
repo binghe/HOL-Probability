@@ -236,66 +236,6 @@ val MARTINGALE_BOTH_SUB_SUPER = store_thm
  >> EQ_TAC >> RW_TAC std_ss [le_refl]
  >> ASM_SIMP_TAC std_ss [GSYM le_antisym]);
 
-(* alternative definition: using generator instead of sigma-algebra *)
-val martingale_alt = store_thm
-  ("martingale_alt",
-  ``!m a u. martingale m a u <=>
-            sigma_finite_FMS m a /\ (!n. integrable m (u n)) /\
-            ?g. (!n. subset_class (space (g n)) (subsets (g n))) /\
-                (!n. a n = sigma (space (g n)) (subsets (g n))) /\
-                !n s. s IN (subsets (g n)) ==>
-                     (integral m (\x. u (SUC n) x * indicator_fn s x) =
-                      integral m (\x. u n x * indicator_fn s x))``,
-    RW_TAC std_ss [martingale_def]
- >> EQ_TAC >> RW_TAC std_ss [sigma_finite_FMS_alt]
- >- (Q.EXISTS_TAC `a` \\
-     fs [filtered_measure_space_alt, filtration_def, sub_sigma_algebra_def, space_def] \\
-     CONJ_TAC >- METIS_TAC [sigma_algebra_def, algebra_def] \\
-     GEN_TAC >> METIS_TAC [SIGMA_OF_SIGMA_ALGEBRA])
- >> 
-    cheat);
-
-(* for sub- or supermartingle we need, in addition, `g n` is a semiring *)
-val sub_martingale_alt = store_thm
-  ("sub_martingale_alt",
-  ``!m a u. sub_martingale m a u <=>
-            sigma_finite_FMS m a /\ (!n. integrable m (u n)) /\
-            ?g. (!n. semiring (g n)) /\
-                (!n. a n = sigma (space (g n)) (subsets (g n))) /\
-                !n s. s IN (subsets (a n)) ==>
-                     (integral m (\x. u n x * indicator_fn s x) <=
-                      integral m (\x. u (SUC n) x * indicator_fn s x))``,
-    RW_TAC std_ss [sub_martingale_def]
- >> EQ_TAC >> RW_TAC std_ss [sigma_finite_FMS_alt]
- >- (Q.EXISTS_TAC `a` \\
-     fs [filtered_measure_space_alt, filtration_def, sub_sigma_algebra_def, space_def] \\
-     CONJ_TAC
-     >- (GEN_TAC >> MATCH_MP_TAC ALGEBRA_IMP_SEMIRING \\
-         METIS_TAC [sigma_algebra_def]) \\
-     GEN_TAC >> METIS_TAC [SIGMA_OF_SIGMA_ALGEBRA])
- >> 
-    cheat);
-
-val super_martingale_alt = store_thm
-  ("super_martingale_alt",
-  ``!m a u. super_martingale m a u <=>
-            sigma_finite_FMS m a /\ (!n. integrable m (u n)) /\
-            ?g. (!n. semiring (g n)) /\
-                (!n. a n = sigma (space (g n)) (subsets (g n))) /\
-                !n s. s IN (subsets (a n)) ==>
-                     (integral m (\x. u (SUC n) x * indicator_fn s x) <=
-                      integral m (\x. u n x * indicator_fn s x))``,
-    RW_TAC std_ss [super_martingale_def]
- >> EQ_TAC >> RW_TAC std_ss [sigma_finite_FMS_alt]
- >- (Q.EXISTS_TAC `a` \\
-     fs [filtered_measure_space_alt, filtration_def, sub_sigma_algebra_def, space_def] \\
-     CONJ_TAC
-     >- (GEN_TAC >> MATCH_MP_TAC ALGEBRA_IMP_SEMIRING \\
-         METIS_TAC [sigma_algebra_def]) \\
-     GEN_TAC >> METIS_TAC [SIGMA_OF_SIGMA_ALGEBRA])
- >> 
-    cheat);
-
 (* ------------------------------------------------------------------------- *)
 (*  General version of martingales with poset indexes (Chapter 19 of [1])    *)
 (* ------------------------------------------------------------------------- *)
