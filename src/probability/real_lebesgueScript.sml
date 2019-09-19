@@ -2651,13 +2651,10 @@ val finite_integral_on_set = store_thm
 
 val finite_space_POW_integral_reduce = store_thm
   ("finite_space_POW_integral_reduce",
-  ``!m f.
-             measure_space m /\
-             (POW (m_space m) = measurable_sets m) /\
-             FINITE (m_space m) ==>
-                (integral m f =
-                 SIGMA (\x. f x * measure m {x})
-                        (m_space m))``,
+  ``!m f. measure_space m /\
+         (POW (m_space m) = measurable_sets m) /\
+          FINITE (m_space m) ==>
+         (integral m f = SIGMA (\x. f x * measure m {x}) (m_space m))``,
    rpt STRIP_TAC
    >> `f IN borel_measurable (m_space m, measurable_sets m)`
         by (Q.PAT_X_ASSUM `P = Q` (MP_TAC o GSYM)

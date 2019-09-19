@@ -1538,7 +1538,7 @@ val variance_eq = store_thm
  >> REWRITE_TAC [variance_def, central_moment_def, moment_def, expectation_def]
  >> Q.ABBREV_TAC `EX = integral p X`
  >> fs [prob_space_def, real_random_variable_def, p_space_def]
- >> `?r. EX = Normal r` by PROVE_TAC [integrable_normal]
+ >> `?r. EX = Normal r` by PROVE_TAC [integrable_normal_integral]
  >> Know `!x. (X x - EX) = (X x + (-EX))`
  >- (GEN_TAC >> MATCH_MP_TAC extreal_sub_add >> DISJ1_TAC \\
      PROVE_TAC [extreal_not_infty]) >> DISCH_TAC
@@ -1595,13 +1595,13 @@ val variance_eq = store_thm
           integral p (\x. (X x) pow 2) + (EX pow 2 + -2 * EX pow 2)`
  >- (MATCH_MP_TAC EQ_SYM \\
      MATCH_MP_TAC add_assoc \\
-    `?r. integral p (\x. (X x) pow 2) = Normal r` by PROVE_TAC [integrable_normal] \\
-    `?c. EX = Normal c` by PROVE_TAC [integrable_normal] \\
+    `?r. integral p (\x. (X x) pow 2) = Normal r` by PROVE_TAC [integrable_normal_integral] \\
+    `?c. EX = Normal c` by PROVE_TAC [integrable_normal_integral] \\
      art [extreal_not_infty, pow_2, extreal_of_num_def, extreal_ainv_def, extreal_mul_def])
  >> Rewr'
  >> Know `1 * EX pow 2 + -2 * EX pow 2 = (1 + -2) * EX pow 2`
  >- (MATCH_MP_TAC EQ_SYM \\
-     `?c. EX = Normal c` by PROVE_TAC [integrable_normal] \\
+     `?c. EX = Normal c` by PROVE_TAC [integrable_normal_integral] \\
      art [pow_2, extreal_mul_def] \\
      MATCH_MP_TAC add_rdistrib_normal \\
      REWRITE_TAC [extreal_of_num_def, extreal_ainv_def, extreal_not_infty])
@@ -1612,7 +1612,7 @@ val variance_eq = store_thm
  >> MATCH_MP_TAC EQ_SYM
  >> MATCH_MP_TAC extreal_sub_add
  >> DISJ1_TAC >> art []
- >> `?r. integral p (\x. (X x) pow 2) = Normal r` by PROVE_TAC [integrable_normal]
+ >> `?r. integral p (\x. (X x) pow 2) = Normal r` by PROVE_TAC [integrable_normal_integral]
  >> POP_ORW >> REWRITE_TAC [extreal_not_infty]);
 
 (* A corollary: Var(X) is always less or equal than E[X^2] *)
@@ -1626,7 +1626,7 @@ val variance_le = store_thm
  >> IMP_RES_TAC integrable_from_square
  >> Q.ABBREV_TAC `EX = integral p X`
  >> fs [prob_space_def, real_random_variable_def, p_space_def, expectation_def]
- >> `?r. EX = Normal r` by PROVE_TAC [integrable_normal]
+ >> `?r. EX = Normal r` by PROVE_TAC [integrable_normal_integral]
  >> Know `EX pow 2 <> PosInf`
  >- (art [pow_2, extreal_mul_def, extreal_not_infty]) >> DISCH_TAC
  >> Know `EX pow 2 <> NegInf`
@@ -1944,30 +1944,31 @@ val finite_second_moments_imp_finite_expectation = store_thm
  >> MATCH_MP_TAC finite_second_moments_imp_integrable >> art []);
 
 (* Markov's inequality for Probability (general version) *)
-val Markov_inequality = store_thm
-  ("Markov_inequality",
-  ``!p X a c. prob_space p /\ integrable p X /\ 0 < c /\ a IN events p ==>
+Theorem prob_markov_inequality :
+    !p X a c. prob_space p /\ integrable p X /\ 0 < c /\ a IN events p ==>
               prob p ({x | c <= abs (X x)} INTER a) <=
-                inv c * (expectation p (\x. abs (X x) * indicator_fn a x))``,
+                inv c * (expectation p (\x. abs (X x) * indicator_fn a x))
+Proof
     RW_TAC std_ss [prob_space_def, prob_def, events_def, expectation_def]
- >> MATCH_MP_TAC MARKOV_INEQUALITY >> art []);
+ >> MATCH_MP_TAC markov_inequality >> art []
+QED
 
 (* The special version with `a = p_space p`, c.f. PROB_GSPEC for moving `a` outside *)
-val Markov_inequality_pspace = store_thm
-  ("Markov_inequality_pspace",
-  ``!p X c. prob_space p /\ integrable p X /\ 0 < c ==>
-            prob p ({x | c <= abs (X x)} INTER p_space p) <= inv c * expectation p (abs o X)``,
+Theorem prob_markov_ineq :
+    !p X c. prob_space p /\ integrable p X /\ 0 < c ==>
+            prob p ({x | c <= abs (X x)} INTER p_space p) <= inv c * expectation p (abs o X)
+Proof
     RW_TAC std_ss [prob_space_def, p_space_def, prob_def, events_def, expectation_def]
- >> MATCH_MP_TAC MARKOV_INEQUALITY_MSPACE >> art []);
+ >> MATCH_MP_TAC markov_ineq >> art []
+QED
 
 (* Chebyshev's inequality (general version) *)
-val Chebyshev_inequality = store_thm
-  ("Chebyshev_inequality",
-  ``!p X a t c. prob_space p /\ real_random_variable X p /\
+Theorem chebyshev_inequality :
+    !p X a t c. prob_space p /\ real_random_variable X p /\
                 finite_second_moments p X /\ 0 < t /\ a IN events p ==>
        prob p ({x | t <= abs (X x - Normal c)} INTER a) <=
-         inv (t pow 2) * (expectation p (\x. (X x - Normal c) pow 2 * indicator_fn a x))``,
- (* proof *)
+         inv (t pow 2) * (expectation p (\x. (X x - Normal c) pow 2 * indicator_fn a x))
+Proof
     rpt STRIP_TAC
  >> Know `!x. t <= abs (X x - Normal c) <=> t pow 2 <= (X x - Normal c) pow 2`
  >- (GEN_TAC \\
@@ -1978,36 +1979,41 @@ val Chebyshev_inequality = store_thm
  >> Know `!x. (X x - Normal c) pow 2 = abs (Y x)`
  >- (GEN_TAC >> Q.UNABBREV_TAC `Y` >> BETA_TAC \\
     `0 <= (X x - Normal c) pow 2` by PROVE_TAC [le_pow2] >> fs [GSYM abs_refl]) >> Rewr'
- >> MATCH_MP_TAC Markov_inequality >> art []
+ >> MATCH_MP_TAC prob_markov_inequality >> art []
  >> Reverse CONJ_TAC >- (MATCH_MP_TAC pow_pos_lt >> art [])
  >> Q.UNABBREV_TAC `Y`
- >> METIS_TAC [finite_second_moments_eq_integrable_squares]);
+ >> METIS_TAC [finite_second_moments_eq_integrable_squares]
+QED
 
 (* The special version with `a = p_space p` *)
-val Chebyshev_inequality_pspace = store_thm
-  ("Chebyshev_inequality_pspace",
-  ``!p X t c. prob_space p /\ real_random_variable X p /\ finite_second_moments p X /\ 0 < t
-          ==> prob p ({x | t <= abs (X x - Normal c)} INTER p_space p) <=
-                inv (t pow 2) * (expectation p (\x. (X x - Normal c) pow 2))``,
+Theorem chebyshev_ineq :
+    !p X t c. prob_space p /\ real_random_variable X p /\
+              finite_second_moments p X /\ 0 < t ==>
+         prob p ({x | t <= abs (X x - Normal c)} INTER p_space p) <=
+           inv (t pow 2) * (expectation p (\x. (X x - Normal c) pow 2))
+Proof
     rpt STRIP_TAC
  >> Know `expectation p (\x. (X x - Normal c) pow 2) =
           expectation p (\x. (\x. (X x - Normal c) pow 2) x * indicator_fn (p_space p) x)`
  >- (FULL_SIMP_TAC pure_ss [prob_space_def, p_space_def, events_def, expectation_def] \\
      MATCH_MP_TAC integral_mspace >> art [])
  >> BETA_TAC >> Rewr'
- >> MATCH_MP_TAC Chebyshev_inequality >> art []
- >> MATCH_MP_TAC EVENTS_SPACE >> art []);
+ >> MATCH_MP_TAC chebyshev_inequality >> art []
+ >> MATCH_MP_TAC EVENTS_SPACE >> art []
+QED
 
 (* The special version with `a = p_space p` and `m = expectation p X` *)
-val Chebyshev_inequality_variance = store_thm
-  ("Chebyshev_inequality_variance",
-  ``!p X t. prob_space p /\ real_random_variable X p /\ finite_second_moments p X /\ 0 < t ==>
-            prob p ({x | t <= abs (X x - expectation p X)} INTER p_space p) <=
-              inv (t pow 2) * variance p X``,
+Theorem chebyshev_ineq_variance :
+    !p X t. prob_space p /\ real_random_variable X p /\
+            finite_second_moments p X /\ 0 < t ==>
+         prob p ({x | t <= abs (X x - expectation p X)} INTER p_space p) <=
+           inv (t pow 2) * variance p X
+Proof
     RW_TAC std_ss [variance_alt]
  >> IMP_RES_TAC finite_second_moments_imp_finite_expectation
  >> `?c. expectation p X = Normal c` by PROVE_TAC [extreal_cases] >> POP_ORW
- >> MATCH_MP_TAC Chebyshev_inequality_pspace >> art []);
+ >> MATCH_MP_TAC chebyshev_ineq >> art []
+QED
 
 (******************************************************************************)
 (*  Independent families [3, p.31-33] - 9 definitions                         *)
@@ -3058,16 +3064,6 @@ val uncorrelated_orthogonal = store_thm
  >- art [sub_rzero] >> Rewr'
  >> MATCH_MP_TAC uncorrelated_thm >> art []);
 
-(* (pairwise) independence implies uncorrelatedness, provided second moments are
-   finite [2, p.108]. (This requires Fibini's theorem.)
-val indep_imp_uncorrelated = store_thm
-  ("indep_imp_uncorrelated",
-  ``!p X Y. finite_second_moments p X /\
-            finite_second_moments p Y /\
-            indep_rv p X Y Borel Borel ==> uncorrelated p X Y``,
-    cheat);
- *)
-
 (* Fundamental relation of uncorrelated r.v.'s [2, p.108] *)
 val variance_sum = store_thm
   ("variance_sum",
@@ -3851,7 +3847,7 @@ val Borel_Cantelli_Lemma2p = store_thm
              POP_ASSUM MATCH_MP_TAC >> REWRITE_TAC [BOREL_MEASURABLE_SETS_RC],
              (* goal 2.2 (of 2) *)
              POP_ASSUM MATCH_MP_TAC >> REWRITE_TAC [BOREL_MEASURABLE_SETS_CR] ] ]) \\
-  (* applying Chebyshev_inequality_variance *)
+  (* applying chebyshev_ineq_variance *)
      Know `!x. S n x - M n = S n x - expectation p (S n)`
      >- (GEN_TAC >> Q.UNABBREV_TAC `M` >> SIMP_TAC std_ss []) >> Rewr' \\
      MATCH_MP_TAC le_trans \\
@@ -3859,7 +3855,7 @@ val Borel_Cantelli_Lemma2p = store_thm
      Q.PAT_X_ASSUM `!n. M n = P` K_TAC \\
      CONJ_TAC
      >- (SIMP_TAC std_ss [PROB_GSPEC] \\
-         MATCH_MP_TAC Chebyshev_inequality_variance >> art [] \\
+         MATCH_MP_TAC chebyshev_ineq_variance >> art [] \\
          MATCH_MP_TAC lt_mul >> art [half_between]) \\
      Suff `4 * inv (M n) = inv ((1 / 2 * M n) pow 2) * M n`
      >- (Rewr' >> MATCH_MP_TAC le_lmul_imp >> art [] \\
@@ -4005,162 +4001,10 @@ val Borel_0_1_Law = store_thm
       DISJ1_TAC >> MATCH_MP_TAC Borel_Cantelli_Lemma1 \\
       fs [GSYM lt_infty, pairwise_indep_events_def] ]);
 
-(******************************************************************************)
-(*  Various modes of convergence [2, Chapter 4]                               *)
-(******************************************************************************)
-
-(*
-val PROB_ONE_AE = store_thm
-  ("PROB_ONE_AE",
-  ``!p E. prob_space p /\ E IN events p ==> ((prob p E = 1) <=> AE x::p. x IN E)``,
-    cheat);
- *)
-
-(* almost everywhere convergence of series *)
-val converge_almost_everywhere_def = Define
-   `converge_almost_everywhere p X Y = AE x::p. real o (\n. X n x) --> real (Y x)`;
-
-(* convergence in probability of series *)
-val converge_in_probability_def = Define
-   `converge_in_probability p X Y =
-      !e. 0 < e ==>
-          real o (\n. prob p ({x | e < abs (X n x - Y x)} INTER p_space p)) --> 0`;
-
-(* the purpose of these overloads is to change the argument order *)
-val _ = overload_on ("converge_AE", ``\X Y p. converge_almost_everywhere p X Y``);
-val _ = overload_on ("converge_PR", ``\X Y p. converge_in_probability p X Y``);
-
-(* use the following commands to remove grammar rules for AE and PR:
-val _ = remove_rules_for_term "converge_AE";
-val _ = remove_rules_for_term "converge_PR";
- *)
-
-(* syntax: ``X --> Y a.e. p`` *)
-val _ = add_rule { term_name = "converge_AE", fixity = Infix (NONASSOC, 450),
-        pp_elements = [ BreakSpace(1,0), TOK "-->", BreakSpace(1,0), TM,
-        HardSpace 1, TOK "a.e.", HardSpace 1 ],
-        paren_style = OnlyIfNecessary,
-        block_style = (AroundEachPhrase, (PP.CONSISTENT, 0)) };
-
-(* syntax: ``X --> Y in p`` *)
-val _ = add_rule { term_name = "converge_PR", fixity = Infix (NONASSOC, 450),
-        pp_elements = [ BreakSpace(1,0), TOK "-->", BreakSpace(1,0), TM,
-        HardSpace 1, TOK "in", HardSpace 1 ],
-        paren_style = OnlyIfNecessary,
-        block_style = (AroundEachPhrase, (PP.CONSISTENT, 0)) };
-
-(* LONG RIGHTWARDS ARROW, actually not working for above rules *)
-val _ = Unicode.unicode_version {u = UTF8.chr 0x27F6, tmnm = "-->"};
-
-(* Theorem 4.1.1 [2, p.69], the characterization of convergence a.e.
-val converge_AE_alt1 = store_thm
-  ("converge_AE_alt1",
-  ``!p X Y.
-      prob_space p ==>
-     (converge_almost_everywhere p X Y <=>
-      !e. 0 < e ==>
-         (\m. real (prob p {x | x IN p_space p /\
-                                !n. m <= n ==> abs (X n x - Y x) <= e})) --> 1)``,
-    cheat);
-
-val converge_AE_alt2 = store_thm
-  ("converge_AE_alt2",
-  ``!p X Y.
-      prob_space p ==>
-     (converge_almost_everywhere p X Y <=>
-      !e. 0 < e ==>
-         (\m. real (prob p {x | x IN p_space p /\
-                                ?n. m <= n /\ e < abs (X n x - Y x)})) --> 0)``,
-    cheat);
-
-(* easy *)
-val converge_AE_alt3 = store_thm
-  ("converge_AE_alt3",
-  ``!p X Y.
-      prob_space p ==>
-     (converge_almost_everywhere p X Y <=>
-      (prob p ({x | x IN p_space p /\ (\n. real (X n x)) --> real (Y x)}) = 1))``,
-    cheat);
-
-val converge_AE_IMP_PR = store_thm
-  ("converge_AE_IMP_PR",
-  ``!p X Y. converge_almost_everywhere p X Y ==> converge_in_probability p X Y``,
-    cheat);
-
-*)
-
-(******************************************************************************)
-(*  Law of large numbers [2, Chapter 5]                                       *)
-(******************************************************************************)
-
-(* I.I.D. of a coutable sequence of real-valued random variables:
-val IID_def = Define
-   `IID p X <=>
-      indep_vars p X (\n. Borel) univ(:num) /\
-      !n s. 0 < n /\ s IN subsets Borel ==>
-           (distribution p (X n) s = distribution p (X 0) s)`;
-
-(* pairwise I.I.D., unused:
-val pairwise_IID_def = Define
-   `pairwise_IID p X <=>
-      pairwise_indep_vars p X (\n. Borel) univ(:num) /\
-      !n s. 0 < n /\ s IN subsets Borel ==>
-           (distribution p (X n) s = distribution p (X 0) s)`;
- *)
-
-(* The common hypotheses/assumptions of the Laws of Large Numbers (LLN) *)
-val LLN_hyp = ``IID p X /\ integrable p (X 0)``;
-
-(* The conclusion part of Weak Law of Large Numbers (WLLN) *)
-val WLLN_concl =
-  ``converge_PR (\n x. SIGMA (\i. X i x) (count (SUC n)) / &SUC n) (\x. m) p``;
-
-(* The conclusion part of Strong Law of Large Numbers (SLLN) *)
-val SLLN_concl =
-  ``converge_AE (\n x. SIGMA (\i. X i x) (count (SUC n)) / &SUC n) (\x. m) p``;
-
-(* Theorem 5.1.1 [2, p.108]. This simple theorem is actually due to Chebyshev. *)
-val Law_of_Large_Numbers_Chebyshev = store_thm
-  ("Law_of_Large_Numbers_Chebyshev",
-  ``!p X m. variance p (X 0) < PosInf /\ ^LLN_hyp ==> ^WLLN_concl``,
-    cheat);
-
-(* Theorem 5.2.2 [2, p.114]. This result is due to Khintchine *)
-val Law_of_Large_Numbers_Khintchine = store_thm
-  ("Law_of_Large_Numbers_Khintchine", ``!p X m. ^LLN_hyp ==> ^WLLN_concl``,
-    cheat);
-
-(* Cantelli's (Strong) Law of Large Numbers requiring finite fourth moments [3, p.60] [5] *)
-val Law_of_Large_Numbers_Cantelli = store_thm
-  ("Law_of_Large_Numbers_Cantelli",
-  ``!p X m. central_moment p (X 0) 4 < PosInf /\ ^LLN_hyp ==> ^SLLN_concl``,
-    cheat);
-
-(* Theorem 5.1.2 [2, p.108]. This result is due to Rajchman (1932). *)
-val Law_of_Large_Numbers_Rajchman = store_thm
-  ("Law_of_Large_Numbers_Rajchman",
-  ``!p X m a. variance p (X 0) < PosInf /\ ^LLN_hyp ==> ^SLLN_concl``,
-    cheat);
-
-(* Examplle 24.8 [9, p.294] (Kolmogorov's strong law of large numbers, Doob's proof) *)
-val Law_of_Large_Numbers_Doob = store_thm
-  ("Law_of_Large_Numbers_Doob", ``!p X m. IID p X ==> (integrable p (X 0) <=> ^SLLN_concl)``,
-    cheat);
-
-(* Theorem 5.4.2 [2, p.133], first part. *)
-val Law_of_Large_Numbers_Kolmogorov1 = store_thm
-  ("Law_of_Large_Numbers_Kolmogorov1", ``!p X m. ^LLN_hyp ==> ^SLLN_concl``,
-    cheat);
-
-(* Theorem 5.4.2 [2, p.133], second part. *)
-val Law_of_Large_Numbers_Kolmogorov2 = store_thm
-  ("Law_of_Large_Numbers_Kolmogorov2",
-  ``!p X m. IID p X /\ (expectation p (X 0) = PosInf) ==>
-            AE x::p. limsup (\n. abs (SIGMA (\i. X i x) (count (SUC n))) / &SUC n) = PosInf``,
-    cheat);
- *)
+(* TO BE CONTINUED *)
 
 val _ = export_theory ();
+val _ = html_theory "probability";
 
 (* References:
 

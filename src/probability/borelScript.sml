@@ -3478,76 +3478,12 @@ val lambda0_finite_subadditive = store_thm
     cheat);
  *)
 
-val closed_interval_def = Define
-   `closed_interval (a :extreal) b = {x | a <= x /\ x <= b}`;
-
-val closed_intervals_def = Define
-   `closed_intervals = {closed_interval a b | T}`;
-
-(* The extreal version of COMPACT_IMP_HEINE_BOREL (real_topologyTheory),
-   also c.f. [8, p.197 (106)]. This extended real version requires a little more
-   work than the usual real version, to deal with PosInf/NegInf boundaries.
-
-   TODO: move to extrealTheory with closed_intervals (and a better name):
-
-val EXTREAL_HEINE_BOREL = store_thm
-  ("EXTREAL_HEINE_BOREL",
-  ``!s f. s IN closed_intervals /\ (!n. f n IN open_intervals) /\
-          s SUBSET BIGUNION (IMAGE f univ(:num)) ==>
-          ?N. N SUBSET univ(:num) /\ FINITE N /\ s SUBSET BIGUNION (IMAGE f N)``,
-    cheat);
- *)
-
-(* Proposition 6.3 of [1, p.46]
-val lambda0_premeasure = store_thm
-  ("lambda0_premeasure",
-  ``premeasure (space half_open_intervals,subsets half_open_intervals,lambda0)``,
- (* proof *)
-    RW_TAC std_ss [premeasure_def, positive_def, measure_def, measurable_sets_def,
-                   lambda0_empty]
- >- (fs [half_open_intervals_def, subsets_def] \\
-     Cases_on `a < b`
-     >- (IMP_RES_TAC lambda0_prop >> art [] \\
-         MATCH_MP_TAC lt_imp_le >> MATCH_MP_TAC sub_zero_lt >> art []) \\
-     fs [GSYM half_open_interval_empty, lambda0_empty, le_refl])
- (* countably_additive (space half_open_intervals,subsets half_open_intervals,lambda0) *)
- >> RW_TAC std_ss [countably_additive_def, IN_FUNSET, IN_UNIV, measurable_sets_def,
-                   measure_def]
-  (* lambda0 (BIGUNION (IMAGE f univ(:num))) = suminf (lambda0 o f) *)
- >> cheat);
- *)
-
-(* Finally, the Lebesgue measure space (with a household measure),
-   named after Henri Lebesgue (1875-1941), a French mathematician [5]
-local
-  val thm = prove (
-    ``?m. (!s. s IN subsets half_open_intervals ==> (measure m s = lambda0 s)) /\
-          ((m_space m, measurable_sets m) = Borel) /\ measure_space m``,
-      MP_TAC (Q.ISPEC `(space half_open_intervals,subsets half_open_intervals,lambda0)`
-                      CARATHEODORY_SEMIRING) \\
-      MP_TAC half_open_intervals_semiring \\
-      MP_TAC half_open_intervals_sigma \\
-      MP_TAC lambda0_premeasure \\
-      RW_TAC std_ss [m_space_def, measurable_sets_def, measure_def, SPACE] \\
-      Q.EXISTS_TAC `m` >> art []);
-in
-  val Lebesgue_def = new_specification (* method learnt from "examples/miller" *)
-    ("Lebesgue_def", ["Lebesgue"], thm);
-end;
- *)
-
 (* a fake definition for now (it's never used actually) *)
 val Lebesgue_def = Define
    `Lebesgue = (space Borel, subsets Borel, lambda0)`;
 
 (* MATHEMATICAL BOLD SCRIPT CAPITAL L *)
 val _ = Unicode.unicode_version {u = UTF8.chr 0x1D4DB, tmnm = "Lebesgue"};
-
-(*
-val measure_space_lebesgue = store_thm
-  ("measure_space_lebesgue", ``measure_space Lebesgue``,
-    PROVE_TAC [Lebesgue_def]);
- *)
 
 val MSPACE_LEBESGUE = store_thm
   ("MSPACE_LEBESGUE", ``m_space Lebesgue = univ(:extreal)``,

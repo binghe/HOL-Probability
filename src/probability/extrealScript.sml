@@ -1669,6 +1669,25 @@ val inv_le_antimono = store_thm
       DISJ1_TAC >> PROVE_TAC [inv_lt_antimono],
       DISJ2_TAC >> PROVE_TAC [inv_inj] ]);
 
+Theorem inv_not_infty :
+    !x :extreal. x <> 0 ==> inv x <> PosInf /\ inv x <> NegInf
+Proof
+    GEN_TAC
+ >> Cases_on `x`
+ >> RW_TAC std_ss [extreal_inv_def, extreal_not_infty,
+                   extreal_of_num_def, extreal_11]
+QED
+
+Theorem div_not_infty :
+    !x y:extreal. y <> 0 ==> Normal x / y <> PosInf /\ Normal x / y <> NegInf
+Proof
+    rpt GEN_TAC
+ >> Cases_on `y`
+ >> RW_TAC std_ss [extreal_div_def, extreal_inv_def, extreal_not_infty,
+                   extreal_of_num_def, extreal_11]
+ >> METIS_TAC [mul_not_infty2, extreal_not_infty]
+QED
+
 (***************************)
 (*         x pow n         *)
 (***************************)

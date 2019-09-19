@@ -7,11 +7,10 @@
 
 open HolKernel Parse boolLib bossLib;
 
-open pred_setTheory combinTheory fcpTheory topologyTheory metricTheory
-     real_topologyTheory;
+open pred_setTheory combinTheory topologyTheory metricTheory
+     hurdUtils util_probTheory real_topologyTheory;
 
-open hurdUtils util_probTheory extrealTheory sigma_algebraTheory measureTheory
-     borelTheory;
+open extrealTheory sigma_algebraTheory measureTheory;
 
 val _ = new_theory "hausdorff_measure";
 
