@@ -1181,7 +1181,7 @@ val IN_MEASURE_PRESERVING = store_thm
 (* The old definition of `measure_preserving m1 m2` requires that both
   `m1` and `m2` must be measure_space. Now they're removed, and we must add
   `measure_space (m_space m2,a,measure m2)` into the antecedents, which cannot
-   be derived from other conditions, since we don't know if `a` (for sure 
+   be derived from other conditions, since we don't know if `a` (for sure
    smaller than `measurable_sets m2`, as a generator) is countably_additive.
 
    Furthermore, due to the changes to [0,+inf]-measure, now the theorem requires
@@ -1193,7 +1193,7 @@ Theorem MEASURE_PRESERVING_LIFT :
        measure_space (m_space m2,a,measure m2) /\
        measure m1 (m_space m1) <> PosInf /\
        measure m2 (m_space m2) <> PosInf /\
-      (measurable_sets m2 = subsets (sigma (m_space m2) a)) /\      
+      (measurable_sets m2 = subsets (sigma (m_space m2) a)) /\
        f IN measure_preserving m1 (m_space m2,a,measure m2) ==>
        f IN measure_preserving m1 m2
 Proof

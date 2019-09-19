@@ -1674,7 +1674,7 @@ val variance_alt = store_thm
 
        Var(X) = E[X^2] - E[X]^2
 
-   `integrable p X` is not needed due to "integrable_from_square" 
+   `integrable p X` is not needed due to "integrable_from_square"
  *)
 val variance_eq = store_thm
   ("variance_eq",

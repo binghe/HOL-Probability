@@ -2021,7 +2021,7 @@ Proof
 QED
 
 (* ------------------------------------------------------------------------- *)
-(* Initial Sigma Algebra                                                     *)
+(*  Initial Sigma Algebra (conributed by HVG concordia)                      *)
 (* ------------------------------------------------------------------------- *)
 
 Inductive sigma_sets :
