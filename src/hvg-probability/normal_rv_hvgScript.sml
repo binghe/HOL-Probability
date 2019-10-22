@@ -267,9 +267,7 @@ val _ = overload_on ("exp",   Term `extreal_exp`);
 
 
 
-val normal_density = new_definition
-  ("normal_density",
-  ``normal_density mu sig x = (1 / sqrt (2 * pi * sig pow 2)) *
+val normal_density = new_definition("normal_density",``normal_density mu sig x = (1 / sqrt (2 * pi * sig pow 2)) *
                               exp (-((x - mu) pow 2) / (2 * sig pow 2))``);
 
 val std_normal_density = new_definition("std_normal_density",``std_normal_density = normal_density 0 1``);
@@ -377,9 +375,7 @@ val IN_MEASURABLE_BOREL_normal_density = store_thm ("IN_MEASURABLE_BOREL_normal_
   
 val _ = hide "normal_pmeasure";
 
-val normal_pmeasure = new_definition
-  ("normal_pmeasure",
-  ``normal_pmeasure mu sig =
+val normal_pmeasure = new_definition("normal_pmeasure",``normal_pmeasure mu sig =
      (\A. if A IN measurable_sets lborel then
           pos_fn_integral lborel
             (\x. (\x. Normal (normal_density mu sig x)) x *
@@ -1501,7 +1497,6 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
 (*                                                                           *)
 (* ------------------------------------------------------------------------- *)
 
-(* DFUNSET (util_probTheory) *)
 val Pi = new_definition("Pi",``Pi A B = {f | !x. x IN A ==> f x IN B x}``);
 
 val Pi_iff = store_thm ("Pi_iff",

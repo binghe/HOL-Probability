@@ -23,14 +23,14 @@
 "arithmeticTheory", "realTheory", "hrealTheory", "realaxTheory", "realLib",  
 "jrhUtils", "pairTheory", "seqTheory", "limTheory", "transcTheory", "listTheory", 
 "mesonLib", "boolTheory", "topologyTheory", "pred_setTheory", "util_probTheory", 
-"optionTheory", "numTheory", "sumTheory", "InductiveDefinition", "ind_typeTheory"]; *)
+"optionTheory", "numTheory", "sumTheory", "InductiveDefinition", "ind_typeTheory", "boolSimps"]; *)
 
 open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith 
 prim_recTheory combinTheory quotientTheory arithmeticTheory hrealTheory 
 realaxTheory realTheory realLib jrhUtils pairTheory seqTheory limTheory 
 transcTheory listTheory mesonLib boolTheory topologyTheory pred_setTheory 
 util_probTheory optionTheory numTheory sumTheory InductiveDefinition 
-ind_typeTheory;
+ind_typeTheory boolSimps;
 
 val _ = new_theory "iterate_hvg";
 
@@ -714,7 +714,7 @@ val HAS_SIZE_INDEX = store_thm ("HAS_SIZE_INDEX",
   X_GEN_TAC ``x:'a`` THEN DISCH_TAC THEN ASM_REWRITE_TAC[] THEN
   FIRST_X_ASSUM(MP_TAC o SPEC ``x:'a``) THEN
   ASM_REWRITE_TAC[IN_DELETE] THEN
-  CONV_TAC(ONCE_DEPTH_CONV COND_ELIM_CONV) THEN
+  FULL_SIMP_TAC (srw_ss() ++ COND_elim_ss)[] THEN
   ASM_CASES_TAC ``a:'a = x`` THEN ASM_SIMP_TAC std_ss [] THEN
   ASM_MESON_TAC[LESS_REFL, IN_DELETE]);
   

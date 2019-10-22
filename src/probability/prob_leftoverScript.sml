@@ -1071,5 +1071,38 @@ val Law_of_Large_Numbers_Kolmogorov2 = store_thm
     cheat);
  *)
 
-val _ = export_theory ();
 
+(* additions in martingaleTheory
+
+Theorem SPACE_SIGMA_FUNCTION :
+    !sp A f. space (sigma_function sp A f) = sp
+Proof
+    RW_TAC std_ss [sigma_function_def, space_def]
+QED
+
+Theorem SIGMA_FUNCTION_SUBSET :
+    !sp sts A f. subset_class (space A) (subsets A) /\
+                 sigma_algebra (sp,sts) /\ f IN (sp -> space A) ==>
+                 subsets (sigma_function sp A f) SUBSET sts
+Proof
+    RW_TAC std_ss [sigma_function_def, SUBSET_DEF, subsets_def,
+                   IN_IMAGE, IN_FUNSET]
+ >> RW_TAC std_ss [PREIMAGE_def]
+
+QED
+ *)
+
+(* The sigma-algebra generated from any A/B-measurable function X is
+   a sub-sigma-algebra of A (really?)
+Theorem SIGMA_FUNCTION_SUB_SIGMA_ALGEBRA :
+    !X A B. X IN measurable A B ==>
+            sub_sigma_algebra (sigma_function (space A) B X) A
+Proof
+    RW_TAC std_ss [IN_MEASURABLE, space_def]
+ >> `X IN measurable (sigma (space A) B X) B` by PROVE_TAC [SIGMA_MEASURABLE]
+ >> fs [IN_MEASURABLE, sub_sigma_algebra_def, SPACE_SIGMA_FUNCTION]
+ >> 
+QED
+ *)
+
+val _ = export_theory ();

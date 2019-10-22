@@ -1889,7 +1889,6 @@ val borel_eq_sigmaI5 = store_thm ("borel_eq_sigmaI5",
 (*                                                                           *)
 (* ------------------------------------------------------------------------- *)
 
-(* Q_set (extrealTheory) *)
 val Qset_def = new_definition ("Qset_def",
   ``Qset = {x:real | ?a b. (x = (&a/(&b))) /\ (0:real < &b)} UNION
            {x:real | ?a b. (x = -(&a/(&b))) /\ (0:real < &b)}``);
@@ -2225,7 +2224,7 @@ val open_union_box = store_thm ("open_union_box",
 val borel_eq_box = store_thm ("borel_eq_box",
   ``borel = sigma UNIV (IMAGE (\(a,b). box a b) UNIV)``,
   SIMP_TAC std_ss [box] THEN MATCH_MP_TAC borel_eq_sigmaI1 THEN
-  EXISTS_TAC ``{s | topology_hvg$Open s}`` THEN SIMP_TAC std_ss [borel] THEN
+  EXISTS_TAC ``{s |topology_hvg$Open s}`` THEN SIMP_TAC std_ss [borel] THEN
   CONJ_TAC THENL
   [ALL_TAC,
    FULL_SIMP_TAC std_ss [sigma_def, subsets_def] THEN
@@ -3388,7 +3387,6 @@ val has_integral_interval_cube = store_thm ("has_integral_interval_cube",
 
 val _ = hide "lebesgue";
 
-(* gauge integral *)
 val lebesgue = new_definition ("lebesgue",
   ``lebesgue = (univ(:real), {A | !n. (indicator A) integrable_on (line n)},
                 (\A. sup {Normal (integral (line n) (indicator A)) | n IN UNIV}))``);
@@ -6035,11 +6033,6 @@ val pos_fn_integral_density' = store_thm ("pos_fn_integral_density'",
 
 val _ = hide "lborel";
 
-(*
-val lebesgue = new_definition ("lebesgue",
-  ``lebesgue = (univ(:real), {A | !n. (indicator A) integrable_on (line n)},
-                (\A. sup {Normal (integral (line n) (indicator A)) | n IN UNIV}))``);
- *)
 val lborel = new_definition ("lborel",
   ``lborel = (univ(:real), subsets borel, measure lebesgue)``);
 
@@ -6325,7 +6318,8 @@ val lborel_eqI = store_thm ("lborel_eqI",
    `?c d. x' = (c,d)` by SIMP_TAC std_ss [ABS_PAIR_THM] THEN
    ASM_SIMP_TAC real_ss [INTER_DEF, EXTENSION, GSPECIFICATION, EXISTS_PROD] THEN
    Q.EXISTS_TAC `max a c` THEN Q.EXISTS_TAC `min b d` THEN
-   SIMP_TAC std_ss [min_def, max_def] THEN REAL_ARITH_TAC,
+   SIMP_TAC std_ss [min_def, max_def] THEN RW_TAC std_ss[]  THEN
+   NTAC 2(POP_ASSUM MP_TAC) THEN  REAL_ARITH_TAC,
    ALL_TAC] THEN
   Q_TAC SUFF_TAC `(!X.
    X IN IMAGE (\(a,b). {x | a <= x /\ x <= b}) univ(:real # real) ==>
@@ -6894,7 +6888,7 @@ val lebesgue_real_affine = store_thm ("lebesgue_real_affine",
     ASM_SIMP_TAC std_ss [CONTENT_CLOSED_INTERVAL] THEN
     ONCE_REWRITE_TAC [REAL_MUL_COMM] THEN ASM_SIMP_TAC std_ss [GSYM REAL_LE_RDIV_EQ] THEN
     Q_TAC SUFF_TAC `(b - a) / c = (b - t) / c - (a - t) / c` THENL
-    [DISC_RW_KILL THEN FULL_SIMP_TAC std_ss [min_def, max_def] THEN
+    [DISC_RW_KILL THEN FULL_SIMP_TAC std_ss [min_def, max_def] THEN RW_TAC std_ss[]  THEN
      ASM_REAL_ARITH_TAC, ALL_TAC] THEN
     SIMP_TAC std_ss [real_sub, REAL_DIV_ADD, real_div] THEN
     REAL_ARITH_TAC,
@@ -7185,8 +7179,8 @@ val lebesgue_real_affine = store_thm ("lebesgue_real_affine",
     ASM_SIMP_TAC std_ss [CONTENT_CLOSED_INTERVAL] THEN
     ONCE_REWRITE_TAC [REAL_MUL_COMM] THEN ASM_SIMP_TAC std_ss [GSYM REAL_LE_RDIV_EQ] THEN
     Q_TAC SUFF_TAC `(b - a) / r = (-(a - t) / r) - (-(b - t) / r)` THENL
-    [DISC_RW_KILL THEN FULL_SIMP_TAC std_ss [min_def, max_def] THEN
-     ASM_REAL_ARITH_TAC, ALL_TAC] THEN
+    [DISC_RW_KILL THEN FULL_SIMP_TAC std_ss [min_def, max_def] THEN RW_TAC std_ss[] THEN 
+     NTAC 2(POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC, ALL_TAC] THEN
     SIMP_TAC std_ss [real_sub, REAL_DIV_ADD, real_div] THEN
     REAL_ARITH_TAC,
     ALL_TAC] THEN

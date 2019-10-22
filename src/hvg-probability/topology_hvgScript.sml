@@ -25,7 +25,6 @@
 "mesonLib", "boolTheory", "topologyTheory", "pred_setTheory", "util_probTheory", 
 "optionTheory", "numTheory", "sumTheory", "InductiveDefinition", "ind_typeTheory",
 "iterate_hvgTheory", "card_hvgTheory", "product_hvgTheory"];*)
-
 open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith prim_recTheory 
 combinTheory quotientTheory arithmeticTheory hrealTheory realaxTheory realTheory 
 realLib jrhUtils pairTheory seqTheory limTheory transcTheory listTheory mesonLib 
@@ -153,7 +152,7 @@ val REAL_LT_RNEG = store_thm ("REAL_LT_RNEG",
 
 val REAL_LT_MIN = store_thm ("REAL_LT_MIN",
  ``!x y z:real. z < min x y <=> z < x /\ z < y``,
-  SIMP_TAC std_ss [min_def] THEN REAL_ARITH_TAC);
+  RW_TAC std_ss[min_def] THEN RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val UPPER_BOUND_FINITE_SET = store_thm ("UPPER_BOUND_FINITE_SET",
  ``!f:('a->num) s. FINITE(s) ==> ?a. !x. x IN s ==> f(x) <= a``,
@@ -305,7 +304,7 @@ val LAMBDA_PAIR = store_thm ("LAMBDA_PAIR",
 
 val REAL_LT_MAX = store_thm ("REAL_LT_MAX",
  ``!x y z:real. z < max x y <=> z < x \/ z < y``,
-  REWRITE_TAC [max_def] THEN REAL_ARITH_TAC);
+  REWRITE_TAC [max_def] THEN RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val NOT_EQ = store_thm ("NOT_EQ",
  ``(a <> b) = ~(a = b)``, METIS_TAC []);
@@ -364,7 +363,7 @@ val REAL_MAX_ACI = store_thm ("REAL_MAX_ACI",
    (max x x = x:real) /\
    (max x (max x y) = max x y:real)``,
   REPEAT (CONJ_TAC) THEN 
-  REWRITE_TAC [max_def] THEN COND_CASES_TAC THEN ASM_REAL_ARITH_TAC);
+  REWRITE_TAC [max_def] THEN COND_CASES_TAC THEN RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN RW_TAC std_ss[] THEN ASM_REAL_ARITH_TAC);
 
 val REAL_MIN_ACI = store_thm ("REAL_MIN_ACI",
  ``(min x y = min y x:real) /\
@@ -373,7 +372,7 @@ val REAL_MIN_ACI = store_thm ("REAL_MIN_ACI",
    (min x x = x:real) /\
    (min x (min x y) = min x y:real)``,
   REPEAT (CONJ_TAC) THEN
-  REWRITE_TAC [min_def] THEN COND_CASES_TAC THEN ASM_REAL_ARITH_TAC);
+  REWRITE_TAC [min_def] THEN COND_CASES_TAC THEN RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN RW_TAC std_ss[] THEN ASM_REAL_ARITH_TAC);
 
 val SUBSET_ANTISYM_EQ = store_thm ("SUBSET_ANTISYM_EQ",
  ``!(s:'a->bool) t. s SUBSET t /\ t SUBSET s <=> (s = t)``,
@@ -396,7 +395,7 @@ val BIGUNION_BIGINTER = store_thm ("BIGUNION_BIGINTER",
 
 val REAL_MIN_LT = store_thm ("REAL_MIN_LT",
  ``!x y z:real. min x y < z <=> x < z \/ y < z``,
-  REWRITE_TAC [min_def] THEN REAL_ARITH_TAC);
+  REWRITE_TAC [min_def] THEN RW_TAC std_ss[] THEN REPEAT(POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val REAL_POW_1_LE = store_thm ("REAL_POW_1_LE",
  ``!n x:real. &0 <= x /\ x <= &1 ==> x pow n <= &1``,
@@ -1450,9 +1449,9 @@ val ABS_TRIANGLE_EQ = store_thm ("ABS_TRIANGLE_EQ",
  ``!x y:real. (abs(x + y) = abs(x) + abs(y)) <=> (abs(x) * y = abs(y) * x)``,
   REPEAT GEN_TAC THEN ASM_CASES_TAC ``0 <= x:real`` THEN
   (ASM_CASES_TAC ``0 <= y:real``) THEN ASM_REWRITE_TAC [abs] THENL
-  [ASM_REAL_ARITH_TAC, ALL_TAC, ALL_TAC, ASM_REAL_ARITH_TAC] THEN
+  [RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC, ALL_TAC, ALL_TAC, RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC] THEN
   ((MP_TAC o SPECL [``x:real``,``y:real``]) REAL_LT_TOTAL THEN STRIP_TAC THEN
-  TRY (ASM_REAL_ARITH_TAC)) THEN COND_CASES_TAC THEN EQ_TAC THEN
+  TRY (RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC)) THEN COND_CASES_TAC THEN EQ_TAC THEN
   TRY (ASM_REAL_ARITH_TAC) THENL
   [GEN_REWR_TAC (LAND_CONV o RAND_CONV) [REAL_MUL_SYM] THEN
    REWRITE_TAC [REAL_EQ_LMUL] THEN ASM_REAL_ARITH_TAC,
@@ -1465,7 +1464,7 @@ val ABS_TRIANGLE_EQ = store_thm ("ABS_TRIANGLE_EQ",
    DISCH_TAC THEN GEN_REWR_TAC (LAND_CONV) [REAL_MUL_SYM] THEN
    REWRITE_TAC [REAL_EQ_LMUL] THEN ASM_REAL_ARITH_TAC,
    GEN_REWR_TAC (LAND_CONV o LAND_CONV) [REAL_MUL_SYM] THEN
-   REWRITE_TAC [REAL_EQ_LMUL] THEN ASM_REAL_ARITH_TAC]);
+   REWRITE_TAC [REAL_EQ_LMUL] THEN RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC]);
 
 val DIST_TRIANGLE_EQ = store_thm ("DIST_TRIANGLE_EQ",
  ``!x y z:real. (dist(x,z) = dist(x,y) + dist(y,z)) <=>
@@ -3143,19 +3142,19 @@ val SUBSET_CBALL = store_thm ("SUBSET_CBALL",
 
 val BALL_MAX_UNION = store_thm ("BALL_MAX_UNION",
  ``!a r s. ball(a,max r s) = ball(a,r) UNION ball(a,s)``,
-  REWRITE_TAC[IN_BALL, IN_UNION, EXTENSION, dist, max_def] THEN REAL_ARITH_TAC);
+  REWRITE_TAC[IN_BALL, IN_UNION, EXTENSION, dist, max_def] THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val BALL_MIN_INTER = store_thm ("BALL_MIN_INTER",
  ``!a r s. ball(a,min r s) = ball(a,r) INTER ball(a,s)``,
-  REWRITE_TAC[IN_BALL, IN_INTER, EXTENSION, dist, min_def] THEN REAL_ARITH_TAC);
+  REWRITE_TAC[IN_BALL, IN_INTER, EXTENSION, dist, min_def] THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val CBALL_MAX_UNION = store_thm ("CBALL_MAX_UNION",
  ``!a r s. cball(a,max r s) = cball(a,r) UNION cball(a,s)``,
-  REWRITE_TAC[IN_CBALL, IN_UNION, EXTENSION, dist, max_def] THEN REAL_ARITH_TAC);
+  REWRITE_TAC[IN_CBALL, IN_UNION, EXTENSION, dist, max_def] THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val CBALL_MIN_INTER = store_thm ("CBALL_MIN_INTER",
  ``!x d e. cball(x,min d e) = cball(x,d) INTER cball(x,e)``,
-  REWRITE_TAC[EXTENSION, IN_INTER, IN_CBALL, dist, min_def] THEN REAL_ARITH_TAC);
+  REWRITE_TAC[EXTENSION, IN_INTER, IN_CBALL, dist, min_def] THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val BALL_TRANSLATION = store_thm ("BALL_TRANSLATION",
  ``!a x r. ball(a + x,r) = IMAGE (\y. a + y) (ball(x,r))``,
@@ -3738,7 +3737,7 @@ val IN_SEGMENT_COMPONENT = store_thm ("IN_SEGMENT_COMPONENT",
   ASM_REWRITE_TAC [] THEN
   SIMP_TAC std_ss [REAL_ARITH ``c <= u * a + t * b <=> u * -a + t * -b <= -c:real``] THEN
   REWRITE_TAC [min_def, max_def] THEN
-  MATCH_MP_TAC REAL_CONVEX_BOUND_LE THEN ASM_REAL_ARITH_TAC);
+  MATCH_MP_TAC REAL_CONVEX_BOUND_LE THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC);
 
 val SEGMENT_TRANSLATION = store_thm ("SEGMENT_TRANSLATION",
  ``(!c a b. segment[c + a,c + b] = IMAGE (\x. c + x) (segment[a,b])) /\
@@ -6686,7 +6685,7 @@ val LIM_MIN = store_thm ("LIM_MIN",
   DISCH_THEN(MP_TAC o MATCH_MP LIM_NEG o MATCH_MP LIM_MAX) THEN
   MATCH_MP_TAC EQ_IMPLIES THEN AP_THM_TAC THEN BINOP_TAC THEN
   SIMP_TAC std_ss [FUN_EQ_THM, min_def, max_def, REAL_MIN_MAX] THEN
-  REAL_ARITH_TAC);
+  RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val LIM_NULL = store_thm ("LIM_NULL",
  ``!net f l. (f --> l) net <=> ((\x. f(x) - l) --> 0) net``,
@@ -8176,7 +8175,7 @@ val INTER_BALLS_EQ_EMPTY = store_thm ("INTER_BALLS_EQ_EMPTY",
   SIMP_TAC std_ss [GSYM real_div] THEN
   FULL_SIMP_TAC std_ss [REAL_LT_RDIV_EQ, REAL_LE_RDIV_EQ, 
                        REAL_LT_LDIV_EQ, REAL_LE_LDIV_EQ, REAL_ARITH ``0 < 2:real``] THEN
-  FULL_SIMP_TAC std_ss [min_def, max_def] THEN
+  FULL_SIMP_TAC std_ss [min_def, max_def] THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN
   ASM_REAL_ARITH_TAC);
 
 (* ------------------------------------------------------------------------- *)
@@ -11909,7 +11908,7 @@ val UNBOUNDED_HALFSPACE_COMPONENT_LE = store_thm ("UNBOUNDED_HALFSPACE_COMPONENT
   X_GEN_TAC ``B:real`` THEN
   EXISTS_TAC ``-((&1:real) + max (abs B) (abs a))`` THEN
   ASM_SIMP_TAC std_ss [ABS_MUL, max_def] THEN
-  REAL_ARITH_TAC);
+  RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val UNBOUNDED_HALFSPACE_COMPONENT_GE = store_thm ("UNBOUNDED_HALFSPACE_COMPONENT_GE",
  ``!a. ~bounded {x:real | x >= a}``,
@@ -11918,7 +11917,7 @@ val UNBOUNDED_HALFSPACE_COMPONENT_GE = store_thm ("UNBOUNDED_HALFSPACE_COMPONENT
   REWRITE_TAC[GSYM MONO_NOT_EQ] THEN MATCH_MP_TAC EQ_IMPLIES THEN
   AP_TERM_TAC THEN MATCH_MP_TAC SURJECTIVE_IMAGE_EQ THEN CONJ_TAC THENL
    [MESON_TAC[REAL_NEG_NEG],
-    SIMP_TAC std_ss [GSPECIFICATION] THEN REAL_ARITH_TAC]);
+    SIMP_TAC std_ss [GSPECIFICATION] THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC]);
 
 val UNBOUNDED_HALFSPACE_COMPONENT_LT = store_thm ("UNBOUNDED_HALFSPACE_COMPONENT_LT",
  ``!a. ~bounded {x:real | x < a}``,
@@ -12217,7 +12216,7 @@ val CAUCHY_CONTINUOUS_UNIQUENESS_LEMMA = store_thm ("CAUCHY_CONTINUOUS_UNIQUENES
      POP_ASSUM K_TAC THEN DISCH_TAC] THEN
     REPEAT(COND_CASES_TAC THEN ASM_REWRITE_TAC[]) THEN
     FULL_SIMP_TAC std_ss [dist, REAL_LT_RDIV_EQ, REAL_ARITH ``0 < 2:real``] THEN
-    ASM_REAL_ARITH_TAC,
+    RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC,
     DISCH_TAC THEN ASM_REWRITE_TAC [] THEN POP_ASSUM K_TAC THEN
     DISCH_TAC THEN X_GEN_TAC ``e:real`` THEN POP_ASSUM (MP_TAC o SPEC ``e:real``) THEN
     ASM_CASES_TAC ``&0 < e:real`` THEN ASM_REWRITE_TAC[] THEN
@@ -14830,20 +14829,25 @@ val DISJOINT_INTERVAL = store_thm ("DISJOINT_INTERVAL",
         ((interval(a,b) INTER interval(c,d) = {}) <=>
           b <= a \/ d <= c \/
           b <= c \/ d <= a)``,
-  REWRITE_TAC[EXTENSION, IN_INTER, IN_INTERVAL, NOT_IN_EMPTY] THEN
+   
+  REWRITE_TAC [EXTENSION, IN_INTER, IN_INTERVAL, NOT_IN_EMPTY] THEN
   SIMP_TAC std_ss [GSYM FORALL_AND_THM, NOT_FORALL_THM] THEN
-  REWRITE_TAC[TAUT `~((p ==> q) /\ (p ==> r)) <=> p /\ (~q \/ ~r)`] THEN
-  REWRITE_TAC[DE_MORGAN_THM] THEN REPEAT STRIP_TAC THEN
+  REWRITE_TAC [TAUT `~((p ==> q) /\ (p ==> r)) <=> p /\ (~q \/ ~r)`] THEN
+  REWRITE_TAC [DE_MORGAN_THM] THEN
+  REPEAT STRIP_TAC THEN 
   (EQ_TAC THENL
-    [DISCH_THEN(MP_TAC o SPEC
-      ``(@f. f = (max ((a:real)) ((c:real)) +
-                  min ((b:real)) ((d:real))) / &2):real``) THEN
-	 DISCH_TAC THEN FULL_SIMP_TAC std_ss [REAL_LE_RDIV_EQ, REAL_LE_LDIV_EQ,
-	  REAL_LT_RDIV_EQ, REAL_LT_LDIV_EQ,
-	  REAL_ARITH ``0 < 2:real``, min_def, max_def] THEN
-	 ASM_REAL_ARITH_TAC,
-     DISCH_THEN(fn th => GEN_TAC THEN MP_TAC th) THEN
-     SIMP_TAC std_ss [] THEN REAL_ARITH_TAC]));
+    [DISCH_THEN (MP_TAC o SPEC ``(@f. f = (max ((a:real)) ((c:real)) +
+                                           min ((b:real)) ((d:real))) / &2):real``) THEN
+     DISCH_TAC THEN
+     FULL_SIMP_TAC std_ss [REAL_LE_RDIV_EQ, REAL_LE_LDIV_EQ,
+                           REAL_LT_RDIV_EQ, REAL_LT_LDIV_EQ,
+                           REAL_ARITH ``0 < 2:real``] THEN (* 4 subgoals *)
+     FULL_SIMP_TAC bool_ss [REAL_NOT_LE, min_def, max_def] THEN
+     POP_ASSUM MP_TAC THEN
+     REPEAT COND_CASES_TAC THEN ASM_REAL_ARITH_TAC,
+
+     DISCH_THEN (fn th => GEN_TAC THEN MP_TAC th) THEN
+     SIMP_TAC std_ss [] THEN REAL_ARITH_TAC ]));
 
 val ENDS_IN_INTERVAL = store_thm ("ENDS_IN_INTERVAL",
  ``(!a b. a IN interval[a,b] <=> ~(interval[a,b] = {})) /\
@@ -14879,7 +14883,7 @@ val OPEN_INTERVAL_LEMMA = store_thm ("OPEN_INTERVAL_LEMMA",
            ==> ?d. (0:real) < d /\ !x'. abs(x' - x) < d ==> a < x' /\ x' < b``,
   REPEAT STRIP_TAC THEN
   EXISTS_TAC ``min (x - a) (b - x:real)`` THEN REWRITE_TAC[REAL_LT_MIN] THEN
-  REPEAT (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
+  REPEAT (POP_ASSUM MP_TAC) THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val OPEN_INTERVAL = store_thm ("OPEN_INTERVAL",
  ``!a:real b. open(interval (a,b))``,
@@ -14938,7 +14942,7 @@ val BOUNDED_CLOSED_INTERVAL = store_thm ("BOUNDED_CLOSED_INTERVAL",
  ``!a b:real. bounded (interval [a,b])``,
   REPEAT STRIP_TAC THEN REWRITE_TAC[bounded_def, interval] THEN
   SIMP_TAC std_ss [GSPECIFICATION] THEN
-  EXISTS_TAC ``abs(a) + abs(b:real)`` THEN REAL_ARITH_TAC);
+  EXISTS_TAC ``abs(a) + abs(b:real)`` THEN RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val BOUNDED_INTERVAL = store_thm ("BOUNDED_INTERVAL",
  ``(!a b. bounded (interval [a,b])) /\ (!a b. bounded (interval (a,b)))``,
@@ -15040,7 +15044,7 @@ val CLOSURE_OPEN_INTERVAL = store_thm ("CLOSURE_OPEN_INTERVAL",
   MATCH_MP_TAC REAL_LE_INV2 THEN FULL_SIMP_TAC std_ss [] THEN 
   UNDISCH_TAC ``N:num <= n`` THEN UNDISCH_TAC ``N <> 0:num`` THEN
   REWRITE_TAC[NOT_ZERO_LT_ZERO, GSYM REAL_OF_NUM_LE, GSYM REAL_LT] THEN
-  REAL_ARITH_TAC);
+  RW_TAC std_ss[] THEN REPEAT( POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC);
 
 val CLOSURE_INTERVAL = store_thm ("CLOSURE_INTERVAL",
  ``(!a b. closure(interval[a,b]) = interval[a,b]) /\
@@ -15146,14 +15150,16 @@ val IMAGE_STRETCH_INTERVAL = store_thm ("IMAGE_STRETCH_INTERVAL",
     ONCE_REWRITE_TAC[GSYM REAL_LE_NEG2] THEN
     ONCE_REWRITE_TAC[REAL_MUL_SYM] THEN
 	KNOW_TAC ``!a b. -(max a b) = min (-a) (-b:real)`` THENL
-	[REWRITE_TAC [max_def, min_def] THEN REAL_ARITH_TAC, DISCH_TAC] THEN
+	[REWRITE_TAC [max_def, min_def] THEN RW_TAC std_ss[] THEN REPEAT (POP_ASSUM MP_TAC) THEN
+	 RW_TAC std_ss[] THEN NTAC 2(POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC, DISCH_TAC] THEN
 	KNOW_TAC ``!a b. -(min a b) = max (-a) (-b:real)`` THENL
-	[REWRITE_TAC [max_def, min_def] THEN REAL_ARITH_TAC, DISCH_TAC] THEN
+	[REWRITE_TAC [max_def, min_def] THEN RW_TAC std_ss[] THEN NTAC 2(POP_ASSUM MP_TAC) THEN
+	 REAL_ARITH_TAC, DISCH_TAC] THEN
     ASM_SIMP_TAC std_ss [real_div, GSYM REAL_MUL_RNEG, REAL_NEG_INV] THEN
     REWRITE_TAC[GSYM real_div]] THEN
   ASM_SIMP_TAC std_ss [REAL_LE_LDIV_EQ, REAL_LE_RDIV_EQ] THEN
   ASM_SIMP_TAC std_ss [min_def, max_def, REAL_LE_LMUL, REAL_LE_RMUL] THEN
-  REAL_ARITH_TAC);
+  RW_TAC std_ss[] THEN NTAC 2(POP_ASSUM MP_TAC) THEN  REAL_ARITH_TAC);
 
 val INTERVAL_IMAGE_STRETCH_INTERVAL = store_thm ("INTERVAL_IMAGE_STRETCH_INTERVAL",
  ``!a b:real m. ?u v:real.
@@ -15176,6 +15182,7 @@ val CLOSED_INTERVAL_IMAGE_UNIT_INTERVAL = store_thm ("CLOSED_INTERVAL_IMAGE_UNIT
   ASM_SIMP_TAC std_ss [REAL_SUB_LE] THEN EQ_TAC THENL
   [DISCH_TAC THEN EXISTS_TAC ``x - a:real`` THEN ASM_REAL_ARITH_TAC, ASM_REAL_ARITH_TAC]);
 
+(*modified based on the developer version available on github*)
 val SUMS_INTERVALS = store_thm ("SUMS_INTERVALS",
  ``(!a b c d:real.
         ~(interval[a,b] = {}) /\ ~(interval[c,d] = {})
@@ -15191,20 +15198,21 @@ val SUMS_INTERVALS = store_thm ("SUMS_INTERVALS",
   REWRITE_TAC[REAL_ARITH ``(x:real = y + z) <=> (z = x - y)``] THEN
   SIMP_TAC std_ss [UNWIND_THM2] THEN
   (X_GEN_TAC ``x:real`` THEN EQ_TAC THENL
-   [DISCH_THEN(X_CHOOSE_THEN ``y:real`` STRIP_ASSUME_TAC),
+   [DISCH_THEN(X_CHOOSE_THEN ``y:real`` STRIP_ASSUME_TAC) THEN ASM_REAL_ARITH_TAC,
     DISCH_TAC THEN
     SIMP_TAC std_ss [GSYM FORALL_AND_THM,
                 TAUT `(p ==> q) /\ (p ==> r) <=> p ==> q /\ r`] THEN
 	ONCE_REWRITE_TAC [CONJ_SYM] THEN
-    SIMP_TAC std_ss [REAL_ARITH
-    ``((a <= y /\ y <= b) /\ c <= x - y /\ x - y <= d <=>
+    KNOW_TAC(``
+    (!y.(a <= y /\ y <= b) /\ c <= x - y /\ x - y <= d <=>
        ((if a <= x - d then x - d else a) <= y /\
     y <= if b <= x - c then b else x - c:real)) /\
-      ((a < y /\ y < b) /\ c < x - y /\ x - y < d <=>
+      (!y.(a < y /\ y < b) /\ c < x - y /\ x - y < d <=>
        ((if a <= x - d then x - d else a) < y /\
-    y < if b <= x - c then b else x - c:real))``] THEN
-    REWRITE_TAC[GSYM min_def, GSYM max_def, GSYM REAL_LE_BETWEEN, GSYM REAL_LT_BETWEEN]] THEN
-  ASM_REWRITE_TAC[min_def, max_def] THEN ASM_REAL_ARITH_TAC));
+    y < if b <= x - c then b else x - c:real))``)
+      THEN1( RW_TAC std_ss[] THEN  ASM_REAL_ARITH_TAC) THEN STRIP_TAC THEN ASM_REWRITE_TAC[] THEN
+    REWRITE_TAC[GSYM min_def, GSYM max_def, GSYM REAL_LE_BETWEEN, GSYM REAL_LT_BETWEEN] THEN
+  ASM_REWRITE_TAC[min_def, max_def] THEN METIS_TAC [REAL_LE_SUB_LADD, REAL_LE_SUB_RADD, REAL_LE_LADD, REAL_LE_NEG, real_sub,  REAL_LT_SUB_LADD, REAL_LT_SUB_RADD, REAL_LT_LADD, REAL_LT_NEG]]));
 
 val OPEN_CONTAINS_INTERVAL_OPEN_INTERVAL = store_thm ("OPEN_CONTAINS_INTERVAL_OPEN_INTERVAL",
  ``(!s:real->bool.
@@ -15747,7 +15755,7 @@ val INTERVAL_CONTAINS_COMPACT_NEIGHBOURHOOD = store_thm ("INTERVAL_CONTAINS_COMP
 	 FULL_SIMP_TAC std_ss [REAL_SUB_LE] THEN METIS_TAC [REAL_LE_TRANS, REAL_LE_LT],
 	 FULL_SIMP_TAC std_ss [REAL_NEG_SUB, 
 	  REAL_ARITH ``y - x < b - x = y < b:real``, REAL_LE_LT]]);
-
+(*
 val IS_INTERVAL_SUMS = store_thm ("IS_INTERVAL_SUMS",
  ``!s t:real->bool.
         is_interval s /\ is_interval t
@@ -15780,15 +15788,22 @@ val IS_INTERVAL_SUMS = store_thm ("IS_INTERVAL_SUMS",
   DISCH_THEN (CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN	
   SIMP_TAC std_ss [REAL_ARITH
    ``c <= y - x /\ y - x <= d <=> y - d <= x /\ x <= y - c:real``] THEN
-  REWRITE_TAC[REAL_ARITH
-   ``a <= x /\ x <= b \/ b <= x /\ x <= a:real <=> 
-     (if a <= b then a else b) <= x /\ x <= if a <= b then b else a``] THEN
+  KNOW_TAC(``!x.a <= x /\ x <= b \/ b <= x /\ x <= a:real <=> 
+     (if a <= b then a else b) <= x /\ x <= if a <= b then b else a ``) THEN1
+     (RW_TAC std_ss[] THEN EQ_TAC THEN RW_TAC std_ss[]THEN NTAC 3(POP_ASSUM MP_TAC)
+     THEN REAL_ARITH_TAC) THEN
+  DISCH_TAC THEN 
   REWRITE_TAC [GSYM min_def, GSYM max_def] THEN
   ONCE_REWRITE_TAC[TAUT `(p /\ q) /\ (r /\ s) <=> (p /\ r) /\ (q /\ s)`] THEN
-  REWRITE_TAC[GSYM REAL_LE_MIN, GSYM REAL_MAX_LE] THEN
+  STRIP_TAC  THEN1(
+      SIMP_TAC std_ss [min_def, max_def] THEN REPEAT COND_CASES_TAC THEN
+    SIMP_TAC std_ss []
+     REWRITE_TAC[GSYM REAL_LE_MIN, GSYM REAL_MAX_LE] THEN
   REWRITE_TAC[GSYM REAL_LE_BETWEEN] THEN
   SIMP_TAC std_ss [min_def, max_def] THEN REPEAT COND_CASES_TAC THEN
   FULL_SIMP_TAC std_ss [] THEN ASM_REAL_ARITH_TAC);
+*)
+
 
 val IS_INTERVAL_SING = store_thm ("IS_INTERVAL_SING",
  ``!a:real. is_interval {a}``,
@@ -19565,7 +19580,9 @@ val SEGMENT_TO_POINT_EXISTS = store_thm ("SEGMENT_TO_POINT_EXISTS",
         closed s /\ ~(s = {}) ==> ?b. b IN s /\ (segment(a,b) INTER s = {})``,
   MESON_TAC[SEGMENT_TO_CLOSEST_POINT, CLOSEST_POINT_EXISTS]);
 
-val CLOSEST_POINT_IN_INTERIOR = store_thm ("CLOSEST_POINT_IN_INTERIOR",
+(* from HOL4 github developer*)
+val CLOSEST_POINT_IN_INTERIOR = store_thm
+  ("CLOSEST_POINT_IN_INTERIOR",
  ``!s x:real.
         closed s /\ ~(s = {})
         ==> ((closest_point s x) IN interior s <=> x IN interior s)``,
@@ -19587,24 +19604,34 @@ val CLOSEST_POINT_IN_INTERIOR = store_thm ("CLOSEST_POINT_IN_INTERIOR",
   ASM_REWRITE_TAC[dist, NOT_IMP, REAL_ARITH
    ``x - (y - e * (y - x)):real = (&1 - e) * (x - y:real)``] THEN
   CONJ_TAC THENL
-   [UNDISCH_TAC ``cball (closest_point s x,e) SUBSET s`` THEN DISCH_TAC THEN
+  [ (* goal 1 (of 2) *)
+    UNDISCH_TAC ``cball (closest_point s x,e) SUBSET s`` THEN DISCH_TAC THEN
     FIRST_X_ASSUM(MATCH_MP_TAC o REWRITE_RULE [SUBSET_DEF]) THEN
     REWRITE_TAC[dist, IN_CBALL, REAL_ARITH ``abs(a:real - a - x) = abs x``] THEN
     SIMP_TAC real_ss [ABS_MUL, ABS_DIV, ABS_ABS] THEN
     RULE_ASSUM_TAC (ONCE_REWRITE_RULE [GSYM REAL_SUB_0]) THEN
     RULE_ASSUM_TAC (ONCE_REWRITE_RULE [ABS_NZ]) THEN
+
     ASM_SIMP_TAC std_ss [GSYM REAL_LE_RDIV_EQ, min_def] THEN
-    MATCH_MP_TAC(REAL_ARITH ``&0 <= a ==> abs(if 1 <= a then 1 else a) <= a:real``) THEN
+    KNOW_TAC ``!a:real. &0 <= a ==> abs (if 1 <= a then 1 else a) <= a``
+    >- ( RW_TAC real_ss [] >> PROVE_TAC [abs, REAL_LE_REFL] ) THEN
+    DISCH_THEN MATCH_MP_TAC THEN
     ASM_SIMP_TAC std_ss [REAL_LT_IMP_LE, REAL_LE_DIV, ABS_POS],
+    (* goal 2 (of 2) *)
     REWRITE_TAC[ABS_MUL, REAL_ARITH
      ``~(n <= a * n) <=> &0 < (&1 - a) * n:real``] THEN
     MATCH_MP_TAC REAL_LT_MUL THEN
     RULE_ASSUM_TAC (ONCE_REWRITE_RULE [REAL_ARITH ``(a <> b) = (b - a <> 0:real)``]) THEN
     RULE_ASSUM_TAC (ONCE_REWRITE_RULE [ABS_NZ]) THEN ASM_SIMP_TAC std_ss [] THEN
-    MATCH_MP_TAC(REAL_ARITH
-     ``&0 < e /\ e <= &1 ==> &0 < &1 - abs(&1 - e:real)``) THEN
+    KNOW_TAC ``!e:real. &0 < e /\ e <= &1 ==> &0 < &1 - abs(&1 - e)``
+    >- ( RW_TAC real_ss [] \\
+         `0 <= 1 - e'` by ASM_REAL_ARITH_TAC \\
+         ASM_SIMP_TAC real_ss [abs] ) THEN
+    DISCH_THEN MATCH_MP_TAC THEN
     REWRITE_TAC[REAL_MIN_LE, REAL_LT_MIN, REAL_LT_01, REAL_LE_REFL] THEN
-    METIS_TAC [REAL_LT_DIV, ABS_SUB]]);
+    METIS_TAC [REAL_LT_DIV, ABS_SUB] ]);
+
+
 
 val CLOSEST_POINT_IN_FRONTIER = store_thm ("CLOSEST_POINT_IN_FRONTIER",
  ``!s x:real.
@@ -21044,14 +21071,14 @@ val HAUSDIST_BALLS = store_thm ("HAUSDIST_BALLS",
   REWRITE_TAC[MESON[CBALL_SING] ``{a} = cball(a:real,&0)``] THEN
   ASM_REWRITE_TAC[SETDIST_BALLS, REAL_LT_REFL] THEN
   X_GEN_TAC ``c:real`` THEN REWRITE_TAC[IN_CBALL] THEN
-  EQ_TAC THENL [ALL_TAC, REWRITE_TAC [dist, max_def] THEN REAL_ARITH_TAC] THEN
+  EQ_TAC THENL [ALL_TAC, REWRITE_TAC [dist, max_def] THEN RW_TAC std_ss[] THEN RW_TAC std_ss[] THEN NTAC 4(POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC] THEN
   ASM_CASES_TAC ``b:real = a`` THENL
    [ONCE_ASM_REWRITE_TAC [DIST_SYM] THEN ASM_REWRITE_TAC[DIST_REFL, REAL_MAX_LE] THEN
     DISCH_THEN(CONJUNCTS_THEN2
      (MP_TAC o SPEC ``a + r * 1:real``)
      (MP_TAC o SPEC ``a + s * 1:real``)) THEN
     REWRITE_TAC[dist, REAL_ARITH ``abs(a:real - (a + x)) = abs x``] THEN
-    SIMP_TAC real_ss [ABS_MUL, LESS_EQ_REFL, max_def] THEN ASM_REAL_ARITH_TAC,
+    SIMP_TAC real_ss [ABS_MUL, LESS_EQ_REFL, max_def] THEN RW_TAC std_ss[] THEN NTAC 2(POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC,
     DISCH_THEN(CONJUNCTS_THEN2
      (MP_TAC o SPEC ``a - r / dist(a,b) * (b - a):real``)
      (MP_TAC o SPEC ``b - s / dist(a,b) * (a - b):real``)) THEN
@@ -21068,7 +21095,7 @@ val HAUSDIST_BALLS = store_thm ("HAUSDIST_BALLS",
     ONCE_REWRITE_TAC [METIS [ABS_SUB] ``r / abs (a - b) * abs (b - a) =
                                    r / abs (a - b) * abs (a - b:real)``] THEN
     ASM_SIMP_TAC real_ss [REAL_DIV_RMUL, ABS_ZERO, REAL_SUB_0, max_def] THEN
-    ASM_REAL_ARITH_TAC]);
+    RW_TAC std_ss[] THEN NTAC 2(POP_ASSUM MP_TAC) THEN ASM_REAL_ARITH_TAC]);
 
 val HAUSDIST_ALT = store_thm ("HAUSDIST_ALT",
  ``!s t:real->bool.
@@ -21803,7 +21830,7 @@ val LOCALLY_COMPACT_INTER_CBALLS = store_thm ("LOCALLY_COMPACT_INTER_CBALLS",
   SUBST1_TAC THENL
    [REWRITE_TAC[INTER_ASSOC, GSYM CBALL_MIN_INTER] THEN
     AP_THM_TAC THEN AP_TERM_TAC THEN AP_TERM_TAC THEN
-    BINOP_TAC THEN REWRITE_TAC[min_def] THEN ASM_REAL_ARITH_TAC,
+    BINOP_TAC THEN REWRITE_TAC[min_def] THEN RW_TAC std_ss[],
     ASM_SIMP_TAC real_ss [GSYM INTER_ASSOC, CLOSED_INTER, CLOSED_CBALL]]);
 
 val LOCALLY_COMPACT_COMPACT = store_thm ("LOCALLY_COMPACT_COMPACT",

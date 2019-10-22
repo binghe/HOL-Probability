@@ -24,7 +24,7 @@
 "jrhUtils", "pairTheory", "seqTheory", "limTheory", "transcTheory", "listTheory", 
 "mesonLib", "boolTheory", "topologyTheory", "pred_setTheory", "util_probTheory", 
 "optionTheory", "numTheory", "sumTheory", "InductiveDefinition", "ind_typeTheory",
-"pred_setLib", "iterate_hvgTheory", "card_hvgTheory", "product_hvgTheory", "topology_hvgTheory"];*)
+"pred_setLib", "iterateTheory", "card_hvgTheory", "product_hvgTheory", "topology_hvgTheory"];*)
 
 open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith prim_recTheory 
 combinTheory quotientTheory arithmeticTheory hrealTheory realaxTheory realTheory 
@@ -123,7 +123,7 @@ val LIMPT_OF_CONVEX = store_thm ("LIMPT_OF_CONVEX",
     ASM_SIMP_TAC std_ss [REAL_ARITH ``&0 < u ==> (abs u = u:real)``] THEN
     MATCH_MP_TAC(REAL_ARITH ``x *  2 <= e /\ &0 < e ==> x < e:real``) THEN
     ASM_SIMP_TAC real_ss [GSYM REAL_LE_RDIV_EQ, GSYM ABS_NZ, REAL_SUB_0] THEN
-    EXPAND_TAC "u" THEN REWRITE_TAC [min_def] THEN REAL_ARITH_TAC]);
+    EXPAND_TAC "u" THEN REWRITE_TAC [min_def] THEN RW_TAC std_ss[] THEN REAL_ARITH_TAC]);
 
 val TRIVIAL_LIMIT_WITHIN_CONVEX = store_thm ("TRIVIAL_LIMIT_WITHIN_CONVEX",
  ``!s x:real.
@@ -165,7 +165,7 @@ val CONVEX_SUM = store_thm ("CONVEX_SUM",
         (!i. i IN k ==> &0 <= u i /\ x i IN s)
         ==> sum k (\i. u i * x i) IN s``,
   GEN_TAC THEN ASM_CASES_TAC ``convex(s:real->bool)`` THEN
-  ASM_SIMP_TAC std_ss [IMP_CONJ, RIGHT_FORALL_IMP_THM] THEN
+  ASM_SIMP_TAC std_ss [GSYM AND_IMP_INTRO, RIGHT_FORALL_IMP_THM] THEN
   ONCE_REWRITE_TAC [METIS []
    ``!k. (!u. (sum k u = 1) ==>
     !x. (!i. i IN k ==> 0 <= u i /\ x i IN s) ==>
@@ -485,7 +485,7 @@ val HAS_DERIVATIVE_SUM = store_thm ("HAS_DERIVATIVE_SUM",
      (!a. a IN s ==> ((f a) has_derivative (f' a)) net)
      ==> ((\x. sum s (\a. f a x)) has_derivative (\h. sum s (\a. f' a h)))
           net``,
-  GEN_TAC THEN GEN_TAC THEN REWRITE_TAC[IMP_CONJ] THEN
+  GEN_TAC THEN GEN_TAC THEN REWRITE_TAC[GSYM AND_IMP_INTRO] THEN
   SET_INDUCT_TAC THEN
   ASM_SIMP_TAC std_ss [SUM_CLAUSES, HAS_DERIVATIVE_CONST] THEN
   REPEAT STRIP_TAC THEN 
@@ -503,7 +503,7 @@ val HAS_DERIVATIVE_TRANSFORM_WITHIN = store_thm ("HAS_DERIVATIVE_TRANSFORM_WITHI
        (!x'. x' IN s /\ dist (x',x) < d ==> (f x' = g x')) /\
        (f has_derivative f') (at x within s)
        ==> (g has_derivative f') (at x within s)``,
-  REPEAT GEN_TAC THEN SIMP_TAC std_ss [has_derivative_within, IMP_CONJ] THEN
+  REPEAT GEN_TAC THEN SIMP_TAC std_ss [has_derivative_within, GSYM AND_IMP_INTRO] THEN
   DISCH_TAC THEN DISCH_TAC THEN DISCH_TAC THEN DISCH_TAC THEN
   MATCH_MP_TAC(REWRITE_RULE[TAUT `a /\ b /\ c ==> d <=> a /\ b ==> c ==> d`]
     LIM_TRANSFORM_WITHIN) THEN
@@ -960,7 +960,8 @@ val DIFFERENTIAL_COMPONENT_ZERO_AT_MAXMIN = store_thm ("DIFFERENTIAL_COMPONENT_Z
     MP_TAC(ISPECL [``f:real->real``, ``f':real->real``,
                    ``x:real``, ``cball(x:real,e)``, ``e:real``]
         DIFFERENTIAL_COMPONENT_POS_AT_MINIMUM)] THEN
-  ASM_SIMP_TAC real_ss [HAS_DERIVATIVE_AT_WITHIN, CENTRE_IN_CBALL,
+
+ASM_SIMP_TAC real_ss [HAS_DERIVATIVE_AT_WITHIN, CENTRE_IN_CBALL,
                CONVEX_CBALL, REAL_LT_IMP_LE, IN_INTER] THEN
   DISCH_TAC THEN X_GEN_TAC ``h:real`` THEN
   UNDISCH_TAC ``(f has_derivative f') (at x)`` THEN
@@ -973,18 +974,26 @@ val DIFFERENTIAL_COMPONENT_ZERO_AT_MAXMIN = store_thm ("DIFFERENTIAL_COMPONENT_Z
   SIMP_TAC real_ss [IN_CBALL, dist, REAL_ARITH
    ``(abs(x:real - (x - e)) = abs e) /\ (abs(x:real - (x + e)) = abs e)``] THEN
   ONCE_REWRITE_TAC [REAL_ARITH ``x - e / abs h * h - x = -(e / abs h * h):real``] THEN
+
+
   FIRST_ASSUM(fn th => REWRITE_TAC[MATCH_MP LINEAR_NEG th]) THENL
+
   [ONCE_REWRITE_TAC [METIS [REAL_LE_NEG] ``-e <= 0 = -0 <= --e:real``],
    ONCE_REWRITE_TAC [METIS [REAL_LE_NEG] ``0 <= -e = --e <= -0:real``]] THEN
   SIMP_TAC std_ss [REAL_NEG_NEG, REAL_NEG_0] THEN
   (Q_TAC SUFF_TAC `abs (e / abs h * h) <= e` THENL
    [DISCH_TAC,
-    ASM_CASES_TAC ``0 <= h:real`` THEN
+    ASM_CASES_TAC ``0 <= h:real`` THEN1(
     REWRITE_TAC [real_div, REAL_ARITH ``a * b * c = a * (b * c:real)``] THEN
     ASM_SIMP_TAC real_ss [abs, REAL_MUL_LINV, GSYM REAL_NEG_INV,
      REAL_ARITH ``-a * b = -(a * b:real)``] THEN
-    UNDISCH_TAC ``0 < e:real`` THEN REAL_ARITH_TAC]) THEN
+    UNDISCH_TAC ``0 < e:real`` THEN RW_TAC std_ss[] THEN1  REAL_ARITH_TAC  THEN METIS_TAC[REAL_LE_NEGL, REAL_LT_IMP_LE]) THEN REWRITE_TAC [real_div, REAL_ARITH ``a * b * c = a * (b * c:real)``] THEN
+    ASM_SIMP_TAC real_ss [abs, REAL_MUL_LINV, GSYM REAL_NEG_INV,
+     REAL_ARITH ``-a * b = -(a * b:real)``] THEN
+    UNDISCH_TAC ``0 < e:real`` THEN RW_TAC std_ss[] THEN1 METIS_TAC[REAL_LE_NEGL, REAL_LT_IMP_LE] THEN REAL_ARITH_TAC] )
+    THEN
   ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [] THEN
+  `0<= f' (e / abs h * h) ` by METIS_TAC[REAL_NEG_LE0] THEN 
   `f' (e / abs h * h) = 0` by METIS_TAC [REAL_LE_ANTISYM] THEN
   POP_ASSUM MP_TAC THEN ASM_SIMP_TAC std_ss [LINEAR_CMUL] THEN
   (Q_TAC SUFF_TAC `e / abs h <> 0` THENL
@@ -992,6 +1001,10 @@ val DIFFERENTIAL_COMPONENT_ZERO_AT_MAXMIN = store_thm ("DIFFERENTIAL_COMPONENT_Z
     ONCE_REWRITE_TAC [EQ_SYM_EQ] THEN MATCH_MP_TAC REAL_LT_IMP_NE THEN
     MATCH_MP_TAC REAL_LT_DIV THEN ASM_SIMP_TAC std_ss [GSYM ABS_NZ]]) THEN
   ASM_SIMP_TAC std_ss [REAL_ENTIRE]);
+
+
+
+
 
 val DIFFERENTIAL_ZERO_MAXMIN = store_thm ("DIFFERENTIAL_ZERO_MAXMIN",
  ``!f:real->real f' x s.
@@ -1769,6 +1782,15 @@ val REAL_MUL_NZ = store_thm ("REAL_MUL_NZ",
   REPEAT GEN_TAC THEN ONCE_REWRITE_TAC [MONO_NOT_EQ] THEN
   SIMP_TAC real_ss [REAL_ENTIRE]);
 
+
+
+
+val FINITE_SUBSET = store_thm ("FINITE_SUBSET",
+ ``!s t. FINITE t /\ s SUBSET t ==> FINITE s``,
+ METIS_TAC [SUBSET_FINITE]);
+
+
+
 val lemma_sum_eq = store_thm ("lemma_sum_eq",
   ``!n x:real. sum (0, SUC n) (\n. ((\n. inv(&(FACT n)))) n * (x pow n)) = 
            sum ((0:num) .. n) (\n. ((\n. inv(&(FACT n)))) n * (x pow n))``,
@@ -1894,6 +1916,15 @@ val EXP_CONVERGES_UNIQUE = store_thm ("EXP_CONVERGES_UNIQUE",
   REPEAT GEN_TAC THEN EQ_TAC THEN SIMP_TAC std_ss [EXP_CONVERGES] THEN
   DISCH_THEN(MP_TAC o C CONJ (Q.SPEC `z` EXP_CONVERGES)) THEN
   REWRITE_TAC[SERIES_UNIQUE]);
+
+
+
+
+
+val LE_0 = store_thm ("LE_0",
+  ``!n:num. 0 <= n``,
+  METIS_TAC [ZERO_LESS_EQ]);
+
 
 val EXP_CONVERGES_UNIFORMLY = store_thm ("EXP_CONVERGES_UNIFORMLY",
  ``!R e. &0 < R /\ &0 < e
