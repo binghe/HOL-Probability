@@ -1,0 +1,319 @@
+<html>
+<head>
+</head>
+
+<body>
+<pre>								     
+(* ========================================================================= *)
+(*                                                                           *)
+(*            Formal Performance Analysis of A Data Structure                *)
+(*             This code is developed using HOL4 kanaskas 7.                 *)
+(*                                                                           *)
+(*                   (c) Copyright, Liya Liu, 2013                           *)
+(*                       Hardware Verification Group,                        *)
+(*                       Concordia University                                *)
+(*                                                                           *)
+(*                                                                           *)
+(*                      Last update: July 10, 2013                            *)
+(*                                                                           *)
+(* ========================================================================= *)
+
+val () = app load
+ ["bossLib", "metisLib", "arithmeticTheory", "pred_setTheory", "realLib", "seqTheory",
+ 	"pairTheory", "combinTheory", "numLib", "dividesTheory", "dep_rewrite", "listTheory",
+ 	"prim_recTheory", "probabilityTheory", "cond_probTheory", "extra_pred_setTools",
+ 	"dtmcBasicTheory", "Tactic", "setUsefulTheory", "classified_dtmcTheory"];
+
+set_trace "Unicode" 0;
+
+open HolKernel Parse boolLib bossLib metisLib numLib combinTheory subtypeTheory
+	pred_setTheory numLib seqTheory dividesTheory dep_rewrite listTheory
+     extra_pred_setTheory arithmeticTheory realTheory realLib pairTheory extra_pred_setTools
+      prim_recTheory extrealTheory probabilityTheory cond_probTheory classified_dtmcTheory
+      dtmcBasicTheory Tactic setUsefulTheory;
+                 
+infixr 0 ++ << || ORELSEC ## --> THENC;
+infix 1 >> |->;
+
+val !! = REPEAT;
+val op++ = op THEN;
+val op<< = op THENL;
+val op|| = op ORELSE;
+val op>> = op THEN1;
+
+(* ------------------------------------------------------------------------- *)
+(* Tools.                                                                    *)
+(* ------------------------------------------------------------------------- *)
+val INTER_ASSOC = GSYM INTER_ASSOC;
+val UNION_ASSOC = GSYM UNION_ASSOC;
+
+fun MP_RW_TAC th g =
+  let
+    val sel = lhs o snd o strip_forall o snd o dest_imp
+    val PART_MATCH = PART_MATCH sel (SPEC_ALL th)
+    val th = ref TRUTH
+    val _ =
+      find_term (fn t => (th := PART_MATCH t; true) handle _ => false) (snd g)
+  in
+   (SUBGOAL_THEN (lhand (concl (!th))) (fn x =>
+     REWRITE_TAC[MP (!th) x] ++ STRIP_ASSUME_TAC x)) g
+end;
+
+fun MP_REWRITE_TAC th g =
+  let
+    val (p,c') = dest_imp (concl (SPEC_ALL th))
+    val (l,r) = (dest_eq o snd o strip_forall) c'
+    fun add_context ctxt k t =
+      (k (mk_conj (ctxt,t)),NONE) handle _ => (k t,SOME ctxt)
+    fun common k (t,NONE) = (k t,NONE)
+      | common k (t,SOME c) = add_context c k t
+    fun mk_opt_conj (NONE,NONE) = NONE
+      | mk_opt_conj (SOME x,NONE) = SOME x
+      | mk_opt_conj (NONE,SOME x) = SOME x
+      | mk_opt_conj (SOME x,SOME y) = SOME(mk_conj(x,y))
+    fun new_concl t =
+      let val (s,t) = match_term l t in
+        add_context (subst s (inst t p)) I (subst s (inst t r))
+      end
+      handle _ =>
+      if is_var t orelse is_const t then (t,NONE) else
+        let val (v,b) = dest_abs t in
+          common (curry mk_abs v) (new_concl b)
+        end
+        handle _ =>
+        let
+          val (t1,t2) = dest_comb t
+          val (t1',c1) = new_concl t1
+          val (t2',c2) = new_concl t2
+        in
+          common I (mk_comb(t1',t2'),mk_opt_conj(c1,c2))
+        end
+     val c = snd g
+  in
+    MATCH_MP_TAC (METIS_PROVE[th] (mk_imp (fst (new_concl c),c))) g
+  end;
+  
+val ra_def = Define `
+    ra d = (\(n:num). if n = 0 then d else (0:real))`;
+
+val rb_def = Define `
+    rb b = (\(n:num). (b:real))`;
+    
+val rd_def = Define `
+    rd d = (\(n:num). (d:real))`;
+    
+val Data_Structure_model_def = Define `
+    Data_Structure_model (X :num -> 'a -> num) p b d m Linit = 
+    0 < b /\ 0 < d /\ DB_model X p (ra d) (rb b) (rd d) m Linit`;
+
+val MULCON_CONST = store_thm
+  ("MULCON_CONST",
+  ``!c m n. mulcon (m, n) (\i. c) = c pow n``,
+    Induct_on `n`
+ >> RW_TAC std_ss [mulcon_def, pow]    
+ ++ RW_TAC std_ss [mulcon_def, pow, REAL_MUL_COMM]);
+
+val REAL_SUM_C_COUNTN = store_thm
+  ("REAL_SUM_C_COUNTN",
+  ``!(c:real) n. 0 < c /\ c < 1 /\ 0 < n ==> 
+	(SIGMA (\i. c pow i) (count n) = (1 - c pow n) / (1 - c))``,
+    Induct_on `n`
+ >> RW_TAC std_ss []
+ ++ RW_TAC std_ss []
+ ++ Cases_on `n = 0`
+ >> (RW_TAC std_ss [COUNT_ONE, POW_1, REAL_SUM_IMAGE_SING, pow, REAL_MUL_RID]
+    ++ MATCH_MP_TAC (GSYM REAL_DIV_REFL)
+    ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+    ++ METIS_TAC [REAL_EQ_SUB_LADD, REAL_ADD_LID, REAL_LT_IMP_NE]
+    ++ FULL_SIMP_TAC arith_ss [COUNT_SUC, pow])
+ ++ RW_TAC std_ss [COUNT_SUC]
+ ++ ONCE_REWRITE_TAC [INSERT_EQ_UNION_SING]
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION]
+ ++ RW_TAC std_ss [FINITE_COUNT, FINITE_SING, REAL_SUM_IMAGE_SING, real_div]
+ >> PSET_TAC [EXTENSION, count_def]
+ ++ RW_TAC real_ss [pow]
+ ++ RW_TAC std_ss [real_div, REAL_SUB_RDISTRIB, real_sub, GSYM REAL_ADD_ASSOC, REAL_EQ_LADD]
+ ++ `!(x:real) y z. (-x + y = -z) <=> (z + y = x)` by REAL_ARITH_TAC
+ ++ `!(x:real) y z. x * y * z = y * (x * z)` by REAL_ARITH_TAC
+ ++ `!(x:real) y. x * y + x = x * (y + 1)` by REAL_ARITH_TAC
+ ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+ ++ RW_TAC std_ss [] ++ POP_ASSUM MATCH_MP_TAC
+ ++ `!(x:real) y z. (z = x - y) ==> (y + z = x)` by REAL_ARITH_TAC
+ ++ POP_ASSUM MATCH_MP_TAC
+ ++ `!(x:real) y. x - y * x = x * (1 - y)` by REAL_ARITH_TAC
+ ++ RW_TAC std_ss [real_sub]
+ ++ MATCH_MP_TAC (GSYM REAL_MUL_LINV)
+ ++ `c <> 1` by METIS_TAC [REAL_LT_IMP_NE]    
+ ++ METIS_TAC [real_sub, REAL_SUB_0]);
+
+val REAL_ONE_INV_INV = prove
+  (``!(x:real) y. x <> 0 /\ y <> 0 ==> (1 / (x / y) = y / x)``,
+    RW_TAC real_ss [real_div]
+ ++ METIS_TAC [REAL_INV_MUL, REAL_INV_NZ, REAL_INV_INV, REAL_MUL_COMM]);
+
+val MEMORY_EMPTY_PROB = prove
+  (``!X p d b m Linit. Data_Structure_model X p b d m Linit /\ b < d /\ 0 < m ==>     
+	(lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) = 
+	 (1 - b / d) / (1 - (b / d) pow m))``,
+    RW_TAC std_ss [Data_Structure_model_def]
+ ++ (MP_TAC o Q.SPECL [`X`, `p`, `ra d`, `rb b`, `rd d`, `m`, `Linit`]) DB_LIM_ZERO_PROB
+ ++ RW_TAC std_ss [rb_def, rd_def, MULCON_CONST]
+ ++ DEP_REWRITE_TAC [REAL_SUM_C_COUNTN, REAL_LT_DIV, REAL_LT_1, REAL_LT_IMP_LE, REAL_ONE_INV_INV]
+ ++ PSET_TAC [DB_model_def, ra_def, rb_def, rd_def]
+ >> (SPOSE_NOT_THEN STRIP_ASSUME_TAC
+    ++ `b pow m * inv d pow m = 1` by PSET_TAC [REAL_SUB_0, real_div, POW_MUL, REAL_POW_INV]
+    ++ `inv (d pow m) = inv (b pow m)` by PSET_TAC [REAL_RINV_UNIQ, GSYM REAL_POW_INV]
+    ++ `SUC (m - 1) = m` by FULL_SIMP_TAC arith_ss []
+    ++ `d pow (SUC (m - 1)) = b pow (SUC (m - 1))` by PSET_TAC [REAL_INV_INJ]
+    ++ `d = b` by (NTAC 6 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC ++ RW_TAC std_ss []
+                  ++ METIS_TAC [REAL_LT_IMP_LE, POW_EQ])
+    ++ METIS_TAC [REAL_LT_IMP_NE])
+ ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+ ++ `b * inv d = 1` by PSET_TAC [REAL_SUB_0, real_div]
+ ++ `b = d` by (NTAC 4 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC 
+               ++ RW_TAC std_ss []
+               ++ METIS_TAC [REAL_LINV_UNIQ, REAL_INV_INV, REAL_INV_INJ])
+ ++ METIS_TAC [REAL_LT_IMP_NE]);
+
+val MEMORY_GEN_PROB = prove
+  (``!X p d b m Linit i. Data_Structure_model X p b d m Linit /\ b < d /\ 0 < m /\ i < m ==>     
+	(lim (\t. prob p (PREIMAGE (X t) {i} INTER p_space p)) = 
+	 (b / d) pow i * lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)))``,
+    RW_TAC std_ss [Data_Structure_model_def]
+ ++ Cases_on `i = 0`    
+ >> RW_TAC std_ss [pow, REAL_MUL_LID]
+ ++ (MP_TAC o Q.SPECL [`X`, `p`, `ra d`, `rb b`, `rd d`, `m`, `i - 1`, `Linit`]) DB_SUC_PROB
+ ++ RW_TAC arith_ss [rb_def, rd_def, MULCON_CONST, REAL_MUL_COMM]);
+
+val REAL_DIV_MUL_DIV = prove
+  (``!(x:real) y z w. x / y * (z / w) = (x * z) / (y * w)``,
+    RW_TAC real_ss [real_div, GSYM REAL_MUL_ASSOC]
+ ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+ ++ POP_ASSUM MATCH_MP_TAC
+ ++ Cases_on `y = 0`
+ >> RW_TAC std_ss [REAL_INV_0, REAL_MUL_LZERO, REAL_MUL_RZERO]
+ ++ Cases_on `w = 0`
+ >> RW_TAC std_ss [REAL_INV_0, REAL_MUL_LZERO, REAL_MUL_RZERO]
+ ++ DEP_REWRITE_TAC [REAL_INV_MUL]
+ ++ RW_TAC std_ss []
+ ++ METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]);
+
+val REAL_MUL_INV = prove
+  (``!(x:real) y. inv (x * y) = inv x * inv y``,
+    RW_TAC std_ss []
+ ++ Cases_on `x = 0`
+ >> RW_TAC std_ss [REAL_INV_0, REAL_MUL_LZERO, REAL_MUL_RZERO]
+ ++ Cases_on `y = 0`
+ >> RW_TAC std_ss [REAL_INV_0, REAL_MUL_LZERO, REAL_MUL_RZERO]
+ ++ DEP_REWRITE_TAC [REAL_INV_MUL]
+ ++ RW_TAC std_ss []);
+      
+val OVERFLOW_PROB = prove
+  (``!X p d b m Linit. Data_Structure_model X p b d m Linit /\ b < d /\ 0 < m ==>     
+	(b * lim (\t. prob p (PREIMAGE (X t) {m - 1} INTER p_space p)) = 
+	 (b pow m * (d - b) / (d pow m - b pow m)))``,
+    RW_TAC std_ss []
+ ++ (MP_TAC o Q.SPECL [`X`, `p`, `d`, `b`, `m`, `Linit`, `m - 1`]) MEMORY_GEN_PROB
+ ++ RW_TAC arith_ss []
+ ++ (MP_TAC o Q.SPECL [`X`, `p`, `d`, `b`, `m`, `Linit`]) MEMORY_EMPTY_PROB
+ ++ RW_TAC std_ss [REAL_MUL_ASSOC] 
+ ++ Suff `b * (b / d) pow (m - 1) = b pow m * (inv d) pow (m - 1)`
+ >> (RW_TAC std_ss [] ++ RW_TAC std_ss [GSYM REAL_MUL_ASSOC]
+    ++ `!(x:real) y z. x * y / z = x * (y / z)` by RW_TAC real_ss [real_div, REAL_MUL_ASSOC]
+    ++ POP_ORW
+    ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+    ++ POP_ASSUM MATCH_MP_TAC
+    ++ `d pow (m - 1) * (b pow m / d pow m) = b pow m / d`
+    	by (RW_TAC std_ss [real_div]
+    	   ++ `!(x:real) y z. x * (y * z) = x * z * y` by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+    	   ++ POP_ORW ++ `SUC (m - 1) = m` by RW_TAC arith_ss []
+    	   ++ `d pow m = d pow (SUC (m - 1))` by RW_TAC std_ss []
+    	   ++ `inv (d pow m) = inv (d pow (m - 1)) * inv d`
+    	   	by (POP_ORW ++ POP_ASSUM K_TAC ++ RW_TAC std_ss [pow, REAL_MUL_INV, REAL_MUL_COMM])
+    	   ++ POP_ORW ++ RW_TAC std_ss [REAL_MUL_ASSOC]
+    	   ++ DEP_REWRITE_TAC [REAL_MUL_RINV]
+    	   ++ RW_TAC std_ss [REAL_MUL_LID, REAL_MUL_COMM]
+    	   ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+    	   ++ `d = 0` by METIS_TAC [POW_ZERO]
+    	   ++ PSET_TAC [Data_Structure_model_def, REAL_LT_IMP_NE])
+    ++ RW_TAC std_ss [REAL_INV_1OVER, REAL_DIV_MUL_DIV, REAL_POW_DIV, POW_ONE, 
+    	REAL_MUL_LID, REAL_SUB_LDISTRIB, REAL_MUL_RID]
+    ++ `d <> 0` by PSET_TAC [Data_Structure_model_def, REAL_LT_IMP_NE]
+    ++ `(1 - b / d) / (d pow (m - 1) - b pow m / d) = 
+        d * (1 - b / d) / (d * (d pow (m - 1) - b pow m / d))`
+        by RW_TAC std_ss [REAL_DIV_LMUL_CANCEL] ++ POP_ORW
+    ++ RW_TAC real_ss [REAL_SUB_LDISTRIB, real_div, REAL_MUL_ASSOC]    
+    ++ `!(x:real) y z. x * y * z = x * z * y` by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM] 
+    ++ POP_ORW ++ `SUC (m - 1) = m` by RW_TAC arith_ss []
+    ++ `d * d pow (m - 1) = d pow m` by RW_TAC std_ss [GSYM pow]
+    ++ POP_ORW ++ POP_ASSUM K_TAC
+    ++ RW_TAC std_ss [REAL_MUL_RINV, REAL_MUL_LID])
+ ++ `SUC (m - 1) = m` by RW_TAC arith_ss []    
+ ++ RW_TAC std_ss [real_div, POW_MUL, REAL_MUL_ASSOC]
+ ++ RW_TAC std_ss [GSYM pow]);
+   
+val UNDERFLOW_PROB = prove
+  (``!X p d b m Linit. Data_Structure_model X p b d m Linit /\ b < d /\ 0 < m ==>     
+	(d * lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) = 
+	 (d pow m * (d - b) / (d pow m - b pow m)))``,
+    RW_TAC std_ss []   
+ ++ DEP_REWRITE_TAC [MEMORY_EMPTY_PROB]
+ ++ RW_TAC std_ss []
+ >> (Q.EXISTS_TAC `Linit` ++ RW_TAC std_ss [])
+ ++ `d <> 0` by PSET_TAC [Data_Structure_model_def, REAL_LT_IMP_NE]
+ ++ Know `(1 - b / d) / (1 - (b / d) pow m) = d pow (m - 1) * (d - b) / (d pow m - b pow m)`
+ >> (`d pow m <> 0` by METIS_TAC [POW_ZERO] 
+    ++ `(1 - b / d) / (1 - (b / d) pow m) = d pow m * (1 - b / d) / (d pow m * (1 - (b / d) pow m))`
+    		by RW_TAC std_ss [REAL_DIV_LMUL_CANCEL] ++ POP_ORW
+    ++ `!(x:real) y z. x * y * z = x * z * y` by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM] 
+    ++ RW_TAC real_ss [REAL_SUB_LDISTRIB, real_div, REAL_MUL_ASSOC]  		
+    ++ POP_ORW ++ RW_TAC real_ss [REAL_MUL_RINV]
+    ++ `!(x:real) y z. (x = y) ==> (x * z = y * z)` by RW_TAC std_ss []
+    ++ POP_ASSUM MATCH_MP_TAC
+    ++ `SUC (m - 1) = m` by RW_TAC arith_ss []
+    ++ `d pow (m - 1) * d = d pow m` by METIS_TAC [REAL_MUL_COMM, pow]
+    ++ POP_ORW ++ RW_TAC real_ss [real_sub, REAL_EQ_LADD, REAL_EQ_NEG] 
+    ++ Suff `d pow m * inv d = d pow (m - 1)`
+    >> RW_TAC std_ss []
+    ++ `(d pow m * inv d = d pow (m - 1)) = (d pow m * inv d * d = d pow (m - 1) * d)`
+    	by METIS_TAC [REAL_EQ_RMUL] ++ POP_ORW 
+    ++ RW_TAC real_ss [GSYM REAL_MUL_ASSOC, REAL_MUL_LINV]
+    ++ METIS_TAC [REAL_MUL_COMM, pow]) ++ RW_TAC std_ss [real_div, REAL_MUL_ASSOC]
+ ++ Suff `d * d pow (m - 1) = d pow m`
+ >> RW_TAC std_ss []
+ ++ `SUC (m - 1) = m` by RW_TAC arith_ss []
+ ++ METIS_TAC [REAL_MUL_COMM, pow]);
+ 
+val LARGE_MEMORY_EMPTY_PROB = prove
+  (``!X p d b m Linit. Data_Structure_model X p b d m Linit /\ b < d ==>     
+	(lim (\m. (1 - b / d) / (1 - (b / d) pow m)) = 1 - b / d)``,
+    RW_TAC std_ss [real_div]
+ ++ MATCH_MP_TAC TEND2LIM
+ ++ `(1 - b * inv d) = (1 - b * inv d) * 1` by RW_TAC real_ss []
+ ++ POP_ORW
+ ++ Suff `(\m'. (1 - b * inv d) * 1 * inv (1 - (b * inv d) pow m')) =
+ 	  (\m'. (\m'. 1 - b * inv d) m' * (\m'. inv (1 - (b * inv d) pow m')) m')`  
+ >> (DISCH_TAC ++ POP_ORW ++ MATCH_MP_TAC SEQ_MUL
+    ++ RW_TAC real_ss [SEQ_CONST]
+    ++ `1 = inv (1:real)` by RW_TAC std_ss [REAL_INV1]     
+    ++ `(\m'. inv (1 - (b * inv d) pow m')) = (\m'. inv ((\m'. 1 - (b * inv d) pow m') m'))`
+    	by RW_TAC std_ss [] ++ POP_ORW ++ POP_ORW
+    ++ MATCH_MP_TAC SEQ_INV
+    ++ RW_TAC real_ss [REAL_INV1]
+    ++ `(1:real) = 1 - 0` by RW_TAC real_ss [] ++ POP_ORW    
+    ++ `(\m'. 1 - 0 - (b * inv d) pow m') = (\m'. (\m'. 1) m' - (\m'. (b * inv d) pow m') m')`
+    	by RW_TAC real_ss [] ++ POP_ORW 
+    ++ MATCH_MP_TAC SEQ_SUB
+    ++ RW_TAC std_ss [SEQ_CONST]
+    ++ MATCH_MP_TAC SEQ_POWER
+    ++ `0 < b /\ 0 < d` by PSET_TAC [Data_Structure_model_def]
+    ++ `0 < b * inv d` by RW_TAC real_ss [REAL_INV_POS, REAL_LT_MUL]
+    ++ `abs (b * inv d) = b * inv d` by METIS_TAC [REAL_LT_IMP_LE, GSYM ABS_REFL]
+    ++ POP_ORW ++ `d <> 0` by PSET_TAC [Data_Structure_model_def, REAL_LT_IMP_NE]
+    ++ `(b * inv d < 1) = (b * inv d * d < 1 * d)` by METIS_TAC [REAL_LT_RMUL]
+    ++ POP_ORW ++ RW_TAC real_ss [GSYM REAL_MUL_ASSOC, REAL_MUL_LINV])
+ ++ RW_TAC real_ss []);
+         
+</script>
+</body>
+</html>

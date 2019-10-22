@@ -1,0 +1,380 @@
+<html>
+<head>
+</head>
+
+<body>
+<pre>
+(* ========================================================================= *)
+(*                                                                           *)
+(*                     Summation of integer theorems                         *)
+(*             This code is developed using HOL4 kanaskas 7.                 *)
+(*                  Authors: Liya Liu & Mukesh Agrawal                       *)
+(*                   (c) Copyright, Liya Liu, 2012                           *)
+(*                       Hardware Verification Group,                        *)
+(*                       Concordia University                                *)
+(*                                                                           *)
+(*                                                                           *)
+(*                      Last update: Dec 10, 2012                            *)
+(*                                                                           *)
+(* ========================================================================= *)
+(* =================================== *)
+(*       SumI of integer theorems      *)
+(*  Authors: Liya Liu & Mukesh Agrawal *)
+(* =================================== *)
+(*
+val () = app load
+ ["bossLib", "metisLib", "arithmeticTheory", "pred_setTheory", "realLib", 
+ 	"pairTheory", "combinTheory", "seqTheory", "listTheory", "transcTheory", "numLib", 
+ 	"prim_recTheory", "integerTheory", "extra_pred_setTheory","extra_pred_setTools"];
+val () = quietdec := true;
+
+set_trace "Unicode" 0;*)
+
+open HolKernel Parse boolLib bossLib metisLib numLib subtypeTheory extra_pred_setTheory
+     combinTheory pred_setTheory arithmeticTheory realTheory realLib pairTheory combinTheory
+      seqTheory listTheory transcTheory prim_recTheory integerTheory extra_pred_setTheory
+      extra_pred_setTools;
+
+(*val () = quietdec := false;*)
+
+(* ------------------------------------------------------------------------- *)
+(* Start a new theory called "extreal"                                       *)
+(* ------------------------------------------------------------------------- *)
+
+val _ = new_theory "integerSum";
+
+(* ------------------------------------------------------------------------- *)
+(* Helpful proof tools                                                       *)
+(* ------------------------------------------------------------------------- *)
+
+infixr 0 ++ << || ORELSEC ## --> THENC;
+infix 1 >> |->;
+
+val !! = REPEAT;
+val op++ = op THEN;
+val op<< = op THENL;
+val op|| = op ORELSE;
+val op>> = op THEN1;
+
+(* ------------------------------------------------------------------------- *)
+(* Helpful proof tools                                                       *)
+(* ------------------------------------------------------------------------- *)
+val sumIc = new_recursive_definition
+   {name = "sumIc",
+    def = (--`(sumIc n 0 (f:num -> int) = 0) /\
+	      (sumIc n (SUC m) f = sumIc n m f + f(n + m))`--),
+    rec_axiom = num_Axiom}
+
+val SUMI_DEF = new_definition("SUMI_DEF",
+  (--`sumI(m,n) (f:num -> int) = sumIc m n f`--));
+
+val sumI = store_thm("sumI",
+  (--`!(f:num -> int) n m. (sumI (n,0) f = 0) /\
+              (sumI (n,SUC m) f = sumI (n,m) f + f(n + m))`--),
+  REWRITE_TAC[SUMI_DEF, sumIc]);
+
+val SUMI_TWO= store_thm("SUMI_TWO",
+  (--`!(f:num -> int) n p. sumI(0,n) f + sumI(n,p) f = sumI(0,n + p) f`--),
+  GEN_TAC THEN GEN_TAC THEN INDUCT_TAC THEN
+  REWRITE_TAC[sumI, INT_ADD_CALCULATE, ADD_CLAUSES] THEN
+  ASM_REWRITE_TAC[INT_ADD_ASSOC]);
+
+val SUMI_DIFF = store_thm("SUMI_DIFF",
+  (--`!(f:num -> int) m n. sumI(m,n) f = sumI(0,m + n) f - sumI(0,m) f`--),
+  REPEAT GEN_TAC THEN REWRITE_TAC [INT_EQ_SUB_LADD] THEN
+  ONCE_REWRITE_TAC[INT_ADD_SYM] THEN MATCH_ACCEPT_TAC SUMI_TWO);
+
+val SUMI_1 = store_thm("SUMI_1",
+  (--`!(f:num -> int) n. sumI(n,1) f = f(n)`--),
+  REPEAT GEN_TAC THEN
+  REWRITE_TAC[num_CONV (--`1:num`--), sumI, ADD_CLAUSES, INT_ADD_LID]);
+  
+val SUMI_2 = store_thm("SUMI_2",
+  (--`!(f:num -> int) n. sumI(n,2) f = f(n) + f(n + 1)`--),
+  REPEAT GEN_TAC THEN 
+  REWRITE_TAC[num_CONV (--`2:num`--),sumI, INT_EQ_RADD, SUMI_1]);
+
+val SUMI_0 = store_thm("SUMI_0",
+  (--`!m n. sumI(m,n)(\r. 0:int) = 0`--),
+  GEN_TAC THEN INDUCT_TAC THEN REWRITE_TAC[sumI] 
+  THEN ASM_REWRITE_TAC[INT_ADD_LID]);
+
+val SUMI_OFFSET = store_thm("SUMI_OFFSET",
+  (--`!(f:num -> int) n k.
+      sumI(0,n)(\m. f(m + k))
+    = sumI(0,n + k) f - sumI(0,k) f`--),
+  REPEAT GEN_TAC THEN
+  ONCE_REWRITE_TAC [ADD_SYM] THEN
+  REWRITE_TAC[GSYM SUMI_TWO, INT_ADD_SUB] THEN
+  SPEC_TAC((--`n:num`--),(--`n:num`--)) THEN
+  INDUCT_TAC THEN REWRITE_TAC[sumI] THEN
+  BETA_TAC THEN ASM_REWRITE_TAC[ADD_CLAUSES]);
+
+val SUMI_REINDEX = store_thm("SUMI_REINDEX",
+  (--`!(f:num -> int) m k n. sumI(m + k,n) f = sumI(m,n)(\r. f(r + k))`--),
+  EVERY [GEN_TAC, GEN_TAC, GEN_TAC] THEN INDUCT_TAC
+  THEN REWRITE_TAC [sumI] THEN ASM_REWRITE_TAC[INT_EQ_LADD]
+  THEN BETA_TAC THEN AP_TERM_TAC THEN
+  CONV_TAC(AC_CONV(ADD_ASSOC, ADD_SYM)));
+
+val SUMI_LE = store_thm("SUMI_LE",
+  (--`!(f:num -> int) (g:num -> int) m n. (!r. m <= r /\ r < (n + m) ==> f(r) <= g(r))
+        ==> (sumI(m,n) f <= sumI(m,n) g)`--),
+  GEN_TAC THEN GEN_TAC THEN GEN_TAC THEN INDUCT_TAC THEN
+  REWRITE_TAC [sumI, INT_LE_REFL] THEN DISCH_TAC THEN MATCH_MP_TAC 
+  INT_LE_ADD2 THEN  CONJ_TAC THEN FIRST_ASSUM MATCH_MP_TAC THENL
+  [GEN_TAC THEN DISCH_TAC THEN FIRST_ASSUM MATCH_MP_TAC THEN
+  ASM_REWRITE_TAC[ADD_CLAUSES] THEN
+  MATCH_MP_TAC LESS_TRANS THEN EXISTS_TAC (--`(n + m):num`--)
+  THEN ASM_REWRITE_TAC [ADD_SYM , ADD_CLAUSES, LESS_EQ_ADD,
+  LESS_SUC_REFL] , DECIDE_TAC]);
+	
+val SUMI_EQ = store_thm("SUMI_EQ",
+  (--`!(f:num -> int) (g:num -> int) (m:num) (n:num).
+ (!r. m <= r /\ r < (n + m) 
+	==> (f(r) = g(r)))  ==> (sumI(m,n) f = sumI(m,n) g)`--),
+  REPEAT GEN_TAC THEN DISCH_TAC THEN REWRITE_TAC[GSYM INT_LE_ANTISYM]
+ THEN CONJ_TAC THEN MATCH_MP_TAC SUMI_LE THEN GEN_TAC THEN
+  DISCH_THEN(fn th => MATCH_MP_TAC INT_EQ_IMP_LE THEN
+    FIRST_ASSUM(SUBST1_TAC o C MATCH_MP th)) THEN REFL_TAC);
+
+val SUMI_POS = store_thm("SUMI_POS",
+  (--`!(f:num -> int). (!n. 0:int <= f(n)) ==> !m n. 0 <= sumI(m,n) f`--),
+  GEN_TAC THEN DISCH_TAC THEN GEN_TAC THEN INDUCT_TAC THEN
+  REWRITE_TAC[sumI, INT_LE_REFL] THEN
+  MATCH_MP_TAC INT_LE_ADD THEN ASM_REWRITE_TAC[]);
+
+val SUMI_POS_GEN = store_thm("SUMI_POS_GEN",
+  (--`!(f:num -> int) (m:num) n. (!k. k < (m + n) ==> 0:int <= f(k)) ==> 0 <= sumI(m,n) f`--),
+    RW_TAC std_ss [] ++ Induct_on `n` >> REWRITE_TAC[sumI, INT_LE_REFL] 
+ ++ RW_TAC std_ss [sumI] ++ MATCH_MP_TAC INT_LE_ADD 
+ ++ FULL_SIMP_TAC arith_ss []);
+
+val SUMI_ABS = store_thm("SUMI_ABS",
+  (--`!(f:num -> int) (m:num) (n:num). ABS(sumI(m,n) (\m. ABS(f m))) = sumI(m,n) (\m. ABS(f m))`--),
+  GEN_TAC THEN GEN_TAC THEN REWRITE_TAC[INT_ABS_EQ_ID] THEN
+  GEN_TAC THEN MATCH_MP_TAC SUMI_POS THEN BETA_TAC THEN
+  REWRITE_TAC[INT_ABS_POS]);
+
+val SUMI_ADD = store_thm("SUMI_ADD",
+  (--`!(f:num -> int) (g:num -> int) m n. sumI(m,n) (\n. f(n) + g(n))
+      = sumI(m,n) f + sumI(m,n) g`--),
+  EVERY [GEN_TAC, GEN_TAC, GEN_TAC] THEN INDUCT_TAC THEN
+  ASM_REWRITE_TAC[sumI, INT_ADD_LID] THEN BETA_TAC THEN
+  CONV_TAC(AC_CONV(INT_ADD_ASSOC,INT_ADD_SYM)));
+
+val SUMI_CMUL = store_thm("SUMI_CMUL",
+  (--`!(f:num -> int) (c:int) (m:num) (n:num). sumI(m,n) (\n. c * f(n)) = c * sumI(m,n) f`--),
+  EVERY [GEN_TAC, GEN_TAC, GEN_TAC] THEN INDUCT_TAC THEN
+  ASM_REWRITE_TAC[sumI, INT_MUL_RZERO] THEN BETA_TAC THEN
+  REWRITE_TAC[INT_LDISTRIB]);
+
+val SUMI_NEG = store_thm("SUMI_NEG",
+  (--`!(f:num -> int) (n:num) (d:num). sumI(n,d) (\n. ~(f n)) = ~(sumI(n,d) f)`--),
+  GEN_TAC THEN GEN_TAC THEN INDUCT_TAC THEN
+  ASM_REWRITE_TAC[sumI, INT_NEG_0] THEN
+  BETA_TAC THEN REWRITE_TAC[INT_NEG_ADD]);
+
+val SUMI_SUB = store_thm("SUMI_SUB",
+  (--`!(f:num -> int) (g:num -> int) (m:num) (n:num). sumI(m,n)(\n. (f n) - (g n))
+    = sumI(m,n) f - sumI(m,n) g`--),
+  REPEAT GEN_TAC THEN REWRITE_TAC[int_sub, GSYM SUMI_NEG, GSYM SUMI_ADD] THEN
+  BETA_TAC THEN REFL_TAC);
+
+val SUMI_SUBST = store_thm("SUMI_SUBST",
+  (--`!(f:num -> int) (g:num -> int) (m:num) (n:num). (!p. m <= p /\ p < (m + n) ==> (f p = g p))
+        ==> (sumI(m,n) f = sumI(m,n) g)`--),
+  EVERY [GEN_TAC, GEN_TAC, GEN_TAC] THEN INDUCT_TAC THEN REWRITE_TAC[sumI] THEN
+  ASM_REWRITE_TAC[] THEN DISCH_TAC THEN BINOP_TAC THEN
+  FIRST_ASSUM MATCH_MP_TAC THENL
+   [GEN_TAC THEN DISCH_TAC THEN FIRST_ASSUM MATCH_MP_TAC THEN
+    ASM_REWRITE_TAC[ADD_CLAUSES] THEN
+    MATCH_MP_TAC LESS_EQ_IMP_LESS_SUC THEN
+    MATCH_MP_TAC LESS_IMP_LESS_OR_EQ THEN ASM_REWRITE_TAC[],
+    REWRITE_TAC[LESS_EQ_ADD] THEN ONCE_REWRITE_TAC[ADD_SYM] THEN
+    MATCH_MP_TAC LESS_MONO_ADD THEN REWRITE_TAC[LESS_SUC_REFL]]);
+
+val SUMI_BOUND = store_thm("SUMI_BOUND",
+  (--`!(f:num -> int) (k:int) (m:num) (n:num). 
+	(!p. m <= p /\ p < (m + n) ==> (f(p) <= k))
+        ==> (sumI(m,n) f <= (&n * k))`--),
+  EVERY [GEN_TAC, GEN_TAC, GEN_TAC] THEN INDUCT_TAC THEN
+  REWRITE_TAC[sumI, INT_MUL_LZERO, INT_LE_REFL] THEN
+  DISCH_TAC THEN REWRITE_TAC[INT, INT_RDISTRIB] THEN
+  MATCH_MP_TAC INT_LE_ADD2 THEN CONJ_TAC THENL
+   [FIRST_ASSUM MATCH_MP_TAC THEN GEN_TAC THEN DISCH_TAC THEN
+    FIRST_ASSUM MATCH_MP_TAC THEN ASM_REWRITE_TAC[] THEN
+    FIRST_ASSUM(MP_TAC o CONJUNCT2) THEN REWRITE_TAC[ADD_CLAUSES] THEN
+    MATCH_ACCEPT_TAC LESS_SUC,
+    REWRITE_TAC[INT_MUL_LID] THEN FIRST_ASSUM MATCH_MP_TAC THEN
+    REWRITE_TAC[ADD_CLAUSES, LESS_EQ_ADD] THEN
+    MATCH_ACCEPT_TAC LESS_SUC_REFL]);
+	
+val SUMI_GROUP = store_thm("SUMI_GROUP",
+  (--`!(n:num) (k:num) (f:num -> int). 
+	sumI(0,n)(\m. sumI(m * k,k) f) = sumI(0,n * k) f`--),
+  INDUCT_TAC THEN REWRITE_TAC[sumI, MULT_CLAUSES] THEN
+  REPEAT GEN_TAC THEN BETA_TAC THEN ASM_REWRITE_TAC[] THEN
+  REWRITE_TAC[ADD_CLAUSES, SUMI_TWO]);
+
+val SUMI_NSUB = store_thm("SUMI_NSUB",
+  (--`!(n:num) (f:num -> int) (c:int).
+      sumI(0,n) f - (&n * c) = sumI(0,n)(\p. f(p) - c)`--),
+  INDUCT_TAC THEN REWRITE_TAC[sumI, INT_MUL_LZERO, INT_SUB_REFL] THEN
+  REWRITE_TAC[ADD_CLAUSES, INT, INT_RDISTRIB] THEN BETA_TAC THEN
+  REPEAT GEN_TAC THEN POP_ASSUM(fn th => REWRITE_TAC[GSYM th]) THEN
+  REWRITE_TAC[int_sub, INT_NEG_ADD, INT_MUL_LID] THEN
+  CONV_TAC(AC_CONV(INT_ADD_ASSOC,INT_ADD_SYM)));
+
+val SUMI_CLOSE_ADD_SUM = store_thm
+  ("SUMI_CLOSE_ADD_SUM",
+   ``!s (f:num -> num) k. 
+	(s = {(r:int) | ?(n:num -> int). r = sumI (0, k) (\i. (n i) * &f i)}) /\ 
+	(!i. (i < k) ==> 0 < f i) ==>
+	(!a b. a IN s /\ b IN s ==> a + b IN s /\ b - a IN s)``,
+    RW_TAC std_ss []
+ >> (FULL_SIMP_TAC std_ss [GSPECIFICATION, EXTENSION]
+    ++ Q.EXISTS_TAC `(\x. n x + n' x)`
+    ++ RW_TAC std_ss [GSYM SUMI_ADD, GSYM INT_RDISTRIB])
+ ++ FULL_SIMP_TAC std_ss [GSPECIFICATION, EXTENSION]
+ ++ Q.EXISTS_TAC `(\x. n' x - n x)`
+ ++ RW_TAC std_ss [GSYM SUMI_SUB, GSYM INT_SUB_RDISTRIB]);
+ 
+val SUMI_TWO_GENERAL = store_thm
+ ("SUMI_TWO_GENERAL",
+ (--`!f m n p. sumI (m,n) f + sumI (m+n,p) f = sumI (m,n + p) f`--),
+	REPEAT GEN_TAC THEN
+	Induct_on `p` THEN1
+		RW_TAC real_ss [sumI, INT_ADD_RID] THEN
+		`n + SUC p = SUC (n + p)` by DECIDE_TAC THEN
+		POP_ORW THEN
+		RW_TAC real_ss [sumI, INT_ADD_ASSOC]);
+
+val SUMI_SPLIT_TRE = store_thm
+  ("SUMI_SPLIT_TRE",
+  (--`!f (a:num) (k:num) b. (k < a) ==>
+      (sumI (b, a + 1) f = 
+       sumI (b, k) f + sumI (b + k, 1) f + sumI (b + k + 1, a - k) f)`--),
+	RW_TAC std_ss [] THEN 
+        `a + 1 = k + (1 + (a - k))` by FULL_SIMP_TAC arith_ss [] THEN
+        (MP_TAC o SYM o Q.SPECL [`f`, `b`, `k`, `1 + (a - k)`]) SUMI_TWO_GENERAL THEN
+        RW_TAC std_ss [] THEN
+        (MP_TAC o SYM o Q.SPECL [`f`, `b + k`, `1`, `(a - k)`]) SUMI_TWO_GENERAL THEN
+        RW_TAC std_ss [INT_ADD_ASSOC]);
+
+val IMAGE_POS_INTSET_NOTEMPTY = store_thm
+  ("IMAGE_POS_INTSET_NOTEMPTY",
+  ``!(f:num -> num) k. (0 < k) ==> (IMAGE (\(i:num). &f i) (count k) <> {})``,
+    RW_TAC std_ss [] 
+ ++ `k = SUC (k - 1)` by RW_TAC arith_ss [] ++ POP_ORW
+ ++ RW_TAC std_ss [COUNT_SUC, IMAGE_INSERT, NOT_INSERT_EMPTY]);
+
+val IMAGE_NUMSET_NOTEMPTY = store_thm
+  ("IMAGE_NUMSET_NOTEMPTY",
+  ``!(f:num -> num) k. (0 < k) ==> (IMAGE (\(i:num). f i) (count k) <> {})``,
+    RW_TAC std_ss [] 
+ ++ `k = SUC (k - 1)` by RW_TAC arith_ss [] ++ POP_ORW
+ ++ RW_TAC std_ss [COUNT_SUC, IMAGE_INSERT, NOT_INSERT_EMPTY]);
+
+val SUMI_ONE_NON_ZERO_TERM = store_thm
+  ("SUMI_ONE_NON_ZERO_TERM",
+  ``!n k x. sumI (0, n) (\m. if m = k then x else 0) = if k < n then x else 0``,
+		Induct
+ >> RW_TAC arith_ss [sumI] 
+ ++ RW_TAC arith_ss [sumI] 
+ << [FULL_SIMP_TAC std_ss [],
+     FULL_SIMP_TAC std_ss [],
+     RW_TAC std_ss [INT_ADD_RID],
+     FULL_SIMP_TAC arith_ss [],
+     RW_TAC std_ss [INT_ADD_LID],
+     FULL_SIMP_TAC arith_ss [],
+     FULL_SIMP_TAC arith_ss [],
+     RW_TAC std_ss [INT_ADD_LID]]);		
+
+val SUMI_IF_MUL = store_thm
+  ("SUMI_IF_MUL",
+  ``!f k t. sumI (0, k) (\i. (if i = t then (1:int) else (0:int)) * &f i) = 
+		sumI (0, k) (\i. if i = t then &f i else (0:int))``,
+		RW_TAC std_ss [] ++ MATCH_MP_TAC SUMI_EQ 
+ ++ RW_TAC std_ss [INT_MUL_LID] ++ RW_TAC std_ss [INT_MUL_LZERO]);
+
+val SUMI_IF_LE_EQ_SUMI_IF_LT = store_thm 
+  ("SUMI_IF_LE_EQ_SUMI_IF_LT",
+  ``!(n:num -> int) (f:num -> num) k. 
+	sumI (0, k) (\i. (if 0 <= n i then n i else 0) * &f i) = 
+	sumI (0, k) (\i. (if 0 < n i then n i else 0) * &f i)``,
+    RW_TAC std_ss [] ++ MATCH_MP_TAC SUMI_SUBST ++ RW_TAC std_ss []
+ >> (`(n:num -> int) (p:num) = 0` by METIS_TAC [INT_NOT_LT, INT_LE_ANTISYM] 
+    ++ RW_TAC std_ss []) ++ METIS_TAC [INT_NOT_LE, INT_LT_GT]);
+
+val SUMI_NFUN_POS = store_thm("SUMI_NFUN_POS",
+  (--`!(f:num -> int) n. (!i. i < n ==> 0:int <= f(i)) ==> 0 <= sumI(0,n) f`--),
+  Induct_on `n` >> RW_TAC std_ss [sumI, INT_LE_REFL]
+ ++ RW_TAC std_ss [sumI] ++ `!i. i < n ==> 0 <= f i` by RW_TAC arith_ss [] 
+ ++ `0 <= sumI (0,n) f` by FULL_SIMP_TAC std_ss [] 
+ ++ `0 <= (f:num -> int) (n:num)` by RW_TAC std_ss [] ++ METIS_TAC [INT_LE_ADD]);
+
+val SUMI_NEG_GEN = store_thm("SUMI_NEG_GEN",
+  (--`!(f:num -> int) n. (!i. i < n ==> f(i) <= (0:int)) ==> sumI(0,n) f <= 0`--),
+  GEN_TAC THEN INDUCT_TAC THEN
+  RW_TAC std_ss [sumI, INT_LE_REFL] THEN
+  RW_TAC std_ss [sumI, ADD] THEN 
+  `!i. i < n ==> f i <= 0` by RW_TAC arith_ss [] THEN
+  `0 <= -sumI (0, n) f` by METIS_TAC [INT_NEG_GE0] THEN
+  `f n <= 0` by RW_TAC arith_ss [] THEN 
+  `0 <= -(f n)` by METIS_TAC [INT_NEG_GE0] THEN 
+  RW_TAC std_ss [GSYM INT_NEG_GE0] THEN
+  METIS_TAC [INT_NEG_ADD, INT_LE_ADD]);
+
+val SUMI_NEG_GT = store_thm("SUMI_NEG_GT",
+  (--`!(f:num -> int) n. (!i. i < n ==> f(i) < (0:int)) /\ (0 < n) ==> sumI(0,n) f < 0`--),
+    GEN_TAC ++ INDUCT_TAC >> RW_TAC std_ss []
+ ++ RW_TAC std_ss [sumI, ADD] ++ Cases_on `n = 0` >> RW_TAC std_ss [sumI, INT_ADD_LID]
+ ++ `0 < n` by RW_TAC arith_ss []
+ ++ `!i. i < n ==> f i < 0` by RW_TAC arith_ss []
+ ++ `0 < -sumI (0, n) f` by METIS_TAC [INT_NEG_GT0]
+ ++ `f n < 0` by RW_TAC arith_ss [] ++ `0 < -(f n)` by METIS_TAC [INT_NEG_GT0]
+ ++ RW_TAC std_ss [GSYM INT_NEG_GT0] ++ METIS_TAC [INT_NEG_ADD, INT_LT_ADD]);
+
+val INT_MUL_LE = store_thm
+  ("INT_MUL_LE",
+  ``!(x:int) y. (x <= 0) /\ (y <= 0) ==> 0 <= (x * y)``,
+    RW_TAC std_ss [GSYM INT_NEG_GE0] 
+ ++ METIS_TAC [INT_LE_MUL, INT_NEG_MUL2]);
+
+val INT_MUL_NEG_LE = store_thm
+  ("INT_MUL_NEG_LE",
+  ``!(x:int) y. (0 <= x) /\ (y <= 0) ==> (x * y) <= 0``,
+    RW_TAC std_ss [GSYM INT_NEG_GE0] 
+ ++ METIS_TAC [INT_LE_MUL, INT_NEG_RMUL]);
+
+val INT_SUB_REFL_LT = store_thm
+  ("INT_SUB_REFL_LT",
+  ``!(x:int) y. (0 < y) ==> (x - y < x)``,
+    RW_TAC std_ss [int_sub]
+ ++ `((x:int) + -y < x) = ((x:int) + -y < x + 0)` by METIS_TAC [INT_ADD_RID] 
+ ++ POP_ORW ++ METIS_TAC [INT_LT_LADD, INT_NEG_LT0]);
+
+val INT_LT_MUL1 = store_thm
+  ("INT_LT_MUL1",
+  ``!(x1:int) x2 y1 y2. 0 <= x1 /\ 0 <= y1 /\ x1 <= x2 /\ y1 <= y2 ==> x1 * y1 <= x2 * y2``,
+    RW_TAC std_ss []
+ ++ Cases_on `x1 = x2` >> (Cases_on `x1 = 0` >> METIS_TAC [INT_MUL_LZERO, INT_LE_REFL] 
+    ++ `0 < (x1:int)` by METIS_TAC [INT_LT_LE] ++ METIS_TAC [INT_LE_MONO])
+ ++ `x1 < x2` by METIS_TAC [INT_LT_LE] 
+ ++ Cases_on `y1 = y2` >> (Cases_on `y1 = 0` >> METIS_TAC [INT_MUL_RZERO, INT_LE_REFL] 
+    ++ `0 < (y1:int)` by METIS_TAC [INT_LT_LE] ++ METIS_TAC [INT_LE_MONO, INT_MUL_COMM]) 
+ ++ `y1 < y2` by METIS_TAC [INT_LT_LE] ++ METIS_TAC [INT_LT_MUL2, INT_LT_IMP_LE]);
+
+val EXISTS_NEG_FUN_IN_SUMI = store_thm
+  ("EXISTS_NEG_FUN_IN_SUMI",
+  ``!(f:num -> int) n. (sumI (0, n) f < 0) ==> ?i. (i < n) /\ (f i < 0)``,
+    SPOSE_NOT_THEN STRIP_ASSUME_TAC 
+ ++ `!i. i < n ==> 0 <= (f:num -> int) i` by METIS_TAC [INT_NOT_LT]
+ ++ `0 <= sumI (0, n) f` by METIS_TAC [SUMI_NFUN_POS] ++ METIS_TAC [INT_NOT_LE]);
+
+
+val _ = export_theory();
+</script>
+</body>
+</html>

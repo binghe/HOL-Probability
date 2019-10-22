@@ -1,0 +1,356 @@
+<html>
+<head>
+</head>
+
+<body>
+<pre>								     
+(* ========================================================================= *)
+(*                                                                           *)
+(*               Formal Performance Analysis of A Program                    *)
+(*             This code is developed using HOL4 kanaskas 7.                 *)
+(*                                                                           *)
+(*                   (c) Copyright, Liya Liu, 2013                           *)
+(*                       Hardware Verification Group,                        *)
+(*                       Concordia University                                *)
+(*                                                                           *)
+(*                                                                           *)
+(*                      Last update: June 10, 2013                            *)
+(*                                                                           *)
+(* ========================================================================= *)
+
+val () = app load ["bossLib", "metisLib", "arithmeticTheory", "pred_setTheory", "realLib", 
+        "seqTheory", "pairTheory", "combinTheory", "listTheory", "rich_listTheory", 
+        "transcTheory", "numLib", "prim_recTheory", "probabilityTheory", "cond_probTheory",
+        "extra_pred_setTools", "dep_rewrite", "setUsefulTheory", "dtmcBasicTheory"];
+
+set_trace "Unicode" 0;
+
+open HolKernel Parse boolLib bossLib metisLib numLib combinTheory subtypeTheory
+     pred_setTheory measureTheory listTheory rich_listTheory numLib seqTheory
+     extra_pred_setTheory arithmeticTheory realTheory realLib pairTheory extra_pred_setTools
+     transcTheory prim_recTheory extrealTheory probabilityTheory cond_probTheory 
+     dep_rewrite setUsefulTheory dtmcBasicTheory;
+
+infixr 0 ++ << || ORELSEC ## --> THENC;
+infix 1 >> |->;
+
+val !! = REPEAT;
+val op++ = op THEN;
+val op<< = op THENL;
+val op|| = op ORELSE;
+val op>> = op THEN1;
+
+(* ------------------------------------------------------------------------- *)
+(* Tools.                                                                    *)
+(* ------------------------------------------------------------------------- *)
+val INTER_ASSOC = GSYM INTER_ASSOC;
+val UNION_ASSOC = GSYM UNION_ASSOC;
+
+fun MP_RW_TAC th g =
+  let
+    val sel = lhs o snd o strip_forall o snd o dest_imp
+    val PART_MATCH = PART_MATCH sel (SPEC_ALL th)
+    val th = ref TRUTH
+    val _ =
+      find_term (fn t => (th := PART_MATCH t; true) handle _ => false) (snd g)
+  in
+   (SUBGOAL_THEN (lhand (concl (!th))) (fn x =>
+     REWRITE_TAC[MP (!th) x] ++ STRIP_ASSUME_TAC x)) g
+end;
+
+fun MP_REWRITE_TAC th g =
+  let
+    val (p,c') = dest_imp (concl (SPEC_ALL th))
+    val (l,r) = (dest_eq o snd o strip_forall) c'
+    fun add_context ctxt k t =
+      (k (mk_conj (ctxt,t)),NONE) handle _ => (k t,SOME ctxt)
+    fun common k (t,NONE) = (k t,NONE)
+      | common k (t,SOME c) = add_context c k t
+    fun mk_opt_conj (NONE,NONE) = NONE
+      | mk_opt_conj (SOME x,NONE) = SOME x
+      | mk_opt_conj (NONE,SOME x) = SOME x
+      | mk_opt_conj (SOME x,SOME y) = SOME(mk_conj(x,y))
+    fun new_concl t =
+      let val (s,t) = match_term l t in
+        add_context (subst s (inst t p)) I (subst s (inst t r))
+      end
+      handle _ =>
+      if is_var t orelse is_const t then (t,NONE) else
+        let val (v,b) = dest_abs t in
+          common (curry mk_abs v) (new_concl b)
+        end
+        handle _ =>
+        let
+          val (t1,t2) = dest_comb t
+          val (t1',c1) = new_concl t1
+          val (t2',c2) = new_concl t2
+        in
+          common I (mk_comb(t1',t2'),mk_opt_conj(c1,c2))
+        end
+     val c = snd g
+  in
+    MATCH_MP_TAC (METIS_PROVE[th] (mk_imp (fst (new_concl c),c))) g
+  end;
+  
+val pmatrix_def = Define `
+    pmatrix q t i j = 
+    if (i = 0:num) then ((q j):real) else if (j = 0:num) then (1:real) else (0:real)`;
+    
+val Program_model_def = Define `
+    Program_model (X :num -> 'a -> num) p q m Linit = 
+    (!(i:num). 0 <= i /\ i <= m ==> ((0:real) < q i /\ q i < 1)) /\ 
+    (SIGMA (\i. q i) (count (m + 1)) = 1) /\
+    APERIODIC_MC X p (count (m + 1), POW (count (m + 1))) Linit (pmatrix q) /\ 
+    IRREDUCIABLE_MC X p (count (m + 1), POW (count (m + 1))) Linit (pmatrix q)`;
+
+val PCOND_PROB = store_thm
+  ("PCOND_PROB",
+  ``!X p q m Linit j. 
+        Program_model X p q m Linit /\ 0 < m /\ j < m + 1 ==> 
+        (cond_prob p (PREIMAGE (X 1) {j} INTER p_space p)
+                (PREIMAGE (X 0) {0} INTER p_space p) = q j)``,
+    RW_TAC std_ss [Program_model_def, IRREDUCIABLE_MC_def, th_dtmc_def, dtmc_def,
+        Trans_def, distribution_def, measureTheory.space_def, IN_COUNT]
+ ++ NTAC 2 (POP_ASSUM MP_TAC) ++ NTAC 2 (POP_ASSUM K_TAC)
+ ++ `!t. prob p (PREIMAGE (X t) {0} INTER p_space p) <> 0`
+         by (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_POS_NZ
+            ++ MATCH_MP_TAC POS_APERIO_MC
+            ++ MAP_EVERY Q.EXISTS_TAC [`(count (m + 1),POW (count (m + 1)))`, 
+                                `Linit`, `pmatrix q`]
+            ++ PSET_TAC [measureTheory.space_def, IN_COUNT]
+            ++ FULL_SIMP_TAC arith_ss []) ++ RW_TAC std_ss []
+ ++ FIRST_ASSUM (MP_TAC o Q.SPECL [`0`, `j`, `0`])
+ ++ REPEAT DISCH_TAC ++ FULL_SIMP_TAC arith_ss [pmatrix_def]);
+
+val PCOND_PROB_ONE = store_thm
+  ("PCOND_PROB_ONE",
+  ``!X p q m Linit i. 
+        Program_model X p q m Linit /\ 0 < m /\ 0 < i /\ i < m + 1 ==> 
+        (cond_prob p (PREIMAGE (X 1) {0} INTER p_space p)
+                (PREIMAGE (X 0) {i} INTER p_space p) = 1)``,
+    RW_TAC std_ss [Program_model_def, IRREDUCIABLE_MC_def, th_dtmc_def, dtmc_def,
+        Trans_def, distribution_def, measureTheory.space_def, IN_COUNT]
+ ++ NTAC 3 (POP_ASSUM MP_TAC) ++ NTAC 2 (POP_ASSUM K_TAC)
+ ++ RW_TAC std_ss []
+ ++ `!t. prob p (PREIMAGE (X t) {i} INTER p_space p) <> 0`
+         by (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_POS_NZ
+            ++ MATCH_MP_TAC POS_APERIO_MC
+            ++ MAP_EVERY Q.EXISTS_TAC [`(count (m + 1),POW (count (m + 1)))`, 
+                                `Linit`, `pmatrix q`]
+            ++ PSET_TAC [measureTheory.space_def, IN_COUNT]
+            ++ FULL_SIMP_TAC arith_ss []) ++ RW_TAC std_ss []
+ ++ `i <> 0` by FULL_SIMP_TAC arith_ss []            
+ ++ FIRST_ASSUM (MP_TAC o Q.SPECL [`i`, `0`, `0`])
+ ++ REPEAT DISCH_TAC ++ FULL_SIMP_TAC arith_ss [pmatrix_def]
+ ++ METIS_TAC []);
+
+val PCOND_PROB_ZERO = store_thm
+  ("PCOND_PROB_ZERO",
+  ``!X p q m Linit i j. 
+        Program_model X p q m Linit /\ 0 < m /\ 0 < i /\ i < m + 1 /\ 0 < j ==> 
+        (cond_prob p (PREIMAGE (X 1) {j} INTER p_space p)
+                (PREIMAGE (X 0) {i} INTER p_space p) = 0)``,
+    RW_TAC std_ss [Program_model_def, IRREDUCIABLE_MC_def, th_dtmc_def, dtmc_def,
+        Trans_def, distribution_def, measureTheory.space_def, IN_COUNT]
+ ++ NTAC 4 (POP_ASSUM MP_TAC) ++ NTAC 2 (POP_ASSUM K_TAC)
+ ++ RW_TAC std_ss []
+ ++ `!t. prob p (PREIMAGE (X t) {i} INTER p_space p) <> 0`
+         by (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_POS_NZ
+            ++ MATCH_MP_TAC POS_APERIO_MC
+            ++ MAP_EVERY Q.EXISTS_TAC [`(count (m + 1),POW (count (m + 1)))`, 
+                                `Linit`, `pmatrix q`]
+            ++ PSET_TAC [measureTheory.space_def, IN_COUNT]
+            ++ FULL_SIMP_TAC arith_ss []) ++ RW_TAC std_ss []
+ ++ `i <> 0` by FULL_SIMP_TAC arith_ss []      
+ ++ Cases_on `m + 1 <= j`
+ >> (`PREIMAGE (X 1) {j} INTER p_space p = {}`
+        by (MATCH_MP_TAC NOTIN_SPACE_EVENTS  
+           ++ Q.EXISTS_TAC `(count (m + 1),POW (count (m + 1)))`    
+           ++ PSET_TAC [IRREDUCIABLE_MC_def, th_dtmc_def, dtmc_def, mc_property_def,
+                measureTheory.space_def, IN_COUNT]
+           ++ FULL_SIMP_TAC arith_ss [])
+    ++ MATCH_MP_TAC COND_PROB_INTER_ZERO
+    ++ DEP_REWRITE_TAC [DTMC_EVENTS]
+    ++ RW_TAC std_ss []
+    << [MAP_EVERY Q.EXISTS_TAC [`(count (m + 1),POW (count (m + 1)))`, 
+                                `Linit`, `pmatrix q`]
+        ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def],
+        PSET_TAC [mc_property_def, random_variable_def],
+        MATCH_MP_TAC PROB_EMPTY ++ PSET_TAC [mc_property_def, random_variable_def]])
+ ++ `j < m + 1 /\ j <> 0` by FULL_SIMP_TAC arith_ss []           
+ ++ FIRST_ASSUM (MP_TAC o Q.SPECL [`i`, `j`, `0`])
+ ++ REPEAT DISCH_TAC ++ FULL_SIMP_TAC arith_ss [pmatrix_def]
+ ++ METIS_TAC []);
+ 
+ val EXISTS_STEADY_PROB = prove
+  (``!X p q m Linit. Program_model X p q m Linit /\ 0 < m ==>     
+	(!j. ?u. (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) --> u)``,
+    RW_TAC std_ss [Program_model_def]
+ ++ DEP_REWRITE_TAC [APERIODIC_MC_SEQ]
+ ++ MAP_EVERY Q.EXISTS_TAC [`(count (m + 1),POW (count (m + 1)))`, `Linit`, `pmatrix q`]
+ ++ RW_TAC std_ss []);
+         
+val PROB_INDUCT = prove
+  (``!X p q m Linit. 
+        Program_model X p q m Linit /\ 0 < m /\ 0 < j /\ j < m + 1 ==>     
+	(lim (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) = 
+	 lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) * q j)``,
+    RW_TAC std_ss [Program_model_def]
+ ++ `!j. ?u. (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) --> u` 
+        by (DEP_REWRITE_TAC [EXISTS_STEADY_PROB]
+           ++ MAP_EVERY Q.EXISTS_TAC [`q`, `m`, `Linit`]
+           ++ RW_TAC std_ss [Program_model_def])
+ ++ `?u. (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) --> u` by METIS_TAC []
+ ++ `lim (\t. (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) t) =
+     lim (\t. (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) (SUC t))`
+     by (MATCH_MP_TAC (GSYM LIM_SUC) ++ METIS_TAC [])
+ ++ FULL_SIMP_TAC std_ss []  
+
+ ++ `!t. prob p (PREIMAGE (X (SUC t)) {j} INTER p_space p) =
+         SIGMA (\k. prob p (PREIMAGE (X t) {k} INTER p_space p) *
+               cond_prob p (PREIMAGE (X 1) {j} INTER p_space p)
+                 (PREIMAGE (X 0) {k} INTER p_space p)) (count (m + 1))`
+    by (RW_TAC std_ss [ADD1] ++ (MP_TAC o Q.SPECL [`X`, `1`, `t`, `j`, `Linit`, `pmatrix q`, `p`, 
+        `(count (m + 1),POW (count (m + 1)))`] o INST_TYPE [``:'b`` |-> ``:num``])
+                N_STEP_PROB_DISTRIBUTION 
+       ++ PSET_TAC [IRREDUCIABLE_MC_def, th_dtmc_def, distribution_def, measureTheory.space_def,
+                 FINITE_COUNT, COND_PMF_EQ_COND_PROB]
+       ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+       ++ RW_TAC std_ss [FINITE_COUNT]
+       ++ PSET_TAC [IRREDUCIABLE_MC_def, th_dtmc_def, Trans_def, distribution_def,
+                 measureTheory.space_def, IN_COUNT]
+       ++ `!t. prob p (PREIMAGE (X t) {x} INTER p_space p) <> 0`
+                        by (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_POS_NZ
+                           ++ MATCH_MP_TAC POS_APERIO_MC
+                           ++ MAP_EVERY Q.EXISTS_TAC [`(count (m + 1),POW (count (m + 1)))`, 
+                                `Linit`, `pmatrix q`]
+                           ++ PSET_TAC [measureTheory.space_def, IN_COUNT])
+       ++ `j < m + 1` by FULL_SIMP_TAC arith_ss []                                         
+       ++ FIRST_ASSUM (MP_TAC o Q.SPECL [`t`, `0`, `x`, `j`])
+       ++ REPEAT DISCH_TAC ++ FULL_SIMP_TAC arith_ss [] ++ METIS_TAC []) ++ POP_ORW 
+ ++ Suff `!t. SIGMA (\k.  prob p (PREIMAGE (X t) {k} INTER p_space p) *
+              cond_prob p (PREIMAGE (X 1) {j} INTER p_space p)
+                (PREIMAGE (X 0) {k} INTER p_space p)) (count (m + 1))  =
+              prob p (PREIMAGE (X t) {0} INTER p_space p) * q j` 
+ >> (RW_TAC std_ss [] ++ ONCE_REWRITE_TAC [REAL_MUL_COMM]
+    ++ `lim (\t. q j * prob p (PREIMAGE (X t) {0} INTER p_space p)) =           
+        lim (\t. q j * (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) t)`
+        by RW_TAC std_ss [] ++ POP_ORW ++ MATCH_MP_TAC LIM_CMUL
+    ++ RW_TAC std_ss [GSYM SEQ_LIM, convergent])
+ ++ `count (m + 1) = {0} UNION count_mn 1 m` 
+        by (PSET_TAC [count_def, count_mn_def, EXTENSION] ++ RW_TAC arith_ss [])
+ ++ RW_TAC std_ss [] ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING]
+ ++ PSET_TAC [FINITE_SING, FINITE_COUNT_MN]
+ >> PSET_TAC [IN_COUNT_MN]         
+ ++ Suff `SIGMA (\k. prob p (PREIMAGE (X t) {k} INTER p_space p) *
+         cond_prob p (PREIMAGE (X 1) {j} INTER p_space p)
+           (PREIMAGE (X 0) {k} INTER p_space p)) (count_mn 1 m) =
+          SIGMA (\k. 0) (count_mn 1 m)` 
+ >> (RW_TAC std_ss []
+    ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_0, FINITE_COUNT_MN, PCOND_PROB]
+    ++ RW_TAC std_ss [REAL_ADD_RID]
+    ++ MAP_EVERY Q.EXISTS_TAC [`m`, `Linit`]
+    ++ RW_TAC std_ss [Program_model_def])
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+ ++ RW_TAC std_ss [FINITE_COUNT_MN]
+ ++ DEP_REWRITE_TAC [PCOND_PROB_ZERO]
+ ++ RW_TAC std_ss [REAL_MUL_RZERO] 
+ ++ MAP_EVERY Q.EXISTS_TAC [`q`, `m`, `Linit`]
+ ++ PSET_TAC [Program_model_def, IN_COUNT_MN]
+ ++ FULL_SIMP_TAC arith_ss []);
+
+val REAL_COMPUTER = prove
+  (``!(x:real) y. x + x * (1 - y) = x * (2 - y)``,REAL_ARITH_TAC
+    RW_TAC real_ss [real_div, GSYM REAL_MUL_ASSOC]
+ ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+ ++ POP_ASSUM MATCH_MP_TAC
+ ++ Cases_on `y = 0`
+ >> RW_TAC std_ss [REAL_INV_0, REAL_MUL_LZERO, REAL_MUL_RZERO]
+ ++ Cases_on `w = 0`
+ >> RW_TAC std_ss [REAL_INV_0, REAL_MUL_LZERO, REAL_MUL_RZERO]
+ ++ DEP_REWRITE_TAC [REAL_INV_MUL]
+ ++ RW_TAC std_ss []
+ ++ METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]);
+ 
+  
+val VISIT_CPU = prove
+  (``!X p q m Linit. Program_model X p q m Linit /\ 0 < m ==>     
+	(lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) = 1 / (2 - q 0))``,	 
+    RW_TAC std_ss [Program_model_def]
+ ++ `!j. ?u. (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) --> u` 
+        by (DEP_REWRITE_TAC [EXISTS_STEADY_PROB]
+           ++ MAP_EVERY Q.EXISTS_TAC [`q`, `m`, `Linit`]
+           ++ RW_TAC std_ss [Program_model_def])
+ ++ `SIGMA (\j. lim (\t. (\t j. prob p (PREIMAGE (X t) {j} INTER p_space p)) t j))
+        (count (m + 1)) = 1`
+        by (MP_RW_TAC (GSYM SIGMA_LIM)
+           >> PSET_TAC [IN_COUNT, FINITE_COUNT]
+           ++ Suff `!n. SIGMA (\j. (\t j. prob p (PREIMAGE (X t) {j} INTER p_space p)) n j)
+                        (count (m + 1)) = 1`
+           >> RW_TAC std_ss [LIM_CONST]
+           ++ RW_TAC std_ss []
+           ++ `SIGMA (\j. prob p (PREIMAGE (X n) {j} INTER p_space p))
+                        (count (m + 1)) = SIGMA (\j. distribution p (X n) {j}) (count (m + 1))`
+               by (MATCH_MP_TAC REAL_SUM_IMAGE_EQ 
+                  ++ RW_TAC std_ss [FINITE_COUNT, distribution_def]) ++ POP_ORW
+           ++ `count (m + 1) = space (count (m + 1),POW (count (m + 1)))`
+                by PSET_TAC [measureTheory.space_def] ++ POP_ORW
+           ++ MATCH_MP_TAC SUM_PMF_ONE
+           ++ PSET_TAC [IRREDUCIABLE_MC_def, th_dtmc_def, dtmc_def, mc_property_def,
+                 measureTheory.space_def, FINITE_COUNT])
+ ++ `SIGMA (\j. lim (\t. (\t j. prob p (PREIMAGE (X t) {j} INTER p_space p)) t j))
+        (count (m + 1)) = lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) +
+     SIGMA (\j. lim (\t. (\t j. prob p (PREIMAGE (X t) {j} INTER p_space p)) t j))               
+        (count_mn 1 m)`
+     by (`count (m + 1) = {0} UNION count_mn 1 m` 
+                by (PSET_TAC [count_def, count_mn_def, EXTENSION] ++ RW_TAC arith_ss [])
+        ++ POP_ORW ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING]
+        ++ PSET_TAC [FINITE_COUNT, FINITE_COUNT_MN, FINITE_SING]
+        ++ PSET_TAC [IN_COUNT_MN])
+ ++ `SIGMA (\j. lim (\t. (\t j. prob p (PREIMAGE (X t) {j} INTER p_space p)) t j)) 
+        (count_mn 1 m) =
+     SIGMA (\j. lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) * q j) 
+        (count_mn 1 m)`
+        by (MATCH_MP_TAC REAL_SUM_IMAGE_EQ ++ PSET_TAC [FINITE_COUNT_MN, IN_COUNT_MN]
+           ++ MATCH_MP_TAC PROB_INDUCT
+           ++ MAP_EVERY Q.EXISTS_TAC [`m`, `Linit`]
+           ++ PSET_TAC [Program_model_def]
+           ++ FULL_SIMP_TAC arith_ss [])
+ ++ `SIGMA (\j. lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) * (\j. q j) j) 
+        (count_mn 1 m) = lim (\t. prob p (PREIMAGE (X t) {0} INTER p_space p)) * (1 - q 0)`
+    by (MP_RW_TAC REAL_SUM_IMAGE_CMUL 
+       >> RW_TAC std_ss [FINITE_COUNT_MN]
+       ++ Suff `SIGMA (\j. q j) (count_mn 1 m) = 1 - q 0`    
+       >> RW_TAC std_ss []
+       ++ `SIGMA (\j. q j) (count_mn 1 m) = SIGMA (\i. q i) (count (m + 1)) - q 0`
+                by (`count (m + 1) = {0} UNION count_mn 1 m` 
+                        by (PSET_TAC [count_def, count_mn_def, EXTENSION] ++ RW_TAC arith_ss [])
+                   ++ POP_ORW 
+                   ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING]
+                   ++ PSET_TAC [FINITE_COUNT, FINITE_COUNT_MN, FINITE_SING, IN_COUNT_MN,
+                         REAL_ADD_SUB]) ++ FULL_SIMP_TAC std_ss [])
+ ++ `!(x:real) y. x + x * (1 - y) = x * (2 - y)` by REAL_ARITH_TAC                         
+ ++ FULL_SIMP_TAC std_ss []
+ ++ `q 0 <> 2` by (SPOSE_NOT_THEN STRIP_ASSUME_TAC 
+        ++ `1 < q 0` by RW_TAC real_ss []
+        ++ POP_ASSUM_LIST (MAP_EVERY STRIP_ASSUME_TAC)
+        ++ POP_ASSUM (MP_TAC o Q.SPEC `0`)
+        ++ RW_TAC real_ss [])
+ ++ `2 - q 0 <> 0` by METIS_TAC [REAL_SUB_0]
+ ++ METIS_TAC [REAL_LINV_UNIQ, REAL_INV_1OVER]);
+ 
+val VISIT_DEVICE = prove
+  (``!X p q m Linit. Program_model X p q m Linit /\ 0 < m /\ 1 < j /\ j < m + 1 ==>     
+	(lim (\t. prob p (PREIMAGE (X t) {j} INTER p_space p)) = (q j) / (2 - q 0))``, 
+    RW_TAC std_ss []
+ ++ DEP_REWRITE_TAC [PROB_INDUCT]
+ ++ RW_TAC std_ss []        
+ >> (MAP_EVERY Q.EXISTS_TAC [`m`, `Linit`] ++ RW_TAC arith_ss [])
+ ++ MP_RW_TAC VISIT_CPU
+ >> RW_TAC std_ss [] 
+ ++ ONCE_REWRITE_TAC [REAL_MUL_COMM]
+ ++ RW_TAC std_ss [real_div, REAL_MUL_LID]);
+         
+</script>
+</body>
+</html>

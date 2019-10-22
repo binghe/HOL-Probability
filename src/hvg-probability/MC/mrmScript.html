@@ -1,0 +1,516 @@
+<html>
+<head>
+</head>
+
+<body>
+<pre>
+(* ========================================================================= *)
+(*                                                                           *)
+(*           Basic Discrete-time Markov Reward Modle Library                 *)
+(*             This code is developed using HOL4 kanaskas 7.                 *)
+(*                                                                           *)
+(*                   (c) Copyright, Liya Liu, 2013                           *)
+(*                       Hardware Verification Group,                        *)
+(*                       Concordia University                                *)
+(*                                                                           *)
+(*                                                                           *)
+(*                      Last update: June 01, 2013                           *)
+(*                                                                           *)
+(* ========================================================================= *)
+(*val () = app load
+ ["bossLib", "metisLib", "arithmeticTheory", "pred_setTheory", "realLib", "seqTheory",
+ 	"pairTheory", "combinTheory", "listTheory", "rich_listTheory", "transcTheory", "numLib", 
+ 	"prim_recTheory", "probabilityTheory", "satTheory", "cond_probTheory", "extra_pred_setTools", "dep_rewrite", "classified_dtmcTheory",
+ 	"dtmcBasicTheory", "setUsefulTheory"];
+
+set_trace "Unicode" 0;*)
+
+open HolKernel Parse boolLib bossLib metisLib numLib combinTheory subtypeTheory
+	pred_setTheory measureTheory listTheory rich_listTheory numLib seqTheory dep_rewrite
+     extra_pred_setTheory arithmeticTheory realTheory realLib pairTheory extra_pred_setTools
+      transcTheory prim_recTheory extrealTheory probabilityTheory satTheory cond_probTheory 
+      classified_dtmcTheory dtmcBasicTheory setUsefulTheory;
+
+val _ = new_theory "mrm";
+
+infixr 0 ++ << || ORELSEC ## --> THENC;
+infix 1 >> |->;
+
+val !! = REPEAT;
+val op++ = op THEN;
+val op<< = op THENL;
+val op|| = op ORELSE;
+val op>> = op THEN1;
+
+(* ------------------------------------------------------------------------- *)
+(* Tools.                                                                    *)
+(* ------------------------------------------------------------------------- *)
+val INTER_ASSOC = GSYM INTER_ASSOC;
+val UNION_ASSOC = GSYM UNION_ASSOC;
+
+fun MP_RW_TAC th g =
+  let
+    val sel = lhs o snd o strip_forall o snd o dest_imp
+    val PART_MATCH = PART_MATCH sel (SPEC_ALL th)
+    val th = ref TRUTH
+    val _ =
+      find_term (fn t => (th := PART_MATCH t; true) handle _ => false) (snd g)
+  in
+   (SUBGOAL_THEN (lhand (concl (!th))) (fn x =>
+     REWRITE_TAC[MP (!th) x] ++ STRIP_ASSUME_TAC x)) g
+end;
+
+fun MP_REWRITE_TAC th g =
+  let
+    val (p,c') = dest_imp (concl (SPEC_ALL th))
+    val (l,r) = (dest_eq o snd o strip_forall) c'
+    fun add_context ctxt k t =
+      (k (mk_conj (ctxt,t)),NONE) handle _ => (k t,SOME ctxt)
+    fun common k (t,NONE) = (k t,NONE)
+      | common k (t,SOME c) = add_context c k t
+    fun mk_opt_conj (NONE,NONE) = NONE
+      | mk_opt_conj (SOME x,NONE) = SOME x
+      | mk_opt_conj (NONE,SOME x) = SOME x
+      | mk_opt_conj (SOME x,SOME y) = SOME(mk_conj(x,y))
+    fun new_concl t =
+      let val (s,t) = match_term l t in
+        add_context (subst s (inst t p)) I (subst s (inst t r))
+      end
+      handle _ =>
+      if is_var t orelse is_const t then (t,NONE) else
+        let val (v,b) = dest_abs t in
+          common (curry mk_abs v) (new_concl b)
+        end
+        handle _ =>
+        let
+          val (t1,t2) = dest_comb t
+          val (t1',c1) = new_concl t1
+          val (t2',c2) = new_concl t2
+        in
+          common I (mk_comb(t1',t2'),mk_opt_conj(c1,c2))
+        end
+     val c = snd g
+  in
+    MATCH_MP_TAC (METIS_PROVE[th] (mk_imp (fst (new_concl c),c))) g
+  end;
+
+(***********************************************)
+val expec_def = Define `
+    expec (X:'a -> real) p s = 
+    SIGMA (\x. x * prob p (PREIMAGE X {x} INTER p_space p)) (space s)`;
+
+val cond_expec_def = Define `
+    cond_expec X Y (y:'b) p sx = 
+    SIGMA (\x. x * cond_prob p (PREIMAGE X {x} INTER p_space p)  	  
+         		       (PREIMAGE Y {y} INTER p_space p)) (space sx)`;
+(***********************************************)
+val mrm_def = Define `
+    mrm X Y p sx sy p0 pij rxy =
+    dtmc X p sx p0 pij /\ (!(t:num). random_variable (Y t) p sy) /\
+    (!x. x IN space sy ==> {x} IN subsets sy) /\
+    !x t. prob p (PREIMAGE (X t) {x} INTER p_space p) <> 0 ==>
+          (rxy t x = cond_expec (Y t) (X t) x p sy)`;
+
+
+val th_mrm_def = Define `
+    th_mrm X Y p sx sy p0 pij rxy =
+    mrm X Y p sx sy p0 pij rxy /\ FINITE (space sy) /\
+    !x t t'. rxy t x = rxy t' x`;            
+(***********************************************)          		       
+val LIM_CMUL = store_thm
+  ("LIM_CMUL",
+  ``!f l (c:real). f --> l ==> (lim (\n. c * f n) = c * l)``,
+    METIS_TAC [TEND2LIM, SEQ_CMUL]);
+
+val LIM_SUC = store_thm
+  ("LIM_SUC",
+  ``!f l. f --> l ==> (lim (\n. f (SUC n)) = lim (\n. f n))``,
+    RW_TAC std_ss []
+ ++ `(\n. f (SUC n)) --> l` by METIS_TAC [SEQ_SUC]
+ ++ METIS_TAC [TEND2LIM]);
+ 
+ val LIM_SUC_SUC = store_thm
+  ("LIM_SUC_SUC",
+  ``!f l. f --> l ==> (lim (\n. f n) = lim (\n. f (SUC (n + 1))))``,
+    RW_TAC std_ss []
+ ++ `lim (\n. f n) = lim (\n. f (SUC n))` by METIS_TAC [LIM_SUC]   
+ ++ POP_ORW
+ ++ `lim (\n. f (SUC (n + 1))) = lim (\n. (\n. f (n + 1)) (SUC n))` 
+ 	by RW_TAC std_ss [ADD]
+ ++ `lim (\n. f (SUC n)) = lim (\n. (\n. f (n + 1)) n)` by RW_TAC std_ss [ADD1]	
+ ++ NTAC 2 (POP_ORW) ++ MATCH_MP_TAC (GSYM LIM_SUC) 
+ ++ Q.EXISTS_TAC `l` ++ RW_TAC std_ss [GSYM ADD1]
+ ++ ONCE_ASM_REWRITE_TAC [GSYM SEQ_SUC]
+ ++ RW_TAC std_ss []);
+
+val SEQ_SUCM = store_thm
+  ("SEQ_SUCM",
+  ``!f l m. f --> l <=> (\t. f (t + m)) --> l``,
+    Induct_on `m` 
+ >> (RW_TAC std_ss [] ++ METIS_TAC [])
+ ++ `!t. t + SUC m = SUC (t + m)` by RW_TAC arith_ss []
+ ++ REWRITE_TAC []
+ ++ POP_ORW
+ ++ REPEAT GEN_TAC
+ ++ EQ_TAC
+ >> (`(\t. f (SUC (t + m))) = (\t. (\t. f (t + m)) (SUC t))` 
+ 	by RW_TAC arith_ss [ADD]
+    ++ POP_ORW ++ DISCH_TAC
+    ++ `(\t. (\t. f (t + m)) t) --> l` by METIS_TAC []
+    ++ (MP_TAC o Q.SPECL [`(\t. f (t + m))`, `l`]) SEQ_SUC
+    ++ DISCH_TAC
+    ++ METIS_TAC [])
+ ++ DISCH_TAC
+ ++ ONCE_ASM_REWRITE_TAC []
+ ++ `(\t. f (SUC (t + m))) = (\t. (\t. f (t + m)) (SUC t))` 
+ 	by RW_TAC arith_ss [ADD]
+ ++ (MP_TAC o Q.SPECL [`(\t. f (t + m))`, `l`]) SEQ_SUC 
+ ++ DISCH_TAC	
+ ++ FULL_SIMP_TAC std_ss []);
+  
+val REAL_ADD_POW_2 = store_thm
+  ("REAL_ADD_POW_2", 
+   ``!(a:real) b. (a + b) pow 2 = a pow 2 + b pow 2 + 2 * a * b``,
+    RW_TAC real_ss [POW_2,REAL_ADD_LDISTRIB,REAL_ADD_RDISTRIB,REAL_ADD_ASSOC]
+    ++ REAL_ARITH_TAC); 
+
+(***********************************************)     
+val SWAP_SIGMA = store_thm
+  ("SWAP_SIGMA", 
+   ``!s s' (f:'a -> 'b -> real). FINITE s /\ FINITE s'==> 
+	(SIGMA (\x. SIGMA (\y. f x y) s) s' = 
+	 SIGMA (\y. SIGMA (\x. f x y) s') s)``,
+   Suff `!s. FINITE s ==> (\s. !s' (f:'a -> 'b -> real). FINITE s'==> 
+	(SIGMA (\x. SIGMA (\y. f x y) s) s' = SIGMA (\y. SIGMA (\x. f x y) s') s)) s` 
+ >> METIS_TAC []
+ ++ MATCH_MP_TAC FINITE_INDUCT 
+ ++ RW_TAC std_ss [] 
+ >> RW_TAC std_ss [REAL_SUM_IMAGE_THM, REAL_SUM_IMAGE_0]
+ ++ RW_TAC std_ss [REAL_SUM_IMAGE_THM] 
+ ++ `s DELETE e = s` by FULL_SIMP_TAC std_ss [DELETE_NON_ELEMENT]
+ ++ FULL_SIMP_TAC std_ss [] ++ RW_TAC std_ss [REAL_SUM_IMAGE_ADD]);
+
+val BIGUNION_PSPACE = store_thm 
+  ("BIGUNION_PSPACE",
+  ``!X p s. FINITE (space s) /\ random_variable X p s /\
+           (!i. i IN space s ==> {i} IN subsets s) ==>
+           (BIGUNION (IMAGE (\x. PREIMAGE X {x} INTER p_space p) (space s)) = p_space p)``,
+    PSET_TAC [EXTENSION, IN_BIGUNION_IMAGE, IN_PREIMAGE, IN_SING, 
+        measureTheory.IN_MEASURABLE, random_variable_def, IN_FUNSET, measureTheory.space_def]
+ ++ EQ_TAC >> RW_TAC std_ss [] ++ RW_TAC std_ss []);
+  	
+
+val EXPEC_SUM_IMAGE_COND_EXPEC = store_thm
+  ("EXPEC_SUM_IMAGE_COND_EXPEC",
+  ``!(X:'a -> real) Y p sx sy. 
+	FINITE (space sx) /\ FINITE (space sy) /\ 
+	(!x. x IN space sx ==> {x} IN subsets sx) /\
+	(!x. x IN space sy ==> {x} IN subsets sy) /\
+	random_variable X p sx /\ random_variable Y p sy ==>
+	(expec X p sx = 
+	 SIGMA (\i. cond_expec X Y i p sx * 
+	            prob p (PREIMAGE Y {i} INTER p_space p)) (space sy))``,
+    RW_TAC std_ss [cond_expec_def]
+ ++ ONCE_REWRITE_TAC [REAL_MUL_COMM]
+ ++ `SIGMA (\i. prob p (PREIMAGE Y {i} INTER p_space p) *
+         SIGMA (\x. x * cond_prob p (PREIMAGE X {x} INTER p_space p)
+                (PREIMAGE Y {i} INTER p_space p)) (space sx)) (space sy) =
+     SIGMA (\i. SIGMA (\x. (\i x. x * (prob p ((PREIMAGE X {x} INTER p_space p) INTER
+                		(PREIMAGE Y {i} INTER p_space p)))) i x) (space sx)) (space sy)`
+     by (RW_TAC std_ss [SWAP_SIGMA_SIGMA] ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+        ++ RW_TAC std_ss []
+        ++ DEP_REWRITE_TAC [GSYM REAL_SUM_IMAGE_CMUL]   
+        ++ RW_TAC std_ss []
+        ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+        ++ RW_TAC std_ss [REAL_MUL_COMM, REAL_MUL_ASSOC]
+        ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+        ++ RW_TAC std_ss [GSYM REAL_MUL_ASSOC]
+        ++ POP_ASSUM MATCH_MP_TAC 
+        ++ MATCH_MP_TAC (GSYM COND_PROB_MUL_RULE)
+        ++ PSET_TAC [random_variable_def, measureTheory.IN_MEASURABLE, 
+        	measureTheory.space_def, measureTheory.subsets_def]) ++ POP_ORW            
+ ++ MP_RW_TAC SWAP_SIGMA
+ >> RW_TAC std_ss []
+ ++ RW_TAC std_ss [expec_def]       
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+ ++ RW_TAC std_ss []
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_CMUL]
+ ++ RW_TAC std_ss [] 
+ ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+ ++ POP_ASSUM MATCH_MP_TAC  
+ ++ `SIGMA (\x'. prob p (PREIMAGE X {x} INTER p_space p INTER
+            (PREIMAGE Y {x'} INTER p_space p))) (space sy) =
+     SIGMA (\x'. prob p (PREIMAGE X {x} INTER p_space p INTER 
+ 		(\x'. PREIMAGE Y {x'} INTER p_space p) x')) (space sy)`
+ 	by RW_TAC std_ss [] ++ POP_ORW
+ ++ MATCH_MP_TAC PROB_REAL_SUM_IMAGE_FN
+ ++ PSET_TAC [random_variable_def]
+ << [PSET_TAC [measureTheory.IN_MEASURABLE, measureTheory.space_def, measureTheory.subsets_def],
+     METIS_TAC [EVENTS_INTER, measureTheory.IN_MEASURABLE, measureTheory.space_def, 
+     	measureTheory.subsets_def],
+     PSET_TAC [PREIMAGE_def, IN_SING, EXTENSION] ++ METIS_TAC [],
+     Suff `BIGUNION (IMAGE (\x'. PREIMAGE Y {x'} INTER p_space p) (space sy)) = p_space p`
+     >> METIS_TAC [INTER_IDEMPOT]
+     ++ MATCH_MP_TAC BIGUNION_PSPACE
+     ++ RW_TAC std_ss [random_variable_def]]);
+
+val LONG_EXPECTATION = store_thm
+  ("LONG_EXPECTATION",
+   ``!Y p s. FINITE (space s) /\ 
+   (!x. ?u. (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) --> u) ==>
+   (lim (\t. expec (Y t) p s) = 
+    SIGMA (\y. y * lim (\t. prob p (PREIMAGE (Y t) {y} INTER p_space p)))
+         (space s))``,
+    RW_TAC std_ss [expec_def]
+ ++ DEP_REWRITE_TAC [SIGMA_LIM]
+ ++ RW_TAC std_ss []
+ >> (`?u. (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) --> u`
+ 	by METIS_TAC [] 
+    ++ `(\t. x * prob p (PREIMAGE (Y t) {x} INTER p_space p)) --> (x * u)`
+    	by (`(\t. x * prob p (PREIMAGE (Y t) {x} INTER p_space p)) =
+     	     (\t. (\t. x) t * (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) t)`
+      		by RW_TAC std_ss [] ++ POP_ORW ++ MATCH_MP_TAC SEQ_MUL
+      	   ++ RW_TAC std_ss [SEQ_CONST])
+    ++ METIS_TAC [])
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+ ++ RW_TAC std_ss []
+ ++ `?u. (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) --> u`
+ 	by METIS_TAC [] 
+ ++ `lim (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) = u` by METIS_TAC [TEND2LIM]
+ ++ POP_ORW 
+ ++ `(\t. x * prob p (PREIMAGE (Y t) {x} INTER p_space p)) =
+     (\t. x * (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) t)`
+     	by RW_TAC std_ss [] ++ POP_ORW
+ ++ MATCH_MP_TAC LIM_CMUL
+ ++ RW_TAC std_ss []);
+
+val convergent_expec = prove
+  (``!X Y p sx sy. 
+	FINITE (space sx) /\ FINITE (space sy) /\ 
+	(!x. x IN space sx ==> {x} IN subsets sx) /\
+	(!x. x IN space sy ==> {x} IN subsets sy) /\
+	(!x. ?u. (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) --> u) /\
+        (!i. ?u. (\t. cond_expec (X t) (Y t) i p sx) --> u) /\
+	(!t. random_variable (X t) p sx) /\ (!t. random_variable (Y t) p sy) ==>
+	?u. (\t. SIGMA (\i. cond_expec (X t) (Y t) i p sx * 
+	            prob p (PREIMAGE (Y t) {i} INTER p_space p)) (space sy)) --> u``,
+    RW_TAC std_ss []
+ ++ `(\t. SIGMA (\i. cond_expec (X t) (Y t) i p sx *
+              prob p (PREIMAGE (Y t) {i} INTER p_space p)) (space sy)) =
+     (\t. SIGMA (\i. (\t i. cond_expec (X t) (Y t) i p sx *
+              prob p (PREIMAGE (Y t) {i} INTER p_space p)) t i) (space sy))`
+        by RW_TAC std_ss [] ++ POP_ORW 
+ ++ MATCH_MP_TAC ((REWRITE_RULE [convergent]) SIGMA_SEQ)
+ ++ RW_TAC std_ss [] 
+ ++ `?u. (\t. prob p (PREIMAGE (Y t) {k} INTER p_space p)) --> u`
+ 	by METIS_TAC [] 
+ ++ `?u. (\n. cond_expec (X n) (Y n) k p sx) --> u` by METIS_TAC [] 	
+ ++ Q.EXISTS_TAC `u' * u` ++ RW_TAC std_ss []
+ ++ `(\n. cond_expec (X n) (Y n) k p sx * prob p (PREIMAGE (Y n) {k} INTER p_space p)) =
+     (\n. (\n. cond_expec (X n) (Y n) k p sx) n * 
+          (\n. prob p (PREIMAGE (Y n) {k} INTER p_space p)) n)` by RW_TAC std_ss [] ++ POP_ORW 
+ ++ MATCH_MP_TAC SEQ_MUL
+ ++ RW_TAC std_ss []);
+            
+val EXT_EXPEC_SUM_LIM = prove
+  (``!X Y p sx sy. 
+	FINITE (space sx) /\ FINITE (space sy) /\ 
+        (!x. ?u. (\t. prob p (PREIMAGE (Y t) {x} INTER p_space p)) --> u) /\
+        (!i. ?u. (\t. cond_expec (X t) (Y t) i p sx) --> u) /\
+        (!x. x IN space sx ==> {x} IN subsets sx) /\
+	(!x. x IN space sy ==> {x} IN subsets sy) /\
+	(!t. random_variable (X t) p sx) /\ (!t. random_variable (Y t) p sy) ==>
+	(lim (\t. expec (X t) p sx) = 
+	 SIGMA (\i. lim (\t. cond_expec (X t) (Y t) i p sx) * 
+	            lim (\t. prob p (PREIMAGE (Y t) {i} INTER p_space p))) (space sy))``,	            
+    RW_TAC std_ss []
+ ++ `SIGMA (\i. lim (\t. cond_expec (X t) (Y t) i p sx) *
+                lim (\t. prob p (PREIMAGE (Y t) {i} INTER p_space p))) (space sy) =
+     lim (\t. SIGMA (\i. (\t i. cond_expec (X t) (Y t) i p sx *
+     			 prob p (PREIMAGE (Y t) {i} INTER p_space p)) t i) (space sy))`
+     	by (MP_RW_TAC SIGMA_LIM 
+     	   << [RW_TAC std_ss [] 
+     	      ++ `?u. (\n. prob p (PREIMAGE (Y n) {k} INTER p_space p)) --> u` 
+     	      		by METIS_TAC [] 
+     	      ++ `?u. (\n. cond_expec (X n) (Y n) k p sx) --> u` by METIS_TAC []
+     	      ++ Q.EXISTS_TAC `u' * u`
+     	      ++ RW_TAC std_ss [] 
+     	      ++ `(\n. cond_expec (X n) (Y n) k p sx * 
+     	      	       prob p (PREIMAGE (Y n) {k} INTER p_space p)) =
+     	      	  (\n. (\n. cond_expec (X n) (Y n) k p sx) n * 
+     	      	       (\n. prob p (PREIMAGE (Y n) {k} INTER p_space p)) n)` by RW_TAC std_ss []
+     	      ++ POP_ORW ++ MATCH_MP_TAC SEQ_MUL
+     	      ++ RW_TAC std_ss [],
+     	      
+     	      MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+     	      ++ RW_TAC std_ss []
+     	      ++ `lim (\n. cond_expec (X n) (Y n) x p sx *
+         		prob p (PREIMAGE (Y n) {x} INTER p_space p)) =
+         	  lim (\n. (\n. cond_expec (X n) (Y n) x p sx) n * 
+         	           (\n. prob p (PREIMAGE (Y n) {x} INTER p_space p)) n)`
+         	  by RW_TAC std_ss [] ++ POP_ORW
+              ++ MATCH_MP_TAC (GSYM LIM_MUL)
+              ++ RW_TAC std_ss [GSYM SEQ_LIM, convergent]])
+ ++ POP_ORW 
+ ++ Suff `!t. expec (X t) p sx = 
+              SIGMA (\i. cond_expec (X t) (Y t) i p sx *
+                 prob p (PREIMAGE (Y t) {i} INTER p_space p)) (space sy)`
+ >> RW_TAC std_ss []
+ ++ RW_TAC std_ss [cond_expec_def]
+ ++ ONCE_REWRITE_TAC [REAL_MUL_COMM]
+ ++ `SIGMA (\i. prob p (PREIMAGE (Y t) {i} INTER p_space p) *
+                SIGMA (\x. x * cond_prob p (PREIMAGE (X t) {x} INTER p_space p)
+                                           (PREIMAGE (Y t) {i} INTER p_space p)) 
+                                           (space sx)) (space sy) =
+     SIGMA (\i. SIGMA (\x. (\i x. x * (prob p ((PREIMAGE (X t) {x} INTER p_space p) INTER
+                		(PREIMAGE (Y t) {i} INTER p_space p)))) i x) (space sx)) (space sy)`
+     by (RW_TAC std_ss [SWAP_SIGMA_SIGMA] ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+        ++ RW_TAC std_ss []
+        ++ DEP_REWRITE_TAC [GSYM REAL_SUM_IMAGE_CMUL]   
+        ++ RW_TAC std_ss []
+        ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+        ++ RW_TAC std_ss [REAL_MUL_COMM, REAL_MUL_ASSOC]
+        ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+        ++ RW_TAC std_ss [GSYM REAL_MUL_ASSOC]
+        ++ POP_ASSUM MATCH_MP_TAC 
+        ++ MATCH_MP_TAC (GSYM COND_PROB_MUL_RULE)
+        ++ PSET_TAC [random_variable_def, measureTheory.IN_MEASURABLE, 
+        	measureTheory.space_def, measureTheory.subsets_def]) ++ POP_ORW            
+ ++ MP_RW_TAC SWAP_SIGMA
+ >> RW_TAC std_ss []
+ ++ RW_TAC std_ss [expec_def]       
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EQ
+ ++ RW_TAC std_ss []
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_CMUL]
+ ++ RW_TAC std_ss [] 
+ ++ `!(x:real) y z. (x = y) ==> (z * x = z * y)` by RW_TAC std_ss []
+ ++ POP_ASSUM MATCH_MP_TAC  
+ ++ `SIGMA (\x'. prob p (PREIMAGE (X t) {x} INTER p_space p INTER
+            (PREIMAGE (Y t) {x'} INTER p_space p))) (space sy) =
+     SIGMA (\x'. prob p (PREIMAGE (X t) {x} INTER p_space p INTER 
+ 		(\x'. PREIMAGE (Y t) {x'} INTER p_space p) x')) (space sy)`
+ 	by RW_TAC std_ss [] ++ POP_ORW
+ ++ MATCH_MP_TAC PROB_REAL_SUM_IMAGE_FN
+ ++ PSET_TAC [random_variable_def]
+ << [PSET_TAC [measureTheory.IN_MEASURABLE, measureTheory.space_def, measureTheory.subsets_def],
+     METIS_TAC [EVENTS_INTER, measureTheory.IN_MEASURABLE, measureTheory.space_def, 
+     	measureTheory.subsets_def],
+     PSET_TAC [PREIMAGE_def, IN_SING, EXTENSION] ++ METIS_TAC [],
+     Suff `BIGUNION (IMAGE (\x'. PREIMAGE (Y t) {x'} INTER p_space p) (space sy)) = p_space p`
+     >> METIS_TAC [INTER_IDEMPOT]
+     ++ MATCH_MP_TAC BIGUNION_PSPACE
+     ++ RW_TAC std_ss [random_variable_def]]);
+     
+val TH_MRM_CONVERGENT = store_thm
+  ("TH_MRM_CONVERGENT",
+  ``!X Y p sx sy p0 pij rxy i.
+        th_mrm X Y p sx sy p0 pij rxy /\ APERIODIC_MC X p sx p0 pij ==>
+        convergent (\t. cond_expec (Y t) (X t) i p sy)``,
+    RW_TAC std_ss [convergent, th_mrm_def, mrm_def]
+ ++ Cases_on `i NOTIN space sx`
+ >> (PSET_TAC [cond_expec_def]
+    ++ `!t. PREIMAGE (X t) {i} INTER p_space p = {}`
+ 	      	by (RW_TAC std_ss [] ++ MATCH_MP_TAC NOTIN_SPACE_EVENTS
+ 	      	   ++ Q.EXISTS_TAC `sx`
+ 		   ++ PSET_TAC [dtmc_def, mc_property_def])
+    ++ POP_ORW
+    ++ `prob_space p` by PSET_TAC [dtmc_def, mc_property_def, random_variable_def]
+    ++ RW_TAC std_ss [cond_prob_def, real_div, PROB_EMPTY, REAL_INV_0, 
+    		REAL_MUL_RZERO, REAL_SUM_IMAGE_0] 
+    ++ Q.EXISTS_TAC `(0:real)` ++ RW_TAC std_ss [SEQ_CONST])
+ ++ (MP_TAC o Q.SPECL [`X`, `p`, `sx`, `p0`, `pij`, `i`]) RETURN_PROB_GT
+ ++ RW_TAC std_ss [] ++ FULL_SIMP_TAC std_ss []
+ ++ Suff `?l. (\t. cond_expec (Y (t + m)) (X (t + m)) i p sy) --> l` 
+ >> (RW_TAC std_ss [] ++ Q.EXISTS_TAC `l` 
+    ++ (MP_TAC o Q.SPECL 
+    	[`(\t. cond_expec (Y t) (X t) (i:'b) p sy)`, `l`, `m`]) SEQ_SUCM
+    ++ RW_TAC std_ss []) 
+ ++ `!t. prob p (PREIMAGE (X (t + m)) {i} INTER p_space p) <> 0`
+ 	by (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_POS_NZ
+ 	   ++ `0 <= prob p (PREIMAGE (X (t + m)) {i} INTER p_space p)`
+    		by (MATCH_MP_TAC PROB_POSITIVE
+    	   	   ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def]
+    	           >> PSET_TAC [dtmc_def, mc_property_def, random_variable_def] 
+    	           ++ MATCH_MP_TAC DTMC_EVENTS
+    	           ++ MAP_EVERY Q.EXISTS_TAC [`sx`, `p0`, `pij`]
+    	           ++ RW_TAC std_ss [])
+ 	   ++ RW_TAC std_ss [REAL_LT_LE]
+           ++ `!(x:real) y. x <> y = y <> x` by METIS_TAC []
+           ++ POP_ORW
+           ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (t + m)) {i} INTER p_space p)
+            		(PREIMAGE (X 0) {i} INTER p_space p) = 0`
+        	by (NTAC 3 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC
+        	   ++ RW_TAC std_ss []
+           	   ++ MATCH_MP_TAC COND_PROB_INTER_ZERO
+           	   ++ DEP_REWRITE_TAC [DTMC_EVENTS]
+           	   ++ RW_TAC std_ss []
+           	   >> (MAP_EVERY Q.EXISTS_TAC [`sx`, `p0`, `pij`]
+           	      ++ RW_TAC std_ss [])
+           	   ++ PSET_TAC [dtmc_def, mc_property_def, random_variable_def])
+           ++ `0 < cond_prob p (PREIMAGE (X (t + m)) {i} INTER p_space p)
+            (PREIMAGE (X 0) {i} INTER p_space p)` 
+            	by (POP_ASSUM K_TAC ++ NTAC 3 (POP_ASSUM MP_TAC)
+		   ++ POP_ASSUM (MP_TAC o Q.SPEC `t + m`)
+		   ++ RW_TAC arith_ss [])      	   
+    	   ++ FULL_SIMP_TAC real_ss [REAL_LT_IMP_NE])
+ ++ `!t. cond_expec (Y (t + m)) (X (t + m)) i p sy = rxy t i`	  
+ 	by (RW_TAC std_ss [] ++ METIS_TAC []) ++ POP_ORW 
+ ++ RW_TAC std_ss [GSYM convergent, GSYM SEQ_CAUCHY, cauchy]  
+ ++ Q.EXISTS_TAC `0` ++ RW_TAC std_ss [] 
+ ++ `rxy t i = rxy t' i` by METIS_TAC []
+ ++ RW_TAC std_ss [REAL_SUB_REFL, ABS_0]);    
+
+val TH_MRM_LIM_RW_CONST = store_thm
+  ("TH_MRM_LIM_RW_CONST",
+  ``!X Y p sx sy p0 pij rxy i.
+        th_mrm X Y p sx sy p0 pij rxy /\ APERIODIC_MC X p sx p0 pij /\ i IN space sx ==>
+        (lim (\t. cond_expec (Y t) (X t) i p sy) =
+         lim (\t. rxy t i))``,
+    RW_TAC std_ss []
+ ++ (MP_TAC o Q.SPECL 
+    	[`X`, `Y`, `p`, `sx`, `sy`, `p0`, `pij`, `rxy`, `i`]) TH_MRM_CONVERGENT    
+ ++ RW_TAC std_ss [convergent] 
+ ++ (MP_TAC o Q.SPECL [`X`, `p`, `sx`, `p0`, `pij`, `i`]) RETURN_PROB_GT
+ ++ RW_TAC std_ss []     	
+ ++ (MP_TAC o GSYM o Q.SPECL 
+    	[`(\t. cond_expec (Y t) (X t) (i:'b) p sy)`, `l`, `m`]) LIM_SUCM
+ ++ RW_TAC std_ss [] ++ POP_ASSUM K_TAC
+ ++ Suff `!t. cond_expec (Y (t + m)) (X (t + m)) i p sy = rxy t i`
+ >> RW_TAC std_ss []
+ ++ `!t. prob p (PREIMAGE (X (t + m)) {i} INTER p_space p) <> 0`
+ 	by (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_POS_NZ
+ 	   ++ `0 <= prob p (PREIMAGE (X (t + m)) {i} INTER p_space p)`
+    		by (MATCH_MP_TAC PROB_POSITIVE
+    	   	   ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def]
+    	           >> PSET_TAC [dtmc_def, mc_property_def, random_variable_def] 
+    	           ++ MATCH_MP_TAC DTMC_EVENTS
+    	           ++ MAP_EVERY Q.EXISTS_TAC [`sx`, `p0`, `pij`]
+    	           ++ RW_TAC std_ss [])
+ 	   ++ RW_TAC std_ss [REAL_LT_LE]
+           ++ `!(x:real) y. x <> y = y <> x` by METIS_TAC []
+           ++ POP_ORW
+           ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (t + m)) {i} INTER p_space p)
+            		(PREIMAGE (X 0) {i} INTER p_space p) = 0`
+        	by (NTAC 2 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC
+        	   ++ RW_TAC std_ss []
+           	   ++ MATCH_MP_TAC COND_PROB_INTER_ZERO
+           	   ++ DEP_REWRITE_TAC [DTMC_EVENTS]
+           	   ++ PSET_TAC [th_mrm_def, mrm_def]
+           	   >> (MAP_EVERY Q.EXISTS_TAC [`sx`, `p0`, `pij`]
+           	      ++ RW_TAC std_ss [])
+           	   ++ PSET_TAC [dtmc_def, mc_property_def, random_variable_def])
+           ++ `0 < cond_prob p (PREIMAGE (X (t + m)) {i} INTER p_space p)
+            (PREIMAGE (X 0) {i} INTER p_space p)` 
+            	by (POP_ASSUM K_TAC ++ NTAC 2 (POP_ASSUM MP_TAC)
+		   ++ POP_ASSUM (MP_TAC o Q.SPEC `t + m`)
+		   ++ RW_TAC arith_ss [])      	   
+    	   ++ FULL_SIMP_TAC real_ss [REAL_LT_IMP_NE])
+ ++ PSET_TAC [th_mrm_def, mrm_def]
+ ++ METIS_TAC []);      
+
+ val _ = export_theory();   
+</script>
+</body>
+</html>

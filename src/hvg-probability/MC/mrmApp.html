@@ -1,0 +1,736 @@
+<html>
+<head>
+</head>
+
+<body>
+<pre>
+(* ========================================================================= *)
+(*                                                                           *)
+(*           Formal Analysis of Memory Contention Problem Library            *)
+(*             This code is developed using HOL4 kanaskas 7.                 *)
+(*                                                                           *)
+(*                   (c) Copyright, Liya Liu, 2013                           *)
+(*                       Hardware Verification Group,                        *)
+(*                       Concordia University                                *)
+(*                                                                           *)
+(*                                                                           *)
+(*                      Last update: June 01, 2013                           *)
+(*                                                                           *)
+(* ========================================================================= *)
+loadPath := "/home/l/liy_liu/HOL_2/probability" :: !loadPath; 
+use "classified_dtmcScript.sml";
+use "mrmScript.sml";
+(*---------------------------------------------------------------------*)
+(*-------      Formal Analysis of Memory Contention Problem      ------*)
+(*---------------------------------------------------------------------*)
+val Sys_state_def = Define ` 
+    Sys_state = {((0:num), (2:num)); (2, 0); ((1:num), (1:num))} `;     
+     
+val Sys_space_def = Define ` 
+    Sys_space = (Sys_state, POW Sys_state) `;                
+
+val Request_def = Define `
+    Request n = {(&r:real) | r IN count (SUC n)}`;
+    
+val Request_space_def = Define `
+    Request_space n = (Request n, POW (Request n))`;
+    
+val Lt_def = Define `
+    Lt (q1:real) (q2:real) (t:num) (i:num # num) (j:num # num) = 
+    	if (i = (1, 1)) /\ (j = (1, 1)) then 2*q1*q2 else  
+        if (i = (0, 2)) /\ (j = (1, 1)) then q1 else
+        if (i = (2, 0)) /\ (j = (1, 1)) then q2 else
+        if (i = (1, 1)) /\ (j = (0, 2)) then q2*q2 else
+        if (i = (0, 2)) /\ (j = (0, 2)) then q2 else
+        if (i = (2, 0)) /\ (j = (2, 0)) then q1 else 
+        if (i = (1, 1)) /\ (j = (2, 0)) then q1 * q1 else 0`;
+
+val Rewards_def = Define `
+    Rewards (t:num) ((i:num), (j:num)) = 
+    if (i, j) = (1, 1) then (2:real) else
+    if (i, j) = (2, 0) then 1 else
+    if (i, j) = (0, 2) then 1 else 0`;
+    
+val Opera_sys_model_def = Define `
+    Opera_sys_model (X :num -> 'a -> (num # num)) (Y:num -> 'a -> real) p (q1:real) (q2:real) p0 = 
+    th_mrm X Y p Sys_space (Request_space 2) p0 (Lt q1 q2) Rewards /\
+    APERIODIC_MC X p Sys_space p0 (Lt q1 q2) /\ 
+    IRREDUCIABLE_MC X p Sys_space p0 (Lt q1 q2) /\
+    (q1 + q2 = 1) /\ 0 < q1 /\ q1 < 1 /\ 0 < q2 /\ q2 < 1`;
+
+(***********************************************) 
+val REAL_ADD_POW_2 = store_thm
+  ("REAL_ADD_POW_2", 
+   ``!(a:real) b. (a + b) pow 2 = a pow 2 + b pow 2 + 2 * a * b``,
+    RW_TAC real_ss [POW_2,REAL_ADD_LDISTRIB,REAL_ADD_RDISTRIB,REAL_ADD_ASSOC]
+    ++ REAL_ARITH_TAC); 
+            
+val TWO_ZERO_ZERO_TWO_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(2,0)} INTER p_space p)
+		      (PREIMAGE (X 0) {(0,2)} INTER p_space p) = 0)``,
+    RW_TAC std_ss [Opera_sys_model_def, th_mrm_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, 
+ 	`p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((0:num), (2:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(0,2)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((0:num), (2:num))`, `((2:num), (0:num))`, `0`])
+ ++ RW_TAC std_ss []);
+
+val ONE_ONE_ZERO_TWO_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(1,1)} INTER p_space p)
+		      (PREIMAGE (X 0) {(0,2)} INTER p_space p) = q1)``,
+    RW_TAC std_ss [Opera_sys_model_def, th_mrm_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((0:num), (2:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(0,2)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((0:num), (2:num))`, `((1:num), (1:num))`, `0`])
+ ++ RW_TAC std_ss []);
+
+val ZERO_TWO_ZERO_TWO_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(0,2)} INTER p_space p)
+		      (PREIMAGE (X 0) {(0,2)} INTER p_space p) = q2)``,
+    RW_TAC std_ss [Opera_sys_model_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((0:num), (2:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(0,2)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((0:num), (2:num))`, `((0:num), (2:num))`, `0`])
+ ++ RW_TAC std_ss []);
+ 
+val TWO_ZERO_TWO_ZERO_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(2,0)} INTER p_space p)
+		      (PREIMAGE (X 0) {(2,0)} INTER p_space p) = q1)``,
+    RW_TAC std_ss [Opera_sys_model_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((2:num), (0:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(2,0)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((2:num), (0:num))`, `((2:num), (0:num))`, `0`])
+ ++ RW_TAC std_ss []);
+
+val ZERO_TWO_TWO_ZERO_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(0,2)} INTER p_space p)
+		      (PREIMAGE (X 0) {(2,0)} INTER p_space p) = 0)``,
+    RW_TAC std_ss [Opera_sys_model_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((2:num), (0:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(2,0)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((2:num), (0:num))`, `((0:num), (2:num))`, `0`])
+ ++ RW_TAC std_ss []);
+
+val TWO_ZERO_ONE_ONE_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(2,0)} INTER p_space p)
+		      (PREIMAGE (X 0) {(1,1)} INTER p_space p) = q1 * q1)``,
+    RW_TAC std_ss [Opera_sys_model_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((1:num), (1:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(1,1)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((1:num), (1:num))`, `((2:num), (0:num))`, `0`])
+ ++ RW_TAC std_ss []);
+   
+val ZERO_TWO_ONE_ONE_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(cond_prob p (PREIMAGE (X 1) {(0,2)} INTER p_space p)
+		      (PREIMAGE (X 0) {(1,1)} INTER p_space p) = q2 * q2)``,
+    RW_TAC std_ss [Opera_sys_model_def]  		      
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((1:num), (1:num))`])
+ 	 APERIODIC_MC_POS_PROB ++ PSET_TAC [measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ `prob p (PREIMAGE (X 0) {(1,1)} INTER p_space p) <> 0` by RW_TAC std_ss [REAL_POS_NZ]
+ ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def, dtmc_def, measureTheory.space_def, distribution_def,
+ 	Lt_def, Trans_def]
+ ++ NTAC 11 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`((1:num), (1:num))`, `((0:num), (2:num))`, `0`])
+ ++ RW_TAC std_ss []);
+ 
+val FUN_MODIFY = prove
+  (``!(a:real) x y. a <> 0 /\ b <> 1 ==> 
+	((x = a / (1 - b) * y) = (x = a * y + b * x))``,
+    RW_TAC real_ss []
+ ++ `(x = a / (1 - b) * y) = (x * (1 - b) = a / (1 - b) * y * (1 - b))`
+ 	by RW_TAC real_ss [REAL_EQ_RMUL, REAL_SUB_0]
+ ++ `a / (1 - b) * y * (1 - b) = a * y` 
+ 	by (RW_TAC real_ss [real_div]
+ 	   ++ `!(x:real) y z w. x * y * z * w = y * w * x * z` 
+ 	   	by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ 	   ++ POP_ORW
+ 	   ++ RW_TAC std_ss [REAL_SUB_0, REAL_MUL_LINV])
+ ++ RW_TAC real_ss [REAL_SUB_LDISTRIB]
+ ++ METIS_TAC [REAL_EQ_SUB_LADD, REAL_MUL_COMM]);
+ 
+val SYS_EXISTS_STEAD_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(?u. (\t. prob p (PREIMAGE (X t) {i} INTER p_space p)) --> u)``, 
+    RW_TAC std_ss []
+ ++ Cases_on `i NOTIN space (Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`
+ >> (RW_TAC std_ss []
+    ++ `!t. PREIMAGE (X t) {i} INTER p_space p = {}`
+ 	      	by (RW_TAC std_ss [] ++ MATCH_MP_TAC NOTIN_SPACE_EVENTS
+ 	      	   ++ Q.EXISTS_TAC `(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`
+ 		   ++ PSET_TAC [Opera_sys_model_def, th_mrm_def, mrm_def, dtmc_def, mc_property_def])
+    ++ POP_ORW
+    ++ PSET_TAC [PROB_EMPTY, Opera_sys_model_def, th_mrm_def, mrm_def, dtmc_def, 
+ 		   	mc_property_def, random_variable_def]
+    ++ Q.EXISTS_TAC `(0:real)` ++ RW_TAC std_ss [SEQ_CONST])  
+ ++ MATCH_MP_TAC APERIODIC_MC_SEQ
+ ++ MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+ ++ PSET_TAC [Opera_sys_model_def]);
+
+val TWO_PROC_WAIT = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(lim (\t. prob p (PREIMAGE (X t) {(2, 0)} INTER p_space p)) =
+	 q1 * q1 / (1 - q1) * lim (\t. prob p (PREIMAGE (X t) {(1, 1)} INTER p_space p)))``,
+    RW_TAC std_ss []
+ ++ DEP_REWRITE_TAC [FUN_MODIFY]
+ ++ PSET_TAC [Opera_sys_model_def, REAL_LT_IMP_NE]
+ >> METIS_TAC [REAL_ENTIRE, REAL_POS_NZ]
+ ++ Q.ABBREV_TAC `A = q1 * q1 * lim (\t. prob p (PREIMAGE (X t) {(1,1)} INTER p_space p)) +
+    q1 * lim (\t. prob p (PREIMAGE (X t) {(2,0)} INTER p_space p))`
+ ++ `{((0:num), (2:num)); (2, 0); ((1:num), (1:num))} =
+     {((0:num), (2:num))} UNION {(2, 0)} UNION {((1:num), (1:num))}` 
+     by (PSET_TAC [EXTENSION] ++ METIS_TAC []) 
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`]) STEADY_PROB
+ ++ RW_TAC std_ss [stationary_distribution_def, measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ POP_ASSUM (MP_TAC o Q.SPEC `(2, 0)`)
+ ++ PSET_TAC []    
+ ++ POP_ASSUM (MP_TAC o Q.SPEC `0`)
+ ++ PSET_TAC [Trans_def, measureTheory.space_def, Sys_space_def, Sys_state_def] ++ POP_ASSUM K_TAC	
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING, FINITE_UNION]
+ ++ PSET_TAC [FINITE_SING] ++ NTAC 3 (POP_ASSUM K_TAC) 
+ ++ `cond_prob p (PREIMAGE (X 1) {(2,0)} INTER p_space p)
+            (PREIMAGE (X 0) {(1,1)} INTER p_space p) = q1 * q1` 
+            by (MATCH_MP_TAC TWO_ZERO_ONE_ONE_PROB
+               ++ PSET_TAC [Opera_sys_model_def, Sys_space_def, Sys_state_def]
+               ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q2`, `p0`]
+               ++ RW_TAC std_ss []) 
+ ++ `cond_prob p (PREIMAGE (X 1) {(2,0)} INTER p_space p)
+            (PREIMAGE (X 0) {(2,0)} INTER p_space p) = q1` 
+            by (POP_ASSUM K_TAC ++ MATCH_MP_TAC TWO_ZERO_TWO_ZERO_PROB
+               ++ PSET_TAC [Opera_sys_model_def, Sys_space_def, Sys_state_def]
+               ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q2`, `p0`]
+               ++ RW_TAC std_ss [])               
+ ++ `cond_prob p (PREIMAGE (X 1) {(2,0)} INTER p_space p)
+            (PREIMAGE (X 0) {(0,2)} INTER p_space p) = 0` 
+            by (NTAC 2 (POP_ASSUM K_TAC) ++ MATCH_MP_TAC TWO_ZERO_ZERO_TWO_PROB
+               ++ PSET_TAC [Opera_sys_model_def, Sys_space_def, Sys_state_def]
+               ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q1`, `q2`, `p0`]
+               ++ RW_TAC std_ss [])       
+ ++ NTAC 3 (POP_ORW) ++ Q.UNABBREV_TAC `A`
+ ++ RW_TAC real_ss []
+ ++ METIS_TAC [REAL_ADD_COMM, REAL_MUL_ASSOC, REAL_MUL_COMM]);
+   
+val TWO_PROC_WORK = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(lim (\t. prob p (PREIMAGE (X t) {(0, 2)} INTER p_space p)) =
+	 q2 * q2 / (1 - q2) * lim (\t. prob p (PREIMAGE (X t) {(1, 1)} INTER p_space p)))``,
+    RW_TAC std_ss []
+ ++ DEP_REWRITE_TAC [FUN_MODIFY]
+ ++ PSET_TAC [Opera_sys_model_def, REAL_LT_IMP_NE]
+ >> METIS_TAC [REAL_ENTIRE, REAL_POS_NZ]
+ ++ Q.ABBREV_TAC `A = q2 * q2 * lim (\t. prob p (PREIMAGE (X t) {(1,1)} INTER p_space p)) +
+    q2 * lim (\t. prob p (PREIMAGE (X t) {(0,2)} INTER p_space p))`
+ ++ `{((0:num), (2:num)); (2, 0); ((1:num), (1:num))} =
+     {((0:num), (2:num))} UNION {(2, 0)} UNION {((1:num), (1:num))}` 
+     by (PSET_TAC [EXTENSION] ++ METIS_TAC []) 
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`]) STEADY_PROB
+ ++ RW_TAC std_ss [stationary_distribution_def, measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ POP_ASSUM (MP_TAC o Q.SPEC `(0, 2)`)
+ ++ PSET_TAC []    
+ ++ POP_ASSUM (MP_TAC o Q.SPEC `0`)
+ ++ PSET_TAC [Trans_def, measureTheory.space_def, Sys_space_def] ++ POP_ASSUM K_TAC	
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING, FINITE_UNION]
+ ++ PSET_TAC [FINITE_SING] ++ NTAC 3 (POP_ASSUM K_TAC) 
+ ++ `cond_prob p (PREIMAGE (X 1) {(0,2)} INTER p_space p)
+            (PREIMAGE (X 0) {(0,2)} INTER p_space p) = q2` 
+            by (MATCH_MP_TAC ZERO_TWO_ZERO_TWO_PROB 
+               ++ PSET_TAC [Opera_sys_model_def, Sys_space_def, Sys_state_def]
+               ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q1`, `p0`]
+               ++ RW_TAC std_ss [])
+ ++ `cond_prob p (PREIMAGE (X 1) {(0,2)} INTER p_space p)
+            (PREIMAGE (X 0) {(1,1)} INTER p_space p) = q2 * q2` 
+            by (POP_ASSUM K_TAC ++ MATCH_MP_TAC ZERO_TWO_ONE_ONE_PROB
+               ++ PSET_TAC [Opera_sys_model_def, Sys_space_def, Sys_state_def]
+               ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q1`, `p0`]
+               ++ RW_TAC std_ss [])            
+ ++ `cond_prob p (PREIMAGE (X 1) {(0,2)} INTER p_space p)
+            (PREIMAGE (X 0) {(2,0)} INTER p_space p) = 0` 
+            by (NTAC 2 (POP_ASSUM K_TAC) ++ MATCH_MP_TAC ZERO_TWO_TWO_ZERO_PROB
+               ++ PSET_TAC [Opera_sys_model_def, Sys_space_def, Sys_state_def]
+               ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q1`, `q2`, `p0`]
+               ++ RW_TAC std_ss [])       
+ ++ NTAC 3 (POP_ORW) ++ Q.UNABBREV_TAC `A`
+ ++ RW_TAC real_ss []
+ ++ METIS_TAC [REAL_ADD_COMM, REAL_MUL_ASSOC, REAL_MUL_COMM]);
+
+val POS_POW_2 = prove 
+  (``!(a:real) b. a <> 0 /\ b <> 0 ==> (0 < a pow 2 + b pow 2)``,
+    RW_TAC real_ss []
+ ++ Suff `!(x:real). x <> 0 ==> 0 < x pow 2`
+ >> METIS_TAC [REAL_LT_ADD]
+ ++ RW_TAC std_ss [POW_2, REAL_POASQ]);
+
+val ADD_POW_3 = prove
+  (``!(x:real) y . x * x * x + y * y * y = (x + y) * (x * x + y * y - x * y)``,
+    RW_TAC real_ss [REAL_ADD_RDISTRIB]
+ ++ `!(a:real) b c. a + b - c = a + (b - c)` by REAL_ARITH_TAC
+ ++ RW_TAC real_ss [REAL_ADD_LDISTRIB, REAL_MUL_ASSOC, REAL_SUB_LDISTRIB, REAL_ADD_ASSOC]
+ ++ `x * x * y = y * x * x` by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ `x * y * y = y * x * y` by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ NTAC 2 (POP_ORW)
+ ++ `!(a:real) b c d. a + (b - c) + c + (d - b) = a + d` by REAL_ARITH_TAC
+ ++ RW_TAC real_ss []);
+
+val POW_3 = prove
+  (``!(x:real). x pow 3 = x * x * x``,
+    RW_TAC std_ss []
+ ++ `3 = SUC (SUC 1)` by RW_TAC arith_ss []
+ ++ POP_ORW
+ ++ RW_TAC std_ss [pow, POW_1, REAL_MUL_ASSOC]);
+  
+val ONE_WORK_ONE_WAIT = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(lim (\t. prob p (PREIMAGE (X t) {(1, 1)} INTER p_space p)) =
+	 q1 * q2 / (1 - 2 * q1 * q2))``, 
+                  
+    RW_TAC std_ss [Opera_sys_model_def]
+ ++ `{((0:num), (2:num)); (2, 0); ((1:num), (1:num))} =
+     {((0:num), (2:num))} UNION {(2, 0)} UNION {((1:num), (1:num))}` 
+     by (PSET_TAC [EXTENSION] ++ METIS_TAC [])     
+ ++ (MP_TAC o Q.ISPECL [`(X :num -> 'a -> (num # num))`, 
+ 	`p:('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, `p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`]) STEADY_PROB
+ ++ RW_TAC std_ss [stationary_distribution_def, measureTheory.space_def, Sys_space_def, Sys_state_def]
+ ++ POP_ASSUM K_TAC
+ ++ POP_ASSUM MP_TAC
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING, FINITE_UNION]
+ ++ PSET_TAC [FINITE_SING]
+ ++ (MP_TAC o (REWRITE_RULE [Opera_sys_model_def]) o Q.SPECL [`X`, `Y`, `p`, `q1`, `q2`, `p0`]) 
+ 	TWO_PROC_WORK ++ RW_TAC real_ss []
+ ++ (MP_TAC o (REWRITE_RULE [Opera_sys_model_def]) o Q.SPECL [`X`, `Y`, `p`, `q1`, `q2`, `p0`]) 
+ 	TWO_PROC_WAIT ++ RW_TAC real_ss []	
+ ++ `!(x:real) y z a. x * a + y * a + a = (x + y + 1) * a` by RW_TAC real_ss [REAL_ADD_RDISTRIB]
+ ++ FULL_SIMP_TAC std_ss []
+ ++ NTAC 3 (POP_ASSUM K_TAC)
+ ++ Suff `q1 * q2 / (1 - 2 * q1 * q2) = inv ((q2 * q2 / (1 - q2) + q1 * q1 / (1 - q1) + 1))`
+ >> (RW_TAC real_ss [] ++ MATCH_MP_TAC REAL_LINV_UNIQ ++ METIS_TAC [REAL_MUL_COMM])
+ ++ `q2 * q2 / (1 - q2) = q2 * q2 / q1` by METIS_TAC [REAL_EQ_SUB_LADD]
+ ++ `q1 * q1 / (1 - q1) = q1 * q1 / q2` by METIS_TAC [REAL_EQ_SUB_LADD, REAL_ADD_COMM]
+ ++ NTAC 2 (POP_ORW)
+ ++ MATCH_MP_TAC REAL_LINV_UNIQ
+ ++ `!(x:real) y z. (x:real) * y * z = x * z * y` by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ RW_TAC std_ss [real_div]
+ ++ POP_ORW 
+ ++ `!(x:real) y z a b. x * y *(z * a * b) = y * z * a * (x * b)` 
+ 	by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ `q1 <> 0` by PSET_TAC [REAL_LT_IMP_NE] 
+ ++ `q2 <> 0` by PSET_TAC [REAL_LT_IMP_NE]  	
+ ++ RW_TAC real_ss [REAL_ADD_LDISTRIB, REAL_MUL_RINV]
+ ++ `!(x:real) y z a b. x * y * z * (a * b) = y * z * a * (x * b)` 
+ 	by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ RW_TAC real_ss [REAL_MUL_RINV] 
+ ++ Suff `q2 * q2 * q2 + q1 * q1 * q1 + q1 * q2 = 1 - 2 * q1 * q2`
+ >> (RW_TAC std_ss [] ++ MATCH_MP_TAC REAL_MUL_RINV    
+    ++ `(1:real) = q1 pow 2 + q2 pow 2 + 2 * q1 * q2` 
+    	by METIS_TAC [POW_ONE, extra_realTheory.REAL_ADD_POW_2] ++ POP_ORW
+    ++ RW_TAC real_ss []
+    ++ MATCH_MP_TAC REAL_POS_NZ
+    ++ MATCH_MP_TAC POS_POW_2
+    ++ RW_TAC real_ss [])
+ ++ RW_TAC real_ss [ADD_POW_3, REAL_ADD_COMM]
+ ++ `!(x:real) y z w. x + (y + z - w) = y + z + (x - w)` by REAL_ARITH_TAC
+ ++ `q1 * q2 = q2 * q1` by METIS_TAC [REAL_MUL_COMM] ++ POP_ORW 
+ ++ RW_TAC real_ss [REAL_SUB_REFL, REAL_EQ_SUB_LADD, 
+ 	GSYM POW_2, GSYM extra_realTheory.REAL_ADD_POW_2]);
+
+val BOTH_WORK_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(lim (\t. prob p (PREIMAGE (X t) {(0, 2)} INTER p_space p)) =
+	 q2 pow 3 / (1 - 2 * q1 * q2))``, 
+    RW_TAC std_ss [POW_3]
+ ++ MP_RW_TAC TWO_PROC_WORK
+ >> RW_TAC std_ss []
+ ++ MP_RW_TAC ONE_WORK_ONE_WAIT
+ >> RW_TAC std_ss []
+ ++ `1 - q2 = q1` by (PSET_TAC [Opera_sys_model_def] ++ METIS_TAC [REAL_EQ_SUB_LADD])
+ ++ POP_ORW
+ ++ `!(a:real) b c d. a * a * b * (c * a * d) = a * a * (b * c) * a * d` 
+ 	by METIS_TAC [REAL_MUL_ASSOC]
+ ++ `q1 <> 0` by PSET_TAC [Opera_sys_model_def, REAL_LT_IMP_NE]  	
+ ++ RW_TAC real_ss [real_div, REAL_MUL_LINV]);
+ 
+val BOTH_WAIT_PROB = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==> 
+	(lim (\t. prob p (PREIMAGE (X t) {(2, 0)} INTER p_space p)) =
+	 q1 pow 3 / (1 - 2 * q1 * q2))``, 
+    RW_TAC std_ss [POW_3]
+ ++ MP_RW_TAC TWO_PROC_WAIT
+ >> RW_TAC std_ss []
+ ++ MP_RW_TAC ONE_WORK_ONE_WAIT
+ >> RW_TAC std_ss []
+ ++ `1 - q1 = q2` by (PSET_TAC [Opera_sys_model_def] ++ METIS_TAC [REAL_ADD_COMM, REAL_EQ_SUB_LADD])
+ ++ POP_ORW
+ ++ `!(a:real) b c d. a * a * b * (a * c * d) = a * a * (b * c) * a * d` 
+ 	by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ `q2 <> 0` by PSET_TAC [Opera_sys_model_def, REAL_LT_IMP_NE]  	
+ ++ RW_TAC real_ss [real_div, REAL_MUL_LINV]);    
+
+val temp_conv = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+	Opera_sys_model X Y p q1 q2 p0 ==>  
+	((2 + q1 pow 2 / (1 - q1) + q2 pow 2 / (1 - q2)) * 
+	 lim (\n. prob p (PREIMAGE (X n) {(1, 1)} INTER p_space p)) =	  
+	 (1 - q1 * q2) / (1 - 2 * q1 * q2))``,
+    RW_TAC std_ss [POW_2]
+ ++ MP_RW_TAC ONE_WORK_ONE_WAIT
+ >> RW_TAC std_ss []
+ ++ `1 - q2 = q1` by (PSET_TAC [Opera_sys_model_def] 
+ ++ METIS_TAC [REAL_EQ_SUB_LADD])
+ ++ `1 - q1 = q2` by (PSET_TAC [Opera_sys_model_def] 
+ ++ METIS_TAC [REAL_ADD_COMM, REAL_EQ_SUB_LADD])
+ ++ NTAC 2 (POP_ORW)
+ ++ RW_TAC std_ss [real_div, REAL_MUL_ASSOC]
+ ++ Suff `(2 + q1 * q1 * inv q2 + q2 * q2 * inv q1) * q1 * q2 =
+ 	1 - q1 * q2`
+ >> RW_TAC std_ss [] 	
+ ++ RW_TAC std_ss [REAL_ADD_RDISTRIB]
+ ++ `!(a:real) b c. a * a * b * a * c = a * a * a * (b * c)` 
+ 	by METIS_TAC [REAL_MUL_COMM, REAL_MUL_ASSOC]
+ ++ POP_ORW ++ `q2 <> 0` by PSET_TAC [Opera_sys_model_def, REAL_LT_IMP_NE]  
+ ++ `!(a:real) b c. a * a * b * c * a = a * a * a * (b * c)` 
+ 	by METIS_TAC [REAL_MUL_COMM, REAL_MUL_ASSOC]
+ ++ POP_ORW ++ `q1 <> 0` by PSET_TAC [Opera_sys_model_def, REAL_LT_IMP_NE]  	
+ ++ RW_TAC real_ss [REAL_MUL_LINV, GSYM REAL_ADD_ASSOC, ADD_POW_3]
+ ++ FULL_SIMP_TAC real_ss [Opera_sys_model_def]
+ ++ `!(x:real) y z w. x + (y + z - w) = y + z + x - w` by REAL_ARITH_TAC
+ ++ RW_TAC real_ss [GSYM ((REWRITE_RULE [POW_2]) REAL_ADD_POW_2)]);
+
+val FINITE_REWARD = prove
+  (``!n. FINITE (Request n)``,
+    RW_TAC std_ss [measureTheory.space_def, Request_def, IN_COUNT]
+ ++ Induct_on `n`
+ >> (`{&x | x < SUC 0} = {(0:real)}` 
+ 	by (PSET_TAC [EXTENSION, GSPECIFICATION] ++ EQ_TAC 
+ 	   >> (RW_TAC std_ss [] ++ `x' = (0:num)` by RW_TAC arith_ss []
+              ++ METIS_TAC [REAL_INJ])
+           ++ RW_TAC std_ss []
+           ++ Q.EXISTS_TAC `0`
+           ++ RW_TAC std_ss []) ++ POP_ORW ++ RW_TAC std_ss [FINITE_SING])
+ ++ `{&x:real | x < SUC (SUC n)} = {&x | x < SUC n} UNION {&(SUC n)}`
+ 	by (PSET_TAC [EXTENSION, GSPECIFICATION] ++ EQ_TAC 
+           >> (RW_TAC arith_ss []
+              ++ Cases_on `x' = SUC n`
+              >> RW_TAC std_ss [REAL_INJ]
+              ++ `x' < SUC n` by RW_TAC arith_ss []
+              ++ Suff `?x''. (&x' = &x'') /\ x'' < SUC n`
+              >> METIS_TAC []
+              ++ Q.EXISTS_TAC `x'`
+              ++ RW_TAC std_ss [REAL_INJ])
+           ++ RW_TAC arith_ss [REAL_INJ]
+           >> (Q.EXISTS_TAC `x'`
+              ++ RW_TAC arith_ss [REAL_INJ])
+           ++ RW_TAC arith_ss []
+           ++ Q.EXISTS_TAC `SUC n`
+           ++ RW_TAC std_ss [REAL_INJ]) ++ POP_ORW
+ ++ METIS_TAC [FINITE_UNION, FINITE_SING]);
+ 
+val FINITE_SYS = prove
+  (``FINITE Sys_state``,
+    RW_TAC std_ss [Sys_state_def, IN_COUNT]
+ ++ `{((0:num), (2:num)); (2,0); (1,1)} =
+     {((0:num), (2:num))} UNION {((2:num), (0:num))} UNION {(1, 1)}`
+     by (PSET_TAC [EXTENSION] ++ METIS_TAC []) ++ POP_ORW
+ ++ METIS_TAC [FINITE_UNION, FINITE_SING]);  
+
+val LIM_RW_BOTH_WORK = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+        Opera_sys_model X Y p q1 q2 p0 ==>    
+        (lim (\t. cond_expec (Y t) (X t) (0,2) p (Request_space 2)) = 1)``,
+    RW_TAC std_ss [Opera_sys_model_def, Request_space_def]
+ ++ `((0:num), (2:num)) IN Sys_state`
+ 	by PSET_TAC [measureTheory.space_def, Sys_state_def]   
+ ++ (MP_TAC o Q.ISPECL [`X:num -> 'a -> num # num`, 
+ 	`(p :('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real))`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, 
+ 	`p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((0:num), (2:num))`]) RETURN_PROB_GT
+ ++ RW_TAC std_ss [Sys_space_def, measureTheory.space_def] 
+ ++ `!t. prob p (PREIMAGE (X (t + m)) {((0:num), (2:num))} INTER p_space p) <> 0`
+ 	by (RW_TAC std_ss [] 
+ 	   ++ MATCH_MP_TAC REAL_POS_NZ
+ 	   ++ `0 <= prob p (PREIMAGE (X (t + m)) {((0:num), (2:num))} INTER p_space p)`
+    		by (MATCH_MP_TAC PROB_POSITIVE
+    	   	   ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def]
+    	           >> PSET_TAC [dtmc_def, mc_property_def, random_variable_def] 
+    	           ++ MATCH_MP_TAC DTMC_EVENTS
+    	           ++ MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+    	           ++ RW_TAC std_ss [])
+ 	   ++ RW_TAC std_ss [REAL_LT_LE]
+           ++ `!(x:real) y. x <> y = y <> x` by METIS_TAC []
+           ++ POP_ORW
+           ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (t + m)) {((0:num), (2:num))} INTER p_space p)
+            		(PREIMAGE (X 0) {((0:num), (2:num))} INTER p_space p) = 0`
+        	by (NTAC 3 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC
+        	   ++ RW_TAC std_ss []
+           	   ++ MATCH_MP_TAC COND_PROB_INTER_ZERO
+           	   ++ DEP_REWRITE_TAC [DTMC_EVENTS]
+           	   ++ RW_TAC std_ss []
+           	   >> (MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+           	      ++ PSET_TAC [th_mrm_def, mrm_def])
+           	   ++ PSET_TAC [th_mrm_def, mrm_def, dtmc_def, mc_property_def, random_variable_def])
+           	   
+           ++ `0 < cond_prob p (PREIMAGE (X (t + m)) {((0:num), (2:num))} INTER p_space p)
+            		(PREIMAGE (X 0) {((0:num), (2:num))} INTER p_space p)` 
+            	by (POP_ASSUM K_TAC ++ NTAC 2 (POP_ASSUM MP_TAC)
+		   ++ POP_ASSUM (MP_TAC o Q.SPEC `t + m`)
+		   ++ RW_TAC arith_ss [])      	   
+    	   ++ FULL_SIMP_TAC real_ss [REAL_LT_IMP_NE])
+ ++ MATCH_MP_TAC TEND2LIM 
+ ++ (MP_TAC o Q.SPECL 
+ 	[`(\t. cond_expec ((Y:num -> 'a -> real) t) ((X:num -> 'a -> num # num) t) ((0:num),(2:num)) 
+ 		p (Request_space 2))`, `1`, `m`]) SEQ_SUCM
+ ++ RW_TAC std_ss [Request_space_def] ++ POP_ASSUM K_TAC 
+ ++ `!t. cond_expec (Y (t + m)) (X (t + m)) (0,2) p (Request 2,POW (Request 2)) = 
+ 	 Rewards t ((0:num), (2:num))`
+         by (PSET_TAC [th_mrm_def, mrm_def, measureTheory.space_def] ++ NTAC 12 (POP_ASSUM MP_TAC)
+            ++ POP_ASSUM (MP_TAC o Q.SPECL [`((0:num),(2:num))`, `t + m`]) 
+            ++ RW_TAC std_ss [] 
+            ++ `Rewards t (0,2) = Rewards (t + m) ((0:num), (2:num))` by METIS_TAC []
+            ++ FULL_SIMP_TAC std_ss []) ++ POP_ORW
+ ++ RW_TAC std_ss [Rewards_def, SEQ_CONST]);
+ 
+val LIM_RW_BOTH_WAIT = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+        Opera_sys_model X Y p q1 q2 p0 ==>    
+        (lim (\t. cond_expec (Y t) (X t) (2,0) p (Request_space 2)) = 1)``,
+    RW_TAC std_ss [Opera_sys_model_def]
+ ++ `((2:num), (0:num)) IN Sys_state`
+ 	by PSET_TAC [measureTheory.space_def, Sys_state_def]   
+ ++ (MP_TAC o Q.ISPECL [`X:num -> 'a -> num # num`, 
+ 	`(p :('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real))`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, 
+ 	`p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((2:num), (0:num))`]) RETURN_PROB_GT
+ ++ RW_TAC std_ss [Sys_space_def, measureTheory.space_def] 
+ ++ `!t. prob p (PREIMAGE (X (t + m)) {((2:num), (0:num))} INTER p_space p) <> 0`
+ 	by (RW_TAC std_ss [] 
+ 	   ++ MATCH_MP_TAC REAL_POS_NZ
+ 	   ++ `0 <= prob p (PREIMAGE (X (t + m)) {((2:num), (0:num))} INTER p_space p)`
+    		by (MATCH_MP_TAC PROB_POSITIVE
+    	   	   ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def]
+    	           >> PSET_TAC [dtmc_def, mc_property_def, random_variable_def] 
+    	           ++ MATCH_MP_TAC DTMC_EVENTS
+    	           ++ MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+    	           ++ RW_TAC std_ss [])
+ 	   ++ RW_TAC std_ss [REAL_LT_LE]
+           ++ `!(x:real) y. x <> y = y <> x` by METIS_TAC []
+           ++ POP_ORW
+           ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (t + m)) {((2:num), (0:num))} INTER p_space p)
+            		(PREIMAGE (X 0) {((2:num), (0:num))} INTER p_space p) = 0`
+        	by (NTAC 3 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC
+        	   ++ RW_TAC std_ss []
+           	   ++ MATCH_MP_TAC COND_PROB_INTER_ZERO
+           	   ++ DEP_REWRITE_TAC [DTMC_EVENTS]
+           	   ++ RW_TAC std_ss []
+           	   >> (MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+           	      ++ PSET_TAC [th_mrm_def, mrm_def])
+           	   ++ PSET_TAC [th_mrm_def, mrm_def, dtmc_def, mc_property_def, random_variable_def])
+           ++ `0 < cond_prob p (PREIMAGE (X (t + m)) {((2:num), (0:num))} INTER p_space p)
+            		(PREIMAGE (X 0) {((2:num), (0:num))} INTER p_space p)` 
+            	by (POP_ASSUM K_TAC ++ NTAC 2 (POP_ASSUM MP_TAC)
+		   ++ POP_ASSUM (MP_TAC o Q.SPEC `t + m`)
+		   ++ RW_TAC arith_ss [])      	   
+    	   ++ FULL_SIMP_TAC real_ss [REAL_LT_IMP_NE])
+ ++ MATCH_MP_TAC TEND2LIM 
+ ++ (MP_TAC o Q.SPECL 
+ 	[`(\t. cond_expec ((Y:num -> 'a -> real) t) ((X:num -> 'a -> num # num) t) ((2:num),(0:num)) 
+ 		p (Request_space 2))`, `1`, `m`]) SEQ_SUCM
+ ++ RW_TAC std_ss [Request_space_def] ++ POP_ASSUM K_TAC 
+ ++ `!t. cond_expec (Y (t + m)) (X (t + m)) (2,0) p (Request 2,POW (Request 2)) = 
+ 	 Rewards t ((2:num), (0:num))`
+         by (PSET_TAC [th_mrm_def, mrm_def, measureTheory.space_def] ++ NTAC 12 (POP_ASSUM MP_TAC)
+            ++ POP_ASSUM (MP_TAC o Q.SPECL [`((2:num),(0:num))`, `t + m`]) 
+            ++ RW_TAC std_ss [] 
+            ++ `Rewards t (2,0) = Rewards (t + m) ((2:num), (0:num))` by METIS_TAC []
+            ++ FULL_SIMP_TAC std_ss [Request_space_def]) ++ POP_ORW
+ ++ RW_TAC std_ss [Rewards_def, SEQ_CONST]); 
+             
+val LIM_RW_ONE_WORK_ONE_WAIT = prove
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+        Opera_sys_model X Y p q1 q2 p0 ==>    
+        (lim (\t. cond_expec (Y t) (X t) (1,1) p (Request_space 2)) = 2)``,
+    RW_TAC std_ss [Opera_sys_model_def]
+ ++ `((1:num), (1:num)) IN Sys_state`
+ 	by PSET_TAC [measureTheory.space_def, Sys_state_def]   
+ ++ (MP_TAC o Q.ISPECL [`X:num -> 'a -> num # num`, 
+ 	`(p :('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real))`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`, 
+ 	`p0:num # num -> real`, 
+ 	`(Lt q1 q2):num -> num # num -> num # num -> real`, `((1:num), (1:num))`]) RETURN_PROB_GT
+ ++ RW_TAC std_ss [Sys_space_def, measureTheory.space_def] 
+ ++ `!t. prob p (PREIMAGE (X (t + m)) {((1:num), (1:num))} INTER p_space p) <> 0`
+ 	by (RW_TAC std_ss [] 
+ 	   ++ MATCH_MP_TAC REAL_POS_NZ
+ 	   ++ `0 <= prob p (PREIMAGE (X (t + m)) {((1:num), (1:num))} INTER p_space p)`
+    		by (MATCH_MP_TAC PROB_POSITIVE
+    	   	   ++ PSET_TAC [APERIODIC_MC_def, th_dtmc_def]
+    	           >> PSET_TAC [dtmc_def, mc_property_def, random_variable_def] 
+    	           ++ MATCH_MP_TAC DTMC_EVENTS
+    	           ++ MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+    	           ++ RW_TAC std_ss [])
+ 	   ++ RW_TAC std_ss [REAL_LT_LE]
+           ++ `!(x:real) y. x <> y = y <> x` by METIS_TAC []
+           ++ POP_ORW
+           ++ SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (t + m)) {((1:num), (1:num))} INTER p_space p)
+            		(PREIMAGE (X 0) {((1:num), (1:num))} INTER p_space p) = 0`
+        	by (NTAC 3 (POP_ASSUM MP_TAC) ++ POP_ASSUM K_TAC
+        	   ++ RW_TAC std_ss []
+           	   ++ MATCH_MP_TAC COND_PROB_INTER_ZERO
+           	   ++ DEP_REWRITE_TAC [DTMC_EVENTS]
+           	   ++ RW_TAC std_ss []
+           	   >> (MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`]
+           	      ++ PSET_TAC [th_mrm_def, mrm_def])
+           	   ++ PSET_TAC [th_mrm_def, mrm_def, dtmc_def, mc_property_def, random_variable_def])
+           ++ `0 < cond_prob p (PREIMAGE (X (t + m)) {((1:num), (1:num))} INTER p_space p)
+            		(PREIMAGE (X 0) {((1:num), (1:num))} INTER p_space p)` 
+            	by (POP_ASSUM K_TAC ++ NTAC 2 (POP_ASSUM MP_TAC)
+		   ++ POP_ASSUM (MP_TAC o Q.SPEC `t + m`)
+		   ++ RW_TAC arith_ss [])      	   
+    	   ++ FULL_SIMP_TAC real_ss [REAL_LT_IMP_NE])
+ ++ MATCH_MP_TAC TEND2LIM 
+ ++ (MP_TAC o Q.SPECL 
+ 	[`(\t. cond_expec ((Y:num -> 'a -> real) t) ((X:num -> 'a -> num # num) t) ((1:num),(1:num)) 
+ 		p (Request_space 2))`, `2`, `m`]) SEQ_SUCM
+ ++ RW_TAC std_ss [Request_space_def] ++ POP_ASSUM K_TAC 
+ ++ `!t. cond_expec (Y (t + m)) (X (t + m)) (1,1) p (Request 2,POW (Request 2)) = 
+ 	 Rewards t ((1:num), (1:num))`
+         by (PSET_TAC [th_mrm_def, mrm_def, measureTheory.space_def] ++ NTAC 12 (POP_ASSUM MP_TAC)
+            ++ POP_ASSUM (MP_TAC o Q.SPECL [`((1:num),(1:num))`, `t + m`]) 
+            ++ RW_TAC std_ss [] 
+            ++ `Rewards t (1,1) = Rewards (t + m) ((1:num), (1:num))` by METIS_TAC []
+            ++ FULL_SIMP_TAC std_ss [Request_space_def]) ++ POP_ORW
+ ++ RW_TAC std_ss [Rewards_def, SEQ_CONST]); 
+
+val LIM_EXPEC_OPERA = prove 
+  (``!(X :num -> 'a -> (num # num)) Y p (q1:real) (q2:real) p0.
+        Opera_sys_model X Y p q1 q2 p0 ==>
+        (lim (\t. expec (Y t) p (Request_space 2)) =
+         (1 - q1 * q2) / (1 - 2 * q1 * q2))``,
+    RW_TAC std_ss [Request_space_def]
+ ++ (MP_TAC o Q.SPECL [`X`, `Y`, `p`, `q1`, `q2`, `p0`]) LIM_RW_ONE_WORK_ONE_WAIT
+ ++ (MP_TAC o Q.SPECL [`X`, `Y`, `p`, `q1`, `q2`, `p0`]) LIM_RW_BOTH_WORK
+ ++ (MP_TAC o Q.SPECL [`X`, `Y`, `p`, `q1`, `q2`, `p0`]) LIM_RW_BOTH_WAIT  
+ ++ RW_TAC std_ss [Request_space_def]
+ ++ MP_RW_TAC (GSYM temp_conv)
+ >> RW_TAC std_ss []
+ ++ `!x. ?u. (\t. prob p (PREIMAGE (X t) {x} INTER p_space p)) --> u`
+ 	by (RW_TAC std_ss [] 
+ 	   ++ MATCH_MP_TAC SYS_EXISTS_STEAD_PROB
+ 	   ++ MAP_EVERY Q.EXISTS_TAC [`Y`, `q1`, `q2`, `p0`]
+ 	   ++ RW_TAC std_ss [])
+ ++ `!i. ?u. (\t.  cond_expec (Y t) (X t) i p (Request_space 2)) --> u`
+       by (RW_TAC std_ss [GSYM convergent] 
+          ++ MATCH_MP_TAC TH_MRM_CONVERGENT	   
+ 	  ++ MAP_EVERY Q.EXISTS_TAC [`Sys_space`, `p0`, `Lt q1 q2`, `Rewards`] 
+ 	  ++ PSET_TAC [Opera_sys_model_def])
+ ++ (MP_TAC o Q.ISPECL [`(Y:num -> 'a -> real)`, `(X :num -> 'a -> (num # num))`, 
+ 	`(p :('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> real))`, 
+ 	`Request_space (2:num)`, 
+ 	`(Sys_space:(num # num -> bool) # ((num # num -> bool) -> bool))`])
+ 	EXT_EXPEC_SUM_LIM 
+ ++ PSET_TAC [Opera_sys_model_def, th_mrm_def, mrm_def, dtmc_def, mc_property_def, 
+ 	measureTheory.space_def, Request_space_def, Sys_space_def, 
+ 	Rewards_def, FINITE_REWARD, FINITE_SYS]
+ ++ POP_ASSUM K_TAC ++ RW_TAC std_ss [measureTheory.space_def, Sys_state_def]
+ ++ `{((0:num),(2:num)); (2,0); (1,1)} = {((0:num),(2:num))} UNION {(2, 0)} UNION {(1, 1)}`
+ 	by (PSET_TAC [EXTENSION] ++ METIS_TAC []) ++ POP_ORW
+ ++ RW_TAC std_ss [measureTheory.space_def, Sys_space_def] 
+ ++ DEP_REWRITE_TAC [REAL_SUM_IMAGE_DISJOINT_UNION, REAL_SUM_IMAGE_SING]
+ ++ PSET_TAC [FINITE_UNION, FINITE_SING]
+ ++ DEP_REWRITE_TAC [TWO_PROC_WORK, TWO_PROC_WAIT]
+ ++ RW_TAC std_ss []
+ << [MAP_EVERY Q.EXISTS_TAC [`Y`, `q1`, `p0`] 
+     ++ (MP_TAC o Q.SPEC `2`) FINITE_REWARD 
+     ++ PSET_TAC [Opera_sys_model_def, th_mrm_def, mrm_def, dtmc_def, mc_property_def, 
+     	 Request_space_def, Sys_space_def, measureTheory.space_def, measureTheory.subsets_def, 
+     	 Sys_state_def, Request_def],
+     MAP_EVERY Q.EXISTS_TAC [`Y`, `q2`, `p0`] 
+     ++ (MP_TAC o Q.SPEC `2`) FINITE_REWARD 
+     ++ PSET_TAC [Opera_sys_model_def, th_mrm_def, mrm_def, dtmc_def, mc_property_def, 
+     	 Request_space_def, Sys_space_def, measureTheory.space_def, measureTheory.subsets_def, 
+     	 Sys_state_def, Request_def],
+     `{((0:num),(2:num)); (2,0); (1,1)} = {((0:num),(2:num))} UNION {(2, 0)} UNION {(1, 1)}`
+ 	by (PSET_TAC [EXTENSION] ++ METIS_TAC [])
+     ++ FULL_SIMP_TAC real_ss [Sys_space_def, GSYM REAL_ADD_RDISTRIB]
+     ++ `q2 * q2 / (1 - q2) + q1 * q1 / (1 - q1) + 2 =
+         2 + q1 pow 2 / (1 - q1) + q2 pow 2 / (1 - q2)` 
+         by METIS_TAC [POW_2, REAL_ADD_COMM, REAL_ADD_ASSOC] 
+     ++ RW_TAC std_ss []]);
+ 
+</script>
+</body>
+</html> 

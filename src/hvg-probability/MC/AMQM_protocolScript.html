@@ -1,0 +1,799 @@
+<html>
+<head>
+</head>
+
+<body>
+<pre>								     
+(* ========================================================================= *)
+(*                                                                           *)
+(*               Verification of AMQM Protocol Properties                    *)
+(*             This code is developed using HOL4 kanaskas 7.                 *)
+(*                                                                           *)
+(*                   (c) Copyright, Liya Liu, 2013                           *)
+(*                       Hardware Verification Group,                        *)
+(*                       Concordia University                                *)
+(*                                                                           *)
+(*                                                                           *)
+(*                      Last update: May 10, 2011                            *)
+(*                                                                           *)
+(* ========================================================================= *)
+
+val () = app load ["bossLib", "metisLib", "arithmeticTheory", "pred_setTheory", "realLib", 
+        "seqTheory", "pairTheory", "combinTheory", "listTheory", "rich_listTheory", 
+        "transcTheory", "numLib", "prim_recTheory", "probabilityTheory", "cond_probTheory",
+        "extra_pred_setTools", "dep_rewrite", "setUsefulTheory", "dtmcBasicTheory"];
+
+set_trace "Unicode" 0;
+
+open HolKernel Parse boolLib bossLib metisLib numLib combinTheory subtypeTheory
+     pred_setTheory measureTheory listTheory rich_listTheory numLib seqTheory
+     extra_pred_setTheory arithmeticTheory realTheory realLib pairTheory extra_pred_setTools
+     transcTheory prim_recTheory extrealTheory probabilityTheory cond_probTheory 
+     dep_rewrite setUsefulTheory dtmcBasicTheory;
+
+infixr 0 ++ << || ORELSEC ## --> THENC;
+infix 1 >> |->;
+
+val !! = REPEAT;
+val op++ = op THEN;
+val op<< = op THENL;
+val op|| = op ORELSE;
+val op>> = op THEN1;
+
+(* ------------------------------------------------------------------------- *)
+(* Tools.                                                                    *)
+(* ------------------------------------------------------------------------- *)
+val INTER_ASSOC = GSYM INTER_ASSOC;
+val UNION_ASSOC = GSYM UNION_ASSOC;
+
+fun MP_RW_TAC th g =
+  let
+    val sel = lhs o snd o strip_forall o snd o dest_imp
+    val PART_MATCH = PART_MATCH sel (SPEC_ALL th)
+    val th = ref TRUTH
+    val _ =
+      find_term (fn t => (th := PART_MATCH t; true) handle _ => false) (snd g)
+  in
+   (SUBGOAL_THEN (lhand (concl (!th))) (fn x =>
+     REWRITE_TAC[MP (!th) x] ++ STRIP_ASSUME_TAC x)) g
+end;
+
+fun MP_REWRITE_TAC th g =
+  let
+    val (p,c') = dest_imp (concl (SPEC_ALL th))
+    val (l,r) = (dest_eq o snd o strip_forall) c'
+    fun add_context ctxt k t =
+      (k (mk_conj (ctxt,t)),NONE) handle _ => (k t,SOME ctxt)
+    fun common k (t,NONE) = (k t,NONE)
+      | common k (t,SOME c) = add_context c k t
+    fun mk_opt_conj (NONE,NONE) = NONE
+      | mk_opt_conj (SOME x,NONE) = SOME x
+      | mk_opt_conj (NONE,SOME x) = SOME x
+      | mk_opt_conj (SOME x,SOME y) = SOME(mk_conj(x,y))
+    fun new_concl t =
+      let val (s,t) = match_term l t in
+        add_context (subst s (inst t p)) I (subst s (inst t r))
+      end
+      handle _ =>
+      if is_var t orelse is_const t then (t,NONE) else
+        let val (v,b) = dest_abs t in
+          common (curry mk_abs v) (new_concl b)
+        end
+        handle _ =>
+        let
+          val (t1,t2) = dest_comb t
+          val (t1',c1) = new_concl t1
+          val (t2',c2) = new_concl t2
+        in
+          common I (mk_comb(t1',t2'),mk_opt_conj(c1,c2))
+        end
+     val c = snd g
+  in
+    MATCH_MP_TAC (METIS_PROVE[th] (mk_imp (fst (new_concl c),c))) g
+  end;
+(*===============================================*)
+(*==    binary channels model definition       ==*)
+(*===============================================*)
+val Lt_def = Define `
+    Lt n t (i:num) (j:num) = 
+    if ((i,j) = (0, 1)) \/ ((i,j) = (2, 1)) \/ ((i,j) = (3, 0)) then (1:real)
+    else if (i,j) = (1, 2) then 1 - 1/(&n)
+    else if (i,j) = (1, 3) then 1/(&n)
+    else 0`;
+
+val Li_def = Define `
+    Li i = if (i = (0:num)) then (1:real) else 0`;
+
+val IMP_AMQM_MODEL_def = Define `
+    IMP_AMQM_MODEL X p n =
+    th_dtmc X p ((count 4), POW (count 4)) Li (Lt n) /\ 1 < n`;
+                                  
+val TRY_PATH_def = Define `
+    (TRY_PATH (0:num) = []) /\
+    (TRY_PATH (SUC n) = [(2:num); 1] ++ (TRY_PATH n))`;
+
+val A_AMQM_PATH_def = Define `
+      (A_AMQM_PATH (0:num) = [0; 1; 3]) /\
+      (A_AMQM_PATH (SUC (n:num)) = [0; 1]++(TRY_PATH (SUC n))++[3])`;
+
+val ITERAL_def = Define `
+    (ITERAL (0:num) = (1:num)) /\
+    (ITERAL (SUC n) = 2 * ITERAL (n:num))`;
+
+val SUB_DIV_DISTRIB = store_thm
+  ("SUB_DIV_DISTRIB",
+  (--`!(x:real) y. ~(x = 0) ==> ((x - y) / x = 1 - y / x)`--),
+	RW_TAC std_ss [] THEN
+        `((x - y) / x = 1 - y / x) = 
+         ((x - y) / x * x = (1 - y / x) * x)`
+            by FULL_SIMP_TAC real_ss [REAL_EQ_RMUL] THEN
+	RW_TAC std_ss [REAL_DIV_RMUL, REAL_SUB_RDISTRIB, REAL_MUL_LID]);
+
+val SUC_DELIVED_STATE = store_thm
+  ("SUC_DELIVED_STATE",
+  (--`!k. EL (2 + SUC k * 2) (A_AMQM_PATH (SUC k)) = 3`--),
+	INDUCT_TAC THEN1 (
+           RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+	   `4 = SUC (SUC (SUC (SUC 0)))` by RW_TAC arith_ss [] THEN
+           ASM_REWRITE_TAC [EL] THEN
+           RW_TAC std_ss [HD, TL]) THEN
+        `2 + SUC (SUC k) * 2 = SUC (SUC (2 + SUC k * 2))` 
+           by RW_TAC arith_ss [] THEN
+        FULL_SIMP_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+        RW_TAC std_ss [EL, HD, TL] THEN
+        `2 + SUC k * 2 = SUC (SUC (SUC (SUC (k * 2))))` 
+           by RW_TAC arith_ss [] THEN 
+        FULL_SIMP_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, 
+                              APPEND, EL, HD, TL]);
+
+val DELIVED_STATE = store_thm
+  ("DELIVED_STATE",
+  (--`!k. EL (2 + k * 2) (A_AMQM_PATH k) = 3`--),
+	RW_TAC std_ss [] THEN Cases_on `k = 0` THEN1 (
+           RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+	   `EL 2 [(0:num); 1; 3] = 
+            EL (SUC (SUC 0)) [0; 1; 3]` by RW_TAC arith_ss [] THEN
+           ASM_REWRITE_TAC [EL] THEN
+           RW_TAC std_ss [HD, TL]) THEN
+        `k - 1 + 1 = k` by FULL_SIMP_TAC arith_ss [] THEN 
+        (MP_TAC o Q.SPECL [`k - 1`]) SUC_DELIVED_STATE THEN
+        RW_TAC std_ss [ADD1]);
+
+val SUC_TRY_STATE = store_thm
+  ("SUC_TRY_STATE",
+  (--`!k. EL (3 + k * 2) (A_AMQM_PATH (SUC k)) = 1`--),
+	INDUCT_TAC THEN1 (
+           RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+	   `EL 3 [(0:num); 1; 2; 1; 3] = 
+            EL (SUC (SUC (SUC 0))) [0; 1; 2; 1; 3]` 
+               by RW_TAC arith_ss [] THEN
+           ASM_REWRITE_TAC [EL] THEN
+           RW_TAC std_ss [HD, TL]) THEN
+        `3 + SUC k * 2 = SUC (SUC (SUC (SUC (SUC (k * 2)))))` 
+           by RW_TAC arith_ss [] THEN
+        `3 + k * 2 = SUC (SUC (SUC (k * 2)))` 
+           by RW_TAC arith_ss [] THEN 
+        FULL_SIMP_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, 
+                              APPEND, EL, HD, TL]);
+
+val TRY_STATE = store_thm
+  ("TRY_STATE",
+  (--`!k. EL (1 + k * 2) (A_AMQM_PATH k) = 1`--),
+	RW_TAC std_ss [] THEN Cases_on `k = 0` THEN1 (
+           RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+	   `EL 1 [(0:num); 1; 3] = 
+            EL (SUC 0) [0; 1; 3]` by RW_TAC arith_ss [] THEN
+           ASM_REWRITE_TAC [EL] THEN
+           RW_TAC std_ss [HD, TL]) THEN
+        `3 + (k - 1) * 2 = 1 + k * 2` 
+           by FULL_SIMP_TAC arith_ss [RIGHT_SUB_DISTRIB] THEN
+        `k - 1 + 1 = k` by FULL_SIMP_TAC arith_ss [] THEN 
+        (MP_TAC o Q.SPECL [`k - 1`]) SUC_TRY_STATE THEN
+        RW_TAC std_ss [ADD1]);
+
+val LOST_STATE = store_thm
+  ("LOST_STATE",
+  (--`!k. EL (2 + k * 2) (A_AMQM_PATH (SUC k)) = 2`--),
+	INDUCT_TAC THEN1 (
+           RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+	   `EL 2 [(0:num); 1; 2; 1; 3] = 
+            EL (SUC (SUC 0)) [0; 1; 2; 1; 3]` 
+               by RW_TAC arith_ss [] THEN
+           ASM_REWRITE_TAC [EL] THEN
+           RW_TAC std_ss [HD, TL]) THEN
+        `2 + SUC k * 2 = SUC (SUC (SUC (SUC (k * 2))))` 
+           by RW_TAC arith_ss [] THEN
+        `2 + k * 2 = SUC (SUC (k * 2))`
+           by RW_TAC arith_ss [] THEN 
+        FULL_SIMP_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, 
+                              APPEND, EL, HD, TL]);
+
+val TRY_PATH_ASSOC = store_thm
+  ("TRY_PATH_ASSOC",
+  (--`!k. [2; 1] ++ TRY_PATH k = TRY_PATH k ++ [2; 1]`--),
+	INDUCT_TAC THEN1 (
+           RW_TAC std_ss [TRY_PATH_def, APPEND]) THEN
+        RW_TAC std_ss [TRY_PATH_def, APPEND] THEN
+        POP_ASSUM (MP_TAC o SYM) THEN 
+        RW_TAC std_ss [APPEND]);
+
+val LENGTH_TRY_PATH = store_thm
+  ("LENGTH_TRY_PATH",
+  (--`!k. LENGTH (TRY_PATH k) = k * 2`--),
+	INDUCT_TAC THEN1 (
+           RW_TAC std_ss [TRY_PATH_def, LENGTH]) THEN
+        RW_TAC arith_ss [TRY_PATH_def, LENGTH, LENGTH_APPEND]);
+
+val EL_PATH_EQ = store_thm
+  ("EL_PATH_EQ",
+  (--`!m k. (m < 2 + k * 2) ==> 
+         (EL m (A_AMQM_PATH (SUC k)) = 
+          EL m (A_AMQM_PATH k))`--),
+      RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, 
+                     TRY_PATH_ASSOC, APPEND_ASSOC] THEN
+      Cases_on `k = 0` THEN1(
+      RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+      `LENGTH [(0:num); 1] = 2`  by RW_TAC arith_ss [LENGTH] THEN
+      `[(0:num); 1; 3] = [0; 1] ++ [3]` by RW_TAC std_ss [APPEND] THEN
+      `EL m [(0:num); 1; 3] = EL m [0; 1]`
+         by FULL_SIMP_TAC std_ss [EL_APPEND1] THEN
+      `[(0:num); 1; 2; 1; 3] = [0; 1] ++ [2; 1; 3]` 
+         by RW_TAC std_ss [APPEND] THEN
+      `EL m [(0:num); 1; 2; 1; 3] = EL m [0; 1]`
+         by FULL_SIMP_TAC std_ss [EL_APPEND1] THEN
+      RW_TAC std_ss []) THEN 
+      `k = SUC (k - 1)` by RW_TAC arith_ss [] THEN
+      ONCE_ASM_REWRITE_TAC [] THEN
+      RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND] THEN
+      `(0:num)::1::2::1::(TRY_PATH (k - 1) ++ [3]) =
+       (0::1::2::1::TRY_PATH (k - 1)) ++ [3]`
+         by RW_TAC std_ss [APPEND] THEN 
+      `(0:num)::1::2::1::(TRY_PATH (k - 1) ++ [2; 1] ++ [3]) =
+       (0::1::2::1::TRY_PATH (k - 1)) ++ [2; 1; 3]`
+         by RW_TAC std_ss [APPEND, GSYM APPEND_ASSOC] THEN
+      `LENGTH (0::1::2::1::TRY_PATH (k - 1)) = 2 + k * 2`
+         by FULL_SIMP_TAC arith_ss [APPEND, LENGTH_APPEND, LENGTH,
+                                    LENGTH_TRY_PATH] THEN
+      FULL_SIMP_TAC std_ss [EL_APPEND1]);
+
+val FIRST_EL_PATH = store_thm
+  ("FIRST_EL_PATH",
+  (--`!k. EL 0 (A_AMQM_PATH k) = 0`--),
+	INDUCT_TAC THEN1 (
+           RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, EL, HD]) THEN
+        RW_TAC std_ss [A_AMQM_PATH_def, TRY_PATH_def, APPEND, EL, HD]);
+
+val COND_PROB_START = store_thm
+  ("COND_PROB_START",
+  (--`!X p n.  IMP_AMQM_MODEL X p n ==>
+       (cond_prob p (PREIMAGE (X 1) {1} INTER p_space p) 
+                  (PREIMAGE (X 0) {0} INTER p_space p) = 1)`--),
+    RW_TAC std_ss [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, 
+   	measureTheory.space_def, IN_COUNT, Li_def, Trans_def, Lt_def]
+ ++ NTAC 4 (POP_ASSUM MP_TAC)
+ ++ POP_ASSUM (MP_TAC o GSYM o Q.SPEC `0`)   
+ ++ RW_TAC arith_ss []  
+ ++ NTAC 3 (POP_ASSUM MP_TAC) 
+ ++ POP_ASSUM (MP_TAC o Q.SPECL [`0`, `1`, `0`])
+ ++ RW_TAC real_ss []);
+
+val PROB_TRY = store_thm
+  ("PROB_TRY",
+  (--`!X p n.  IMP_AMQM_MODEL X p n ==>
+       prob p (PREIMAGE (X 1) {1} INTER p_space p) <> 0`--),
+    RW_TAC std_ss [IMP_AMQM_MODEL_def, th_dtmc_def] 
+ ++ (MP_TAC o Q.SPECL [`X`, `1`, `0`, `1`, `Li`, `Lt n`, `p`,`(count 4, POW (count 4))`]
+    	o INST_TYPE [``:'b`` |-> ``:num``]) N_STEP_PROB_DISTRIBUTION 
+ ++ RW_TAC real_ss [distribution_def, measureTheory.space_def, IN_COUNT]
+ ++ MATCH_MP_TAC REAL_POS_NZ
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EXISTS_POS
+ ++ `prob_space p` by PSET_TAC [dtmc_def, mc_property_def, random_variable_def] 
+ ++ RW_TAC std_ss [FINITE_COUNT, IN_COUNT, COND_PMF_EQ_COND_PROB]
+ >> (MATCH_MP_TAC REAL_LE_MUL ++ RW_TAC std_ss []
+    >> (MATCH_MP_TAC PROB_POSITIVE ++ METIS_TAC [DTMC_EVENTS])
+    ++ MATCH_MP_TAC (MATCH_MP (METIS_PROVE [] ``(a ==> b /\ c) ==> (a ==> b)``) 
+           (SPEC_ALL COND_PROB_BOUNDS)) ++ METIS_TAC [DTMC_EVENTS])
+ ++ Q.EXISTS_TAC `0` 
+ ++ DEP_REWRITE_TAC [COND_PROB_START]
+ ++ RW_TAC std_ss [REAL_MUL_RID]
+ >> (Q.EXISTS_TAC `n` ++ RW_TAC std_ss [IMP_AMQM_MODEL_def, th_dtmc_def])
+ ++ PSET_TAC [dtmc_def, Li_def, measureTheory.space_def, IN_COUNT, distribution_def]
+ ++ NTAC 6 (POP_ASSUM K_TAC) ++ POP_ASSUM (MP_TAC o GSYM o Q.SPEC `0`) 
+ ++ RW_TAC real_ss []);
+
+val PRE_LOST_STATE = store_thm
+  ("PRE_LOST_STATE",
+  (--`!k. ~(k = 0) ==> (EL (k * 2) (A_AMQM_PATH k) = 2)`--),
+	RW_TAC std_ss [] THEN
+        (MP_TAC o Q.SPECL [`k - 1`]) LOST_STATE THEN
+	RW_TAC std_ss [] THEN
+        `2 * (k - 1) + 2 = 2 * k` by RW_TAC arith_ss [] THEN
+         FULL_SIMP_TAC arith_ss [ADD1]);
+
+val PROB_START = store_thm
+  ("PROB_START",
+  (--`!X p n.  IMP_AMQM_MODEL X p n ==>
+       prob p (PREIMAGE (X 2) {2} INTER p_space p) <> 0`--),
+    RW_TAC std_ss []
+ ++ `prob p (PREIMAGE (X 1) {1} INTER p_space p) <> 0` by METIS_TAC [PROB_TRY]
+ ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, ADD1] 
+ ++ `prob_space p` by PSET_TAC [dtmc_def, mc_property_def, random_variable_def]   
+ ++ `0 < prob p (PREIMAGE (X 1) {1} INTER p_space p)` 
+ 	by METIS_TAC [PROB_POSITIVE, DTMC_EVENTS, REAL_LT_LE]
+ ++ (MP_TAC o Q.SPECL [`X`, `1`, `1`, `2`, `Li`, `Lt n`, `p`,`(count 4, POW (count 4))`]
+    	o INST_TYPE [``:'b`` |-> ``:num``]) N_STEP_PROB_DISTRIBUTION 
+ ++ RW_TAC real_ss [distribution_def, measureTheory.space_def, IN_COUNT]
+ ++ MATCH_MP_TAC REAL_POS_NZ 
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EXISTS_POS
+ ++ RW_TAC std_ss [FINITE_COUNT, IN_COUNT, COND_PMF_EQ_COND_PROB]
+ >> (MATCH_MP_TAC REAL_LE_MUL ++ RW_TAC std_ss []
+    >> (MATCH_MP_TAC PROB_POSITIVE ++ METIS_TAC [DTMC_EVENTS])
+    ++ MATCH_MP_TAC (MATCH_MP (METIS_PROVE [] ``(a ==> b /\ c) ==> (a ==> b)``) 
+           (SPEC_ALL COND_PROB_BOUNDS)) ++ METIS_TAC [DTMC_EVENTS])
+ ++ Q.EXISTS_TAC `1` 
+ ++ DEP_REWRITE_TAC [REAL_LT_MUL]
+ ++ RW_TAC std_ss []
+ ++ NTAC 3 (POP_ASSUM K_TAC)
+ ++ PSET_TAC [dtmc_def, measureTheory.space_def, IN_COUNT, distribution_def, Lt_def, Trans_def]
+ ++ NTAC 4 (POP_ASSUM MP_TAC)
+ ++ POP_ASSUM (MP_TAC o GSYM o Q.SPECL [`1`, `2`, `1`])
+ ++ RW_TAC std_ss [REAL_SUB_LT, real_div, REAL_MUL_LID]
+ ++ ONCE_REWRITE_TAC [GSYM REAL_INV1] 
+ ++ MATCH_MP_TAC REAL_LT_INV
+ ++ RW_TAC real_ss []);
+
+val POS_STATE_2 = prove
+  (``!X p n k. IMP_AMQM_MODEL X p n /\ k <> 0 ==>            
+     0 < prob p (PREIMAGE (X (2 * k)) {2} INTER p_space p)``,
+    Induct_on `k`
+ >> RW_TAC std_ss []
+ ++ RW_TAC std_ss [ADD1, IMP_AMQM_MODEL_def, th_dtmc_def, LEFT_ADD_DISTRIB]
+ ++ `prob_space p` by PSET_TAC [dtmc_def, mc_property_def, random_variable_def]  
+ ++ Cases_on `k = 0`
+ >> (RW_TAC std_ss [REAL_LT_LE] 
+    >> (DEP_REWRITE_TAC [PROB_POSITIVE, DTMC_EVENTS] ++ RW_TAC std_ss []
+       ++ MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+       ++ RW_TAC std_ss []) ++ ONCE_REWRITE_TAC [EQ_SYM_EQ]
+    ++ DEP_REWRITE_TAC [PROB_START]
+    ++ Q.EXISTS_TAC `n` ++ RW_TAC std_ss [IMP_AMQM_MODEL_def, th_dtmc_def])    
+ ++ (MP_TAC o Q.SPECL [`X`, `2`, `2 * k`, `2`, `Li`, `Lt n`, `p`,`(count 4, POW (count 4))`]
+    	o INST_TYPE [``:'b`` |-> ``:num``]) N_STEP_PROB_DISTRIBUTION 
+ ++ RW_TAC real_ss [distribution_def, measureTheory.space_def, IN_COUNT, COND_PMF_EQ_COND_PROB]
+ ++ MATCH_MP_TAC REAL_SUM_IMAGE_EXISTS_POS
+ ++ PSET_TAC [FINITE_COUNT, IN_COUNT]
+ >> (DEP_REWRITE_TAC [REAL_LE_MUL, PROB_POSITIVE, 
+        (MATCH_MP (METIS_PROVE [] ``(a ==> b /\ c) ==> (a ==> b)``) (SPEC_ALL COND_PROB_BOUNDS)),
+        DTMC_EVENTS] ++ RW_TAC std_ss []
+    ++ MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+    ++ RW_TAC std_ss [])
+ ++ Q.EXISTS_TAC `2`
+ ++ RW_TAC std_ss []
+ ++ DEP_REWRITE_TAC [REAL_LT_MUL, REAL_LT_LE, PROB_POSITIVE, 
+        (MATCH_MP (METIS_PROVE [] ``(a ==> b /\ c) ==> (a ==> b)``) (SPEC_ALL COND_PROB_BOUNDS)),
+        DTMC_EVENTS]
+ ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def]
+ << [MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+    ++ RW_TAC std_ss [],
+    ONCE_REWRITE_TAC [EQ_SYM_EQ] ++ MATCH_MP_TAC REAL_POS_NZ
+    ++ METIS_TAC [],
+    ONCE_REWRITE_TAC [EQ_SYM_EQ]
+    ++ (MP_TAC o Q.SPECL [`X`, `p`,`(count 4,POW (count 4))`, `Li`, `Lt n`, `2 * k`, `1`, `1`, 
+        `2`, `2`] o INST_TYPE [``:'b`` |-> ``:num``]) DTMC_CK_EQUATION
+    ++ RW_TAC arith_ss [measureTheory.space_def, FINITE_COUNT]  
+    ++ DEP_REWRITE_TAC [REAL_POS_NZ, REAL_SUM_IMAGE_EXISTS_POS]
+    ++ RW_TAC std_ss [FINITE_COUNT, IN_COUNT]
+    >> (DEP_REWRITE_TAC [REAL_LE_MUL, 
+        (MATCH_MP (METIS_PROVE [] ``(a ==> b /\ c) ==> (a ==> b)``) (SPEC_ALL COND_PROB_BOUNDS)),
+        DTMC_EVENTS] ++ RW_TAC std_ss []
+       ++ MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+       ++ RW_TAC std_ss [])
+    ++ Q.EXISTS_TAC `1` ++ RW_TAC std_ss []
+    ++ `0 < prob p (PREIMAGE (X (2 * k)) {2} INTER p_space p)` by METIS_TAC []
+    ++ `prob p (PREIMAGE (X (2 * k)) {2} INTER p_space p) <> 0` by METIS_TAC [REAL_POS_NZ]
+    ++ `cond_prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)
+                (PREIMAGE (X (2 * k)) {2} INTER p_space p) = 1`
+        by (PSET_TAC [dtmc_def, measureTheory.space_def, IN_COUNT, distribution_def, 
+                        Trans_def, Lt_def]
+           ++ NTAC 9 (POP_ASSUM MP_TAC)
+           ++ POP_ASSUM (MP_TAC o Q.SPECL [`2`, `1`, `2 * k`])
+           ++ RW_TAC std_ss [])
+    ++ `prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) <> 0`
+        by (SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)
+                (PREIMAGE (X (2 * k)) {2} INTER p_space p) = 0`
+                by (DEP_REWRITE_TAC [COND_PROB_INTER_ZERO, DTMC_EVENTS]
+                   ++ RW_TAC std_ss []
+                   ++ MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+                   ++ RW_TAC std_ss []) ++ FULL_SIMP_TAC real_ss [])
+    ++ `cond_prob p (PREIMAGE (X (2 * k + 2)) {2} INTER p_space p)
+                (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) = 1 - 1 / &n`
+        by (PSET_TAC [dtmc_def, measureTheory.space_def, IN_COUNT, distribution_def, 
+                        Trans_def, Lt_def]
+           ++ NTAC 11 (POP_ASSUM MP_TAC)
+           ++ POP_ASSUM (MP_TAC o Q.SPECL [`1`, `2`, `2 * k + 1`])
+           ++ RW_TAC arith_ss []) ++ RW_TAC std_ss [REAL_MUL_RID]
+    ++ DEP_REWRITE_TAC [GSYM SUB_DIV_DISTRIB, REAL_LT_DIV]
+    ++ RW_TAC real_ss [REAL_SUB_LT]]);
+    
+val POS_STATE_1 = prove
+  (``!X p n k. IMP_AMQM_MODEL X p n /\ k <> 0 ==>            
+     0 < prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)``,
+    RW_TAC std_ss []
+ ++ `prob_space p` by PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, 
+        mc_property_def, random_variable_def]  
+ ++ `prob p (PREIMAGE (X (2 * k)) {2} INTER p_space p) <> 0`
+        by (DEP_REWRITE_TAC [REAL_POS_NZ, POS_STATE_2]
+           ++ Q.EXISTS_TAC `n`
+           ++ RW_TAC std_ss [])
+ ++ `cond_prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)         
+            (PREIMAGE (X (2 * k)) {2} INTER p_space p) = 1`
+        by (PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, distribution_def,
+                 measureTheory.space_def, IN_COUNT]
+           ++ NTAC 6 (POP_ASSUM MP_TAC) ++ POP_ASSUM (MP_TAC o Q.SPECL [`2`, `1`, `2 * k`])
+           ++ RW_TAC std_ss [Lt_def, Trans_def, FINITE_COUNT, measureTheory.space_def, IN_COUNT])
+ ++ `prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) <> 0`
+        by (SPOSE_NOT_THEN STRIP_ASSUME_TAC
+           ++ `cond_prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)         
+                (PREIMAGE (X (2 * k)) {2} INTER p_space p) = 0`
+                by (DEP_REWRITE_TAC [COND_PROB_INTER_ZERO, DTMC_EVENTS]
+                   ++ RW_TAC std_ss []
+                   >> (MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+                      ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def]))
+           ++ FULL_SIMP_TAC real_ss [])
+ ++ RW_TAC real_ss [REAL_LT_LE]
+ ++ DEP_REWRITE_TAC [PROB_POSITIVE, DTMC_EVENTS]
+ ++ RW_TAC std_ss []
+ ++ MAP_EVERY Q.EXISTS_TAC [`(count 4,POW (count 4))`, `Li`, `Lt n`]
+ ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def]);
+                
+val COND_PROB_12 = prove
+  (``!X p n k. IMP_AMQM_MODEL X p n /\ k <> 0 ==>                   
+      (cond_prob p (PREIMAGE (X (2 * k + 2)) {2} INTER p_space p)
+      (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) = 1 - 1 / &n)``,
+    RW_TAC std_ss []
+ ++ `prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) <> 0`
+        by (DEP_REWRITE_TAC [REAL_POS_NZ, POS_STATE_1]
+           ++ Q.EXISTS_TAC `n`
+           ++ RW_TAC std_ss [])      
+ ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, distribution_def,
+                 measureTheory.space_def, IN_COUNT]
+ ++ NTAC 5 (POP_ASSUM MP_TAC) ++ POP_ASSUM (MP_TAC o Q.SPECL [`1`, `2`, `2 * k + 1`])
+ ++ RW_TAC arith_ss [Lt_def, Trans_def, FINITE_COUNT, measureTheory.space_def, IN_COUNT]);
+ 
+val COND_PROB_21 = prove
+  (``!X p n k. IMP_AMQM_MODEL X p n /\ k <> 0 ==>                   
+      (cond_prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)
+                (PREIMAGE (X (2 * k)) {2} INTER p_space p) = 1)``,
+    RW_TAC std_ss []
+ ++ `prob p (PREIMAGE (X (2 * k)) {2} INTER p_space p) <> 0`
+        by (DEP_REWRITE_TAC [REAL_POS_NZ, POS_STATE_2]
+           ++ Q.EXISTS_TAC `n` ++ RW_TAC std_ss [])
+ ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, distribution_def,
+                 measureTheory.space_def, IN_COUNT]
+ ++ NTAC 5 (POP_ASSUM MP_TAC) ++ POP_ASSUM (MP_TAC o Q.SPECL [`2`, `1`, `2 * k`])
+ ++ RW_TAC arith_ss [Lt_def, Trans_def, FINITE_COUNT, measureTheory.space_def, IN_COUNT]); 
+
+val COND_PROB_13 = prove
+  (``!X p n k. IMP_AMQM_MODEL X p n /\ k <> 0 ==>                   
+      (cond_prob p (PREIMAGE (X (2 * k + 2)) {3} INTER p_space p)
+      (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) = 1 / &n)``,
+    RW_TAC std_ss []
+ ++ `prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) <> 0`
+        by (DEP_REWRITE_TAC [REAL_POS_NZ, POS_STATE_1]
+           ++ Q.EXISTS_TAC `n`
+           ++ RW_TAC std_ss [])      
+ ++ PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, distribution_def,
+                 measureTheory.space_def, IN_COUNT]
+ ++ NTAC 5 (POP_ASSUM MP_TAC) ++ POP_ASSUM (MP_TAC o Q.SPECL [`1`, `3`, `2 * k + 1`])
+ ++ RW_TAC arith_ss [Lt_def, Trans_def, FINITE_COUNT, measureTheory.space_def, IN_COUNT]);
+                   
+val MUL_PROB = store_thm
+  ("MUL_PROB",
+   ``!X p n. IMP_AMQM_MODEL X p n ==>
+     (mulcon (0,2 * k)
+        (\m.
+         cond_prob p (PREIMAGE (X (m + 1)) {EL (m + 1) (A_AMQM_PATH k)} INTER p_space p)
+                     (PREIMAGE (X m) {EL m (A_AMQM_PATH k)} INTER p_space p)) =
+      ((& n - 1) / & n) pow k)``,
+   RW_TAC std_ss [] THEN 
+   `n <> (0:num)` by FULL_SIMP_TAC arith_ss [IMP_AMQM_MODEL_def] THEN 
+   `&n <> (0:real)` by METIS_TAC [eq_ints] THEN
+   Induct_on `k` THEN1 RW_TAC std_ss [pow, mulcon_def] THEN
+   RW_TAC std_ss [ADD1, LEFT_ADD_DISTRIB] THEN
+   (MP_TAC o Q.SPECL [`X`, `p`, `n`]) PROB_TRY THEN
+      RW_TAC arith_ss [] THEN 
+   `(&n - 1) / &n = (1:real) - 1 / &n` 
+      		by RW_TAC std_ss [real_div, REAL_SUB_RDISTRIB, REAL_MUL_LID, REAL_MUL_RINV] THEN
+   Cases_on `k = 0` THEN1 (
+      RW_TAC std_ss [POW_1] THEN `2 = SUC (SUC 0)` by RW_TAC arith_ss [] THEN
+      ONCE_ASM_REWRITE_TAC [] THEN POP_ASSUM K_TAC THEN
+      RW_TAC std_ss [mulcon_def, REAL_MUL_LID] THEN
+      (MP_TAC o Q.SPECL [`0`]) LOST_STATE THEN
+      RW_TAC arith_ss [ADD1, MULT, ADD_0] THEN
+      (MP_TAC o Q.SPECL [`1`, `0`]) EL_PATH_EQ THEN
+      RW_TAC arith_ss [ADD1] THEN (MP_TAC o Q.SPECL [`0`]) TRY_STATE THEN
+      RW_TAC arith_ss [ADD1, MULT, FIRST_EL_PATH] THEN
+      DEP_REWRITE_TAC [COND_PROB_START] THEN
+      RW_TAC std_ss [REAL_MUL_LID] THEN1
+      (Q.EXISTS_TAC `n` THEN RW_TAC std_ss []) THEN  
+      NTAC 3 (POP_ASSUM K_TAC) THEN
+      PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, dtmc_def, measureTheory.space_def, Li_def,
+      	distribution_def, Trans_def, Lt_def] THEN 
+      NTAC 8 (POP_ASSUM MP_TAC) THEN
+      POP_ASSUM (MP_TAC o Q.SPECL [`1`, `2`, `1`]) THEN RW_TAC arith_ss [] THEN    
+      FULL_SIMP_TAC std_ss []) THEN
+   `2 * k + 2 = SUC (SUC (k * 2))` by RW_TAC arith_ss [] THEN
+   RW_TAC arith_ss [mulcon_def] THEN POP_ASSUM K_TAC THEN
+  (MP_TAC o Q.SPECL [`k`]) LOST_STATE THEN RW_TAC arith_ss [ADD1] THEN
+  (MP_TAC o Q.SPECL [`k`]) TRY_STATE THEN RW_TAC arith_ss [ADD1] THEN
+  (MP_TAC o Q.SPECL [`2 * k + 1`, `k`]) EL_PATH_EQ THEN
+  RW_TAC arith_ss [ADD1] THEN (MP_TAC o Q.SPECL [`k`]) PRE_LOST_STATE THEN
+  RW_TAC arith_ss [ADD1] THEN (MP_TAC o Q.SPECL [`2 * k`, `k`]) EL_PATH_EQ THEN
+  RW_TAC arith_ss [ADD1] THEN (MP_TAC o Q.SPECL [`X`, `p`, `n`]) PROB_START THEN
+  RW_TAC arith_ss [] THEN 
+  `cond_prob p (PREIMAGE (X (2 * k + 2)) {2} INTER p_space p)
+      (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p) = 1 - 1 / &n`
+      by (MATCH_MP_TAC COND_PROB_12 THEN RW_TAC std_ss []) THEN
+  `cond_prob p (PREIMAGE (X (2 * k + 1)) {1} INTER p_space p)
+      (PREIMAGE (X (2 * k)) {2} INTER p_space p) = 1`
+      by (MATCH_MP_TAC COND_PROB_21 THEN Q.EXISTS_TAC `n` THEN RW_TAC std_ss []) THEN
+  Know `mulcon (0,2 * k)
+      (\m. cond_prob p (PREIMAGE (X (m + 1)) {EL (m + 1) (A_AMQM_PATH (k + 1))} INTER
+            p_space p) (PREIMAGE (X m) {EL m (A_AMQM_PATH (k + 1))} INTER p_space p)) = 
+   mulcon (0,2 * k)
+      (\m. cond_prob p (PREIMAGE (X (m + 1)) {EL (m + 1) (A_AMQM_PATH k)} INTER
+            p_space p) (PREIMAGE (X m) {EL m (A_AMQM_PATH k)} INTER p_space p))` THEN1 (
+     MATCH_MP_TAC MULCON_POS_EQ THEN RW_TAC std_ss [] THEN
+     (MP_TAC o Q.SPECL [`r`, `k`]) EL_PATH_EQ THEN RW_TAC arith_ss [ADD1] THEN
+     (MP_TAC o Q.SPECL [`r + 1`, `k`]) EL_PATH_EQ THEN
+     RW_TAC arith_ss [ADD1, REAL_DIV_RMUL]) THEN 
+   RW_TAC std_ss [GSYM ADD1, pow, POW_1, REAL_MUL_LID, REAL_MUL_COMM]);  
+
+val PATH_BIGINTER = store_thm
+  ("PATH_BIGINTER", 
+  (``!X p (n:num) (k:num). IMP_AMQM_MODEL X p n ==>
+       (PREIMAGE (X (2 + k * 2)) {3} INTER p_space p INTER
+                (BIGINTER (IMAGE (\m.    
+                       (PREIMAGE (X (3 + m * 2)) {1} INTER p_space p) INTER
+                       (PREIMAGE (X (2 + m * 2)) {2} INTER p_space p))
+                (count k))) INTER (PREIMAGE (X 1) {1} INTER p_space p) INTER
+                (PREIMAGE (X 0) {0} INTER p_space p) =
+       BIGINTER (IMAGE
+       (\m. PREIMAGE (X m) {EL m (A_AMQM_PATH k)} INTER p_space p) (count_mn 0 (2 + k * 2))))``),
+    RW_TAC std_ss [IMP_AMQM_MODEL_def] THEN
+    `count_mn 0 (2 + k * 2) = {0} UNION {1} UNION count_mn 2 (2 + k * 2)` 
+    	by (PSET_TAC [count_def, IN_COUNT_MN, EXTENSION] ++ RW_TAC arith_ss []) THEN
+    POP_ORW THEN 
+    Cases_on `k = 0` THEN1 (
+        `EL 1 [(0:num); 1; 3] = 1` by (`1 = SUC 0` by RW_TAC arith_ss [] 
+       		++ POP_ORW ++ RW_TAC std_ss [EL, HD, TL]) THEN
+        `EL 2 [(0:num); 1; 3] = 3` by (`2 = SUC (SUC 0)` by RW_TAC arith_ss [] 
+       		++ POP_ORW ++ RW_TAC std_ss [EL, HD, TL]) THEN 
+    	RW_TAC std_ss [IMAGE_UNION, BIGINTER_UNION, COUNT_MN_SING, IMAGE_SING, 
+    		BIGINTER_SING, A_AMQM_PATH_def, EL, HD, COUNT_ZERO, IMAGE_EMPTY, 
+    		BIGINTER_EMPTY, INTER_UNIV] THEN	
+        Q.ABBREV_TAC `A = PREIMAGE (X 2) {3} INTER p_space p` THEN
+        Q.ABBREV_TAC `B = PREIMAGE (X 0) {0} INTER p_space p` THEN
+        METIS_TAC [INTER_ASSOC, INTER_COMM]) THEN
+    `count_mn 2 (2 + k * 2) = count_mn 2 (1 + k * 2) UNION {2 + k * 2}`
+    	by (PSET_TAC [count_mn_def, EXTENSION] THEN RW_TAC arith_ss []) THEN
+    POP_ORW THEN 
+    `EL (2 * k + 2) (A_AMQM_PATH (SUC (k - 1))) = 3` 
+    	by (`SUC (k - 1) = k` by RW_TAC arith_ss [] THEN 
+    	   METIS_TAC [ADD_COMM, MULT_COMM, DELIVED_STATE]) THEN
+    `k = SUC (k - 1)` by RW_TAC arith_ss [] THEN 
+    `A_AMQM_PATH k = A_AMQM_PATH (SUC (k - 1))` by METIS_TAC [] THEN
+    `EL 0 (A_AMQM_PATH k) = 0` by (POP_ORW THEN 
+        `LENGTH [(0:num); 1] = 2` by RW_TAC std_ss [LENGTH] THEN
+    	RW_TAC arith_ss [A_AMQM_PATH_def, LENGTH_APPEND, EL_APPEND1] THEN 
+    	RW_TAC std_ss [EL, HD]) THEN
+    `EL 1 (A_AMQM_PATH k) = 1` by (
+    	POP_ASSUM K_TAC THEN POP_ORW THEN 
+    	RW_TAC std_ss [A_AMQM_PATH_def] THEN
+    	`LENGTH [(0:num); 1] = 2` by RW_TAC std_ss [LENGTH] THEN
+    	RW_TAC std_ss [LENGTH_APPEND, GSYM APPEND_ASSOC, EL_APPEND1] THEN 
+    	`1 = SUC 0` by RW_TAC arith_ss [] THEN POP_ORW THEN
+    	RW_TAC std_ss [EL, TL, HD]) THEN 
+    
+    RW_TAC arith_ss [IMAGE_UNION, BIGINTER_UNION, IMAGE_SING, BIGINTER_SING] THEN
+    Q.ABBREV_TAC `A = PREIMAGE (X (2 * k + 2)) {3} INTER p_space p` THEN
+    Q.ABBREV_TAC `B = PREIMAGE (X 1) {1} INTER p_space p` THEN
+    Q.ABBREV_TAC `C = PREIMAGE (X 0) {0} INTER p_space p` THEN    
+    Suff `BIGINTER (IMAGE (\m. PREIMAGE (X (2 * m + 3)) {1} INTER p_space p INTER
+            (PREIMAGE (X (2 * m + 2)) {2} INTER p_space p)) (count k)) =
+          BIGINTER (IMAGE (\m. PREIMAGE (X m) {EL m (A_AMQM_PATH (SUC (k - 1)))} INTER
+            p_space p) (count_mn 2 (2 * k + 1)))` THEN1 
+        METIS_TAC [INTER_ASSOC, INTER_COMM] THEN
+    NTAC 8 (POP_ASSUM K_TAC) THEN     
+    Induct_on `k` THEN1 RW_TAC std_ss [] THEN RW_TAC std_ss [] THEN
+    Cases_on `k = 0` THEN1 (
+        `count_mn 2 3 = {2:num} UNION {3}` 
+        	by (PSET_TAC [count_mn_def, EXTENSION] ++ RW_TAC arith_ss []) THEN
+        `LENGTH [(0:num); 1] = 2` by RW_TAC std_ss [LENGTH] THEN
+        `EL 2 (A_AMQM_PATH 1) = 2` by (`1 = SUC 0` by RW_TAC arith_ss [] THEN POP_ORW THEN
+        	RW_TAC std_ss [A_AMQM_PATH_def, GSYM APPEND_ASSOC, EL_APPEND2, 
+        		LENGTH_TRY_PATH, EL_APPEND1] THEN 
+        	`1 = SUC 0` by RW_TAC arith_ss [] THEN POP_ORW THEN 
+        	RW_TAC std_ss [TRY_PATH_def, APPEND_NIL, EL, HD]) THEN
+        (MP_TAC o Q.SPEC `1`) TRY_STATE THEN	
+    	RW_TAC std_ss [COUNT_ONE, IMAGE_UNION, BIGINTER_UNION, IMAGE_SING, BIGINTER_SING] THEN
+    	METIS_TAC [INTER_COMM]) THEN FULL_SIMP_TAC std_ss [] THEN 
+    `count_mn 2 (2 * SUC k + 1) = count_mn 2 (2 * k + 1) UNION {2 * k + 2} UNION {2 * k + 3}`
+    	by (PSET_TAC [count_mn_def, EXTENSION] THEN RW_TAC arith_ss []) THEN
+    RW_TAC std_ss [IMAGE_UNION, BIGINTER_UNION, IMAGE_SING, BIGINTER_SING, 
+    	BIGINTER_INDUCT_LAST] THEN `2 * k + 2 = 2 + k * 2` by RW_TAC arith_ss [] THEN
+    `2 * k + 3 = 3 + k * 2` by RW_TAC arith_ss [] THEN 
+    `SUC (k - 1) = k` by RW_TAC arith_ss [] THEN
+    RW_TAC std_ss [LOST_STATE, SUC_TRY_STATE] THEN 
+    Q.ABBREV_TAC `A = PREIMAGE (X (3 + k * 2)) {1} INTER p_space p` THEN
+    Q.ABBREV_TAC `B = PREIMAGE (X (2 + k * 2)) {2} INTER p_space p` THEN
+    Suff `BIGINTER
+      (IMAGE (\m. PREIMAGE (X m) {EL m (A_AMQM_PATH k)} INTER p_space p)
+         (count_mn 2 (2 * k + 1))) = BIGINTER
+      (IMAGE
+         (\m. PREIMAGE (X m) {EL m (A_AMQM_PATH (SUC k))} INTER p_space p)
+         (count_mn 2 (2 * k + 1)))` THEN1 METIS_TAC [INTER_ASSOC, INTER_COMM] THEN
+    PSET_TAC [EXTENSION, IN_BIGINTER_IMAGE, IN_COUNT_MN] THEN
+    EQ_TAC THEN (
+    	RW_TAC std_ss [] THEN1 FULL_SIMP_TAC arith_ss [EL_PATH_EQ] THEN
+    	METIS_TAC []));
+
+val CASE_K_ZERO = store_thm
+  ("CASE_K_ZERO", 
+  (--`!X p (n:num). IMP_AMQM_MODEL X p n ==>
+      (prob p (BIGINTER
+         (IMAGE (\m. PREIMAGE (X m) {EL m (A_AMQM_PATH 0)} INTER p_space p)
+            (count 3))) = 
+         (((& n:real) - 1) / & n) pow 0 * 1 / & n)`--),
+      RW_TAC std_ss [pow, REAL_MUL_LID, A_AMQM_PATH_def] THEN
+      `3 = SUC (SUC 1)` by RW_TAC arith_ss [] THEN
+      ASM_REWRITE_TAC [BIGINTER_INDUCT_LAST] THEN POP_ASSUM K_TAC THEN
+      RW_TAC std_ss [COUNT_ONE, IMAGE_SING, BIGINTER_SING, INTER_UNIV] THEN
+      (MP_TAC o Q.SPECL [`X`, `p`, `n`]) PROB_TRY THEN RW_TAC std_ss [] THEN
+      `EL 1 [(0:num); 1; 3] = 1` by (`1 = SUC 0` by RW_TAC arith_ss [] 
+       		++ POP_ORW ++ RW_TAC std_ss [EL, HD, TL]) THEN
+          `EL 2 [(0:num); 1; 3] = 3` by (`2 = SUC (SUC 0)` by RW_TAC arith_ss [] 
+       		++ POP_ORW ++ RW_TAC std_ss [EL, HD, TL]) THEN RW_TAC std_ss [EL, HD] THEN
+      `PREIMAGE (X 2) {3} INTER p_space p INTER
+       (PREIMAGE (X 1) {1} INTER p_space p) INTER
+       (PREIMAGE (X 0) {0} INTER p_space p) = 
+      BIGINTER (IMAGE (\m. PREIMAGE (X m) {EL m [0; 1; 3]} INTER p_space p) (count 3))`
+       by (`count 3 = {0:num} UNION {1} UNION {2}` 
+       		by (PSET_TAC [count_def, EXTENSION] THEN RW_TAC arith_ss []) THEN
+          RW_TAC std_ss [IMAGE_UNION, BIGINTER_UNION, IMAGE_SING, BIGINTER_SING, EL, HD] THEN
+          Q.ABBREV_TAC `A = PREIMAGE (X 2) {3} INTER p_space p` THEN
+          Q.ABBREV_TAC `B = PREIMAGE (X 0) {0} INTER p_space p` THEN
+          METIS_TAC [INTER_ASSOC, INTER_COMM]) THEN RW_TAC std_ss [GSYM INTER_ASSOC] THEN
+      POP_ASSUM K_TAC THEN
+      (MP_TAC o Q.SPECL [`X`, `p`, `(count 4, POW (count 4))`, `0`, `2`, 
+      	`[(0:num); 1; 3]`, `Li`, `Lt n`] o INST_TYPE [``:'b`` |-> ``:num``]) MC_JOINT_PROB THEN
+      PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, EL, HD] THEN 
+      `2 = SUC (SUC 0)` by RW_TAC arith_ss [] THEN POP_ORW THEN 
+      RW_TAC std_ss [mulcon_def, REAL_MUL_LID, EL, HD] THEN NTAC 3 (POP_ASSUM K_TAC) THEN
+
+      PSET_TAC [dtmc_def, Li_def, Lt_def, Trans_def, measureTheory.space_def, IN_COUNT] THEN
+      NTAC 5 (POP_ASSUM MP_TAC) THEN POP_ASSUM (MP_TAC o GSYM o Q.SPEC `0`) THEN
+      RW_TAC std_ss [] THEN 
+      `cond_pmf p (X 1) (X 0) ({1}, {0}) = 1` 
+      		by (NTAC 4 (POP_ASSUM MP_TAC) THEN 
+      		   POP_ASSUM (MP_TAC o GSYM o Q.SPECL [`0`, `1`, `0`]) THEN
+      		   RW_TAC real_ss [COND_PMF_EQ_COND_PROB]) THEN 
+      RW_TAC std_ss [REAL_MUL_LID, REAL_MUL_RID, COND_PMF_EQ_COND_PROB] THEN
+      NTAC 5 (POP_ASSUM MP_TAC) THEN 
+      POP_ASSUM (MP_TAC o Q.SPECL [`1`, `3`, `1`]) THEN
+      		   RW_TAC real_ss [distribution_def] THEN
+      FULL_SIMP_TAC std_ss []);	
+
+val REAL_DIV_LMUL = prove
+  (``!(x:real) y z. (z <> 0) ==> (x / y = (z * x)/(z * y))``,
+    RW_TAC real_ss [real_div] 
+ ++ Cases_on `y = 0`
+ >> RW_TAC real_ss [REAL_INV_0, REAL_MUL_RZERO]
+ ++ RW_TAC real_ss [REAL_INV_MUL]
+ ++ `!(a:real) b c d. (a * b * (c * d) = a * c * b * d)` 
+ 	by METIS_TAC [REAL_MUL_ASSOC, REAL_MUL_COMM]
+ ++ POP_ASSUM MP_TAC 
+ ++ RW_TAC std_ss [REAL_MUL_RINV, REAL_MUL_LID]);
+
+val SUMMATION_PATHS = store_thm
+  ("SUMMATION_PATHS",
+  (--`!i (n:num). 
+      (1 < n) ==> 
+         (sum (0,i) (\k. ((& n - 1) / & n) pow k * 1 / & n) =
+          1 - ((& n - 1) / & n) pow i)`--),
+      RW_TAC std_ss [] THEN 
+      `n <> (0:num)` by FULL_SIMP_TAC arith_ss [IMP_AMQM_MODEL_def] THEN 
+     `&n <> (0:real)` by METIS_TAC [eq_ints] THEN
+      `!k. ((& n - 1) / & n) pow k * inv(&n) = ((& n - 1) / & n) pow k * (1:real) / &n`
+          by RW_TAC std_ss [REAL_INV_1OVER, mult_ratr] THEN
+      `!k. inv(& n) * ((& n - 1) / & n) pow k = ((& n - (1:real)) / & n) pow k * inv(& n)` 
+          by RW_TAC std_ss [real_div, REAL_MUL_COMM, REAL_MUL_LID] THEN
+      `sum (0,i) (\k. ((& n - 1) / & n) pow k) * 1 / &n = 
+      	inv (& n) * sum (0,i) (\k. ((& n - (1:real)) / & n) pow k)`
+          by RW_TAC std_ss [real_div, REAL_MUL_COMM, REAL_MUL_LID] THEN
+      RW_TAC std_ss[real_div, REAL_MUL_COMM, SUM_CMUL, REAL_MUL_LID] THEN
+      `inv (&n) * (&n - 1) <> (1:real)` 
+      	by (SPOSE_NOT_THEN STRIP_ASSUME_TAC THEN
+      	   `&n * (inv (&n) * (&n - 1)) = &n * (1:real)` by RW_TAC real_ss [REAL_EQ_LMUL2] THEN
+           `&n * inv (&n) = (1:real)` by RW_TAC real_ss [REAL_MUL_RINV] THEN
+           FULL_SIMP_TAC real_ss [REAL_MUL_ASSOC, REAL_MUL_RID, real_sub, 
+           	REAL_ADD_RID_UNIQ]) THEN
+      RW_TAC std_ss[GP_FINITE] THEN
+      `((inv (&n) * (&n - 1)) pow i - (1:real)) / (inv (&n) * (&n - 1) - 1) =
+       &n * ((inv (&n) * (&n - 1)) pow i - 1) / (&n * (inv (&n) * (&n - 1) - 1))`
+       	by (MATCH_MP_TAC REAL_DIV_LMUL THEN RW_TAC std_ss []) THEN POP_ORW THEN
+      RW_TAC std_ss [REAL_SUB_LDISTRIB, REAL_MUL_RID, REAL_MUL_LINV, REAL_MUL_RINV,
+      	 	REAL_SUB_SUB, real_div] THEN 
+      RW_TAC real_ss [GSYM REAL_NEG_INV, REAL_INV1, REAL_SUB_LDISTRIB, 
+      		REAL_MUL_ASSOC, REAL_MUL_LINV]);
+       
+val DELIVED_PROB = store_thm
+  ("DELIVED_PROB",
+  (--`!X p (n:num) (i:num). IMP_AMQM_MODEL X p n ==>
+     (sum (0, i) (\k. 
+           prob p (PREIMAGE (X (2 + k * 2)) {3} INTER p_space p INTER
+                (BIGINTER (IMAGE (\m.    
+                       (PREIMAGE (X (3 + m * 2)) {1} INTER p_space p) INTER
+                       (PREIMAGE (X (2 + m * 2)) {2} INTER p_space p))
+                (count k))) INTER (PREIMAGE (X 1) {1} INTER p_space p) INTER
+                (PREIMAGE (X 0) {0} INTER p_space p))) =
+      (1:real) - ((&n - 1) / (&n)) pow i)`--),
+     RW_TAC std_ss [] THEN 
+     `n <> (0:num)` by FULL_SIMP_TAC arith_ss [IMP_AMQM_MODEL_def] THEN 
+     `&n <> (0:real)` by METIS_TAC [eq_ints] THEN
+     (MP_TAC o Q.SPECL [`X`, `p`, `n`]) PROB_TRY THEN RW_TAC std_ss [] THEN
+     (MP_TAC o Q.SPECL [`X`, `p`, `n`]) PROB_START THEN RW_TAC std_ss [] THEN
+     Know `!(k:num). prob p (PREIMAGE (X (2 + k * 2)) {3} INTER p_space p INTER
+                (BIGINTER (IMAGE (\m.    
+                       (PREIMAGE (X (3 + m * 2)) {1} INTER p_space p) INTER
+                       (PREIMAGE (X (2 + m * 2)) {2} INTER p_space p))
+                (count k))) INTER (PREIMAGE (X 1) {1} INTER p_space p) INTER
+                (PREIMAGE (X 0) {0} INTER p_space p)) = 
+                (((&n - 1)/(&n)) pow k) * 1/(&n)` THEN1 (
+         RW_TAC std_ss [] THEN
+         (MP_TAC o Q.SPECL [`X`, `p`, `n`, `k`]) PATH_BIGINTER THEN
+         RW_TAC std_ss [COUNT_MN_COUNT] THEN POP_ASSUM K_TAC THEN
+
+         Cases_on `k = 0` THEN1 (RW_TAC std_ss [CASE_K_ZERO]) THEN
+         (MP_TAC o Q.SPECL [`X`, `p`, `(count 4, POW (count 4))`, `0`, `2 + k * 2`, 
+         	`A_AMQM_PATH k`, `Li`, `Lt n`] o INST_TYPE [``:'b`` |-> ``:num``]) 
+         	MC_JOINT_PROB THEN
+         PSET_TAC [IMP_AMQM_MODEL_def, th_dtmc_def, ADD1] THEN POP_ASSUM K_TAC THEN 
+         `2 + k * 2 = SUC (SUC (k * 2))` by RW_TAC arith_ss [] THEN 
+         POP_ORW THEN 
+         `EL 0 (A_AMQM_PATH k) = 0` by (`k = SUC (k - 1)` by RW_TAC arith_ss [] THEN
+                POP_ORW THEN 
+        	`LENGTH [(0:num); 1] = 2` by RW_TAC std_ss [LENGTH] THEN
+    		RW_TAC arith_ss [A_AMQM_PATH_def, LENGTH_APPEND, EL_APPEND1] THEN 
+    		RW_TAC std_ss [EL, HD]) THEN
+         RW_TAC std_ss [mulcon_def, COND_PMF_EQ_COND_PROB, ADD_COMM, TRY_STATE, 
+         	PRE_LOST_STATE] THEN ONCE_REWRITE_TAC [MULT_COMM] THEN
+         DEP_REWRITE_TAC [MUL_PROB] THEN 
+         RW_TAC std_ss [IMP_AMQM_MODEL_def, th_dtmc_def, GSYM REAL_MUL_ASSOC] THEN
+         Suff `cond_prob p (PREIMAGE (X (1 + 2 * k)) {1} INTER p_space p)
+      			(PREIMAGE (X (2 * k)) {2} INTER p_space p) *
+    	      (cond_prob p (PREIMAGE (X (1 + SUC (2 * k)))
+         		{EL (1 + SUC (2 * k)) (A_AMQM_PATH k)} INTER p_space p)
+      			(PREIMAGE (X (SUC (2 * k))) {EL (SUC (2 * k)) (A_AMQM_PATH k)} INTER
+       				p_space p) * distribution p (X 0) {0}) = 1 / &n` THEN1
+       	 (RW_TAC std_ss [] THEN RW_TAC std_ss [real_div, REAL_MUL_ASSOC]) THEN
+       	 `SUC (2 * k) = 1 + k * 2` by RW_TAC arith_ss [] THEN 
+       	 `1 + SUC (2 * k) = 2 + k * 2` by RW_TAC arith_ss [] THEN
+       	 RW_TAC std_ss [TRY_STATE, DELIVED_STATE] THEN
+       	 `1 + 2 * k = 2 * k + 1` by RW_TAC arith_ss [] THEN POP_ORW THEN
+       	 `1 + k * 2 = 2 * k + 1` by ARITH_TAC THEN POP_ORW THEN
+       	 `2 + k * 2 = 2 * k + 2` by ARITH_TAC THEN POP_ORW THEN
+       	 DEP_REWRITE_TAC [COND_PROB_13, COND_PROB_21] THEN 
+       	 RW_TAC std_ss [REAL_MUL_LID, distribution_def, IMP_AMQM_MODEL_def, th_dtmc_def] THEN1
+       	 (Q.EXISTS_TAC `n` THEN RW_TAC std_ss []) THEN
+       	 Suff `prob p (PREIMAGE (X 0) {0} INTER p_space p) = 1` THEN1 
+       	        RW_TAC real_ss [REAL_MUL_RID] THEN
+       	 PSET_TAC [dtmc_def, measureTheory.space_def, IN_COUNT, Trans_def, Li_def, 
+         	Lt_def, distribution_def] THEN NTAC 12 (POP_ASSUM MP_TAC) THEN
+         POP_ASSUM (MP_TAC o Q.SPEC `0`) THEN RW_TAC std_ss []) THEN RW_TAC std_ss [] THEN
+    MATCH_MP_TAC SUMMATION_PATHS THEN
+    PSET_TAC [IMP_AMQM_MODEL_def]);
+         
+</script>
+</body>
+</html>
