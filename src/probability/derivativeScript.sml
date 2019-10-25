@@ -11,18 +11,17 @@
 (*                       Concordia University                                *)
 (*            Contact:  <m_qasi@ece.concordia.ca>                            *)
 (*                                                                           *)
-(*        (c) Copyright 2019, Fondazione Bruno Kessler, Italy                *)
-(*            Contact:  Chun Tian <ctian@fbk.eu>                             *)
-(*                                                                           *)
 (*    Note: This theory was ported from HOL Light                            *)
 (*                                                                           *)
 (* ========================================================================= *)
 
-open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith prim_recTheory
-combinTheory quotientTheory arithmeticTheory hrealTheory realaxTheory realTheory
+open HolKernel Parse boolLib bossLib;
+
+open numLib unwindLib tautLib Arith prim_recTheory
+combinTheory quotientTheory arithmeticTheory realTheory
 realLib jrhUtils pairTheory seqTheory limTheory transcTheory listTheory mesonLib
 boolTheory topologyTheory pred_setTheory optionTheory numTheory RealArith
-sumTheory InductiveDefinition ind_typeTheory pred_setLib cardinalTheory;
+pred_setLib cardinalTheory;
 
 open hurdUtils iterateTheory productTheory real_topologyTheory;
 
