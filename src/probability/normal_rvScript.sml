@@ -200,58 +200,9 @@ val RN_deriv_positive_integral = store_thm ("RN_deriv_positive_integral",
 (* PDF_def                                                                   *)
 (* ------------------------------------------------------------------------- *)
 
+(* simplifed as (\s. distribution p X) *)
 val measurable_distr = new_definition ("measurable_distr",
   ``measurable_distr p X = (\s. if s IN subsets borel then distribution p X s else 0)``);
-
-val _ = hide "PDF";
-
-val PDF_def = new_definition ("PDF_def",
-  ``PDF p X = RN_deriv lborel (space borel, subsets borel, measurable_distr p X)``);
-
-val PDF_LE_POS = store_thm ("PDF_LE_POS",
-  ``!p X x v. (v = (space borel, subsets borel, measurable_distr p X)) /\
-      measure_space v /\ measure_absolutely_continuous v lborel ==>
-      0 <= PDF p X x``,
-  ASSUME_TAC sigma_finite_measure_lborel THEN RW_TAC std_ss [] THEN
-  ASSUME_TAC measure_space_lborel THEN
-  ABBREV_TAC ``M = lborel`` THEN
-  ABBREV_TAC ``N = (space borel,subsets borel,measurable_distr p (X:'a->real))`` THEN
-  `measurable_sets M = measurable_sets N` by METIS_TAC [lborel, measurable_sets_def] THEN
-  Q_TAC SUFF_TAC `sigma_finite_measure M /\ measure_space M /\ measure_space N /\
-     measure_absolutely_continuous N M /\
-     (measurable_sets M = measurable_sets N)` THENL
-  [ALL_TAC, METIS_TAC []] THEN
-  DISCH_THEN (MP_TAC o MATCH_MP RADON_NIKODYM) THEN
-  RW_TAC std_ss [] THEN SIMP_TAC std_ss [PDF_def, RN_deriv] THEN
-  SELECT_ELIM_TAC THEN FULL_SIMP_TAC std_ss [GSYM space_borel] THEN
-  METIS_TAC []);
-
-val INTEGRAL_PDF_1 = store_thm ("INTEGRAL_PDF_1",
-   ``!p X v. (v = (space borel, subsets borel, measurable_distr p X)) /\
-        measure_absolutely_continuous v lborel /\ prob_space v ==>
-        (integral lborel (PDF p X) = 1)``,
-  RW_TAC std_ss [] THEN
-  ASSUME_TAC measure_space_lborel THEN ASSUME_TAC sigma_finite_measure_lborel THEN
-  ABBREV_TAC ``v = (space borel,subsets borel,measurable_distr p (X:'a->real))`` THEN
-  `(measurable_sets lborel = measurable_sets v)`
-   by (EXPAND_TAC "v" THEN
-       METIS_TAC [lborel, measurable_sets_def]) THEN
-  `measure_space v /\ (measure v (space borel) = 1)` by
-   METIS_TAC [prob_space_def, space_borel, p_space_def, m_space_def] THEN
-  REWRITE_TAC [PDF_def, RN_deriv] THEN SELECT_ELIM_TAC THEN CONJ_TAC THENL
-  [MATCH_MP_TAC RADON_NIKODYM THEN ASM_SIMP_TAC std_ss [GSYM space_borel],
-   ALL_TAC] THEN
-  X_GEN_TAC ``f:real->extreal`` THEN STRIP_TAC THEN
-  FIRST_X_ASSUM (MP_TAC o Q.SPEC `m_space lborel`) THEN
-  ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE] THEN
-  `m_space lborel = space borel` by METIS_TAC [lborel, m_space_def, space_borel] THEN
-  ASM_REWRITE_TAC [GSYM space_borel] THEN
-  DISCH_THEN (ASSUME_TAC o ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN
-  ASM_REWRITE_TAC [integral_def] THEN
-  ASM_SIMP_TAC std_ss [pos_fn_integral_zero, extreal_lt_def, sub_rzero] THEN
-  SIMP_TAC std_ss [space_borel, indicator_fn_def, IN_UNIV, mul_rone] THEN
-  SIMP_TAC std_ss [GSYM extreal_lt_def, GSYM fn_plus_def] THEN
-  ASM_SIMP_TAC std_ss [FN_PLUS_POS_ID] THEN METIS_TAC [ETA_AX]);
 
 (* ------------------------------------------------------------------------- *)
 (* normal_density                                                            *)
