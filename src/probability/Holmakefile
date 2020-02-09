@@ -8,7 +8,7 @@ EXTRA_CLEANS = heap \
 
 ifdef POLY
 HOLHEAP = heap
-OBJNAMES = real_topologyTheory
+OBJNAMES = real_topologyTheory derivativeTheory integrationTheory
 OBJS = $(patsubst %,$(dprot $(SIGOBJ)/%.uo),$(OBJNAMES))
 
 all: $(HOLHEAP)
