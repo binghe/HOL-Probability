@@ -2115,6 +2115,71 @@ val lebesgue_pos_integral_real_affine = store_thm ("lebesgue_pos_integral_real_a
 (*                                                                           *)
 (* ------------------------------------------------------------------------- *)
 
+(* this (nonsense) lemma is not used any more, reserved for future only *)
+Theorem null_sets_density_iff[local] :
+    !f A M. measure_space M /\ (!x. 0 <= f x) /\
+            f IN measurable (m_space M, measurable_sets M) Borel ==>
+           (A IN measurable_sets M /\
+           (measure (m_space M,measurable_sets M,
+             (\A. pos_fn_integral M (\x. f x * indicator_fn A x))) A = 0) <=>
+           (A IN measurable_sets M /\ AE x::M. x IN A ==> f x <= 0))
+Proof
+    RW_TAC std_ss []
+ >> MATCH_MP_TAC (METIS [] ``(a ==> (b <=> c)) ==> (a /\ b <=> a /\ c)``)
+ >> DISCH_TAC
+ >> Know `pos_fn_integral M (\x. f x * indicator_fn A x) =
+          pos_fn_integral M (\x. max 0 (f x) * indicator_fn A x)`
+ >- (ASM_SIMP_TAC std_ss [extreal_max_def]) >> DISCH_TAC
+ >> Know `(pos_fn_integral M (\x. f x * indicator_fn A x) = 0) <=>
+          (measure M {x | x IN m_space M /\ (max 0 (f x) * indicator_fn A x <> 0)} = 0)`
+ >- (ONCE_REWRITE_TAC [METIS [] ``max 0 (f x) * indicator_fn A x =
+                             (\x. max 0 (f x) * indicator_fn A x) x``] \\
+     ONCE_ASM_REWRITE_TAC [] \\
+     MATCH_MP_TAC pos_fn_integral_eq_0 \\
+     Q_TAC SUFF_TAC `!x. max 0 (f x) = f x` >|
+     [ DISC_RW_KILL, METIS_TAC [extreal_max_def] ] \\
+     ASM_SIMP_TAC std_ss [nonneg_def] >> rpt STRIP_TAC >| (* 2 subgoals *)
+     [ (* goal 1 (of 2) *)
+       MATCH_MP_TAC le_mul >> art [INDICATOR_FN_POS],
+       (* goal 2 (of 2) *)
+       MATCH_MP_TAC IN_MEASURABLE_BOREL_MUL_INDICATOR \\
+       METIS_TAC [measure_space_def, subsets_def] ]) >> DISCH_TAC
+ (* below is reworked by Chun Tian *)
+ >> ASM_SIMP_TAC std_ss [measure_def]
+ >> POP_ASSUM K_TAC
+ >> POP_ASSUM (ONCE_REWRITE_TAC o wrap o SYM)
+ >> Q.ABBREV_TAC `g = \x. f x * indicator_fn A x`
+ >> Know `(integral M (abs o g) = 0) <=> AE x::M. (abs o g) x = 0`
+ >- (Suff `g IN measurable (m_space M, measurable_sets M) Borel`
+     >- METIS_TAC [integral_abs_eq_0] \\
+     Q.UNABBREV_TAC `g` \\
+     MATCH_MP_TAC IN_MEASURABLE_BOREL_MUL_INDICATOR \\
+     fs [measure_space_def, subsets_def])
+ >> Know `!x. 0 <= g x`
+ >- (GEN_TAC >> Q.UNABBREV_TAC `g` >> BETA_TAC \\
+     MATCH_MP_TAC le_mul >> art [INDICATOR_FN_POS]) >> DISCH_TAC
+ >> `abs o g = g` by METIS_TAC [nonneg_fn_abs, nonneg_def] >> POP_ORW
+ >> Know `integral M g = pos_fn_integral M g`
+ >- (MATCH_MP_TAC integral_pos_fn >> art []) >> Rewr'
+ >> Rewr'
+ >> EQ_TAC >> RW_TAC std_ss [AE_ALT, null_set_def] (* 2 subgoals *)
+ >| [ (* goal 1 (of 2) *)
+      Q.EXISTS_TAC `N` >> art [] \\
+      Suff `{x | x IN m_space M /\ x IN A /\ ~(f x <= 0)} =
+            {x | x IN m_space M /\ g x <> 0}` >- rw [] \\
+      Q.UNABBREV_TAC `g` \\
+      RW_TAC std_ss [Once EXTENSION, GSPECIFICATION] \\
+      Cases_on `x IN A` >> RW_TAC std_ss [indicator_fn_def, mul_rone, mul_rzero] \\
+      EQ_TAC >> RW_TAC std_ss [GSYM extreal_lt_def, lt_le],
+      (* goal 2 (of 2) *)
+      Q.EXISTS_TAC `N` >> art [] \\
+      Suff `{x | x IN m_space M /\ g x <> 0} =
+            {x | x IN m_space M /\ x IN A /\ ~(f x <= 0)}` >- rw [] \\
+      Q.UNABBREV_TAC `g` \\
+      RW_TAC std_ss [Once EXTENSION, GSPECIFICATION] \\
+      Cases_on `x IN A` >> RW_TAC std_ss [indicator_fn_def, mul_rone, mul_rzero] \\
+      EQ_TAC >> RW_TAC std_ss [GSYM extreal_lt_def, lt_le] ]
+QED
 
 (* ------------------------------------------------------------------------- *)
 (*                                                                           *)
