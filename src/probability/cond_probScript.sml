@@ -28,134 +28,12 @@ open HolKernel Parse boolLib bossLib metisLib numLib combinTheory subtypeTheory
 
 val _ = new_theory "cond_prob";
 
-val std_ss' = simpLib.++ (std_ss, boolSimps.ETA_ss);
-
-
-val EVENTS_BIGUNION = store_thm
-  ("EVENTS_BIGUNION",
-  ``!p f n. prob_space p /\ (f IN ((count n) -> events p)) ==>
-    BIGUNION (IMAGE f (count n)) IN events p``,
-    RW_TAC std_ss [IN_FUNSET, IN_COUNT]
- >> `BIGUNION (IMAGE f (count n)) = BIGUNION (IMAGE (\m. (if m < n then f m else {})) UNIV)`
-     by (RW_TAC std_ss [EXTENSION,IN_BIGUNION_IMAGE, IN_COUNT, IN_UNIV] >> METIS_TAC [NOT_IN_EMPTY])
- >> POP_ORW
- >> (MATCH_MP_TAC o REWRITE_RULE [subsets_def, space_def] o
-	Q.SPECL [`(p_space p, events p)`,`(\m. if m < n then A m else {})`]) SIGMA_ALGEBRA_ENUM
- >> RW_TAC std_ss [EVENTS_SIGMA_ALGEBRA] >> RW_TAC std_ss [IN_FUNSET, IN_UNIV, DISJOINT_EMPTY]
- >> METIS_TAC [EVENTS_EMPTY]);
-
-val PROB_INTER_ZERO = store_thm(
-   "PROB_INTER_ZERO",
-   ``!p A B.
-       (prob_space p) /\ (A IN events p) /\ (B IN events p) /\ (prob p B = 0) ==>
-         (prob p (A INTER B) = 0)``,
-       RW_TAC std_ss [] THEN POP_ASSUM (MP_TAC o SYM) THEN RW_TAC std_ss [] THEN
-       `(A INTER B) SUBSET B` by RW_TAC std_ss [INTER_SUBSET] THEN
-       `prob p (A INTER B) <= prob p B` by FULL_SIMP_TAC std_ss [PROB_INCREASING, EVENTS_INTER] THEN
-       `0 <= prob p (A INTER B)` by FULL_SIMP_TAC std_ss [PROB_POSITIVE, EVENTS_INTER] THEN
-       METIS_TAC [REAL_LE_ANTISYM]);
-
-val PROB_ZERO_INTER = store_thm
-  ("PROB_ZERO_INTER",
-   ``!p A B.
-       (prob_space p) /\ (A IN events p) /\ (B IN events p) /\ (prob p A = 0) ==>
-         (prob p (A INTER B) = 0)``,
-       RW_TAC std_ss [] >> (MP_TAC o Q.SPECL [`p`, `B`, `A`]) PROB_INTER_ZERO
-  >> RW_TAC std_ss [INTER_COMM]);
-
-val COND_PROB_ZERO = store_thm
-  ("COND_PROB_ZERO",
-   ``!p A B. prob_space p /\ A IN events p /\ B IN events p /\ (prob p B = 0) ==>
-     (cond_prob p A B = 0)``,
-     RW_TAC std_ss [cond_prob_def, PROB_INTER_ZERO, REAL_DIV_LZERO]);
-
-val COND_PROB_INTER_ZERO = store_thm
-  ("COND_PROB_INTER_ZERO",
-   ``!p A B. prob_space p /\ A IN events p /\ B IN events p /\ (prob p A = 0) ==>
-     (cond_prob p A B = 0)``,
-     RW_TAC std_ss [cond_prob_def] THEN
-     `prob p (A INTER B) = 0 ` by METIS_TAC [PROB_INTER_ZERO, INTER_COMM] THEN
-     RW_TAC std_ss [REAL_DIV_LZERO]);
-
-val COND_PROB_ZERO_INTER = store_thm
-  ("COND_PROB_ZERO_INTER",
-   ``!p A B. prob_space p /\ A IN events p /\ B IN events p /\ (prob p (A INTER B) = 0) ==>
-     (cond_prob p A B = 0)``,
-     RW_TAC std_ss [cond_prob_def, REAL_DIV_LZERO]);
-
-val COND_PROB_INCREASING = store_thm
-  ("COND_PROB_INCREASING",
-  ``!A B C p. prob_space p /\ A IN events p /\ B IN events p /\ C IN events p ==>
-   cond_prob p (A INTER B) C <= cond_prob p A C``,
-    RW_TAC std_ss []
- >> Cases_on `prob p C = 0`
- >- METIS_TAC [EVENTS_INTER, COND_PROB_ZERO, REAL_LE_REFL]
- >> RW_TAC std_ss [cond_prob_def, real_div]
- >> `(A INTER B INTER C) SUBSET (A INTER C)` by PSET_TAC []
- >> METIS_TAC [PROB_POSITIVE, REAL_LT_LE, REAL_INV_POS, PROB_INCREASING,
-    EVENTS_INTER, REAL_LE_RMUL]);
-
-val POS_COND_PROB_IMP_POS_PROB = store_thm
-  ("POS_COND_PROB_IMP_POS_PROB",
-  ``!A B p. prob_space p /\ A IN events p /\ B IN events p /\
-  	(0 < cond_prob p A B) ==> (prob p (A INTER B) <> 0)``,
-    RW_TAC std_ss []
- >> `0 <= prob p B` by RW_TAC std_ss [PROB_POSITIVE]
- >> `prob p B <> 0` by (SPOSE_NOT_THEN STRIP_ASSUME_TAC
- 	>> `cond_prob p A B = 0` by METIS_TAC [COND_PROB_ZERO]
- 	>> METIS_TAC [REAL_LT_IMP_NE])
- >> FULL_SIMP_TAC std_ss [cond_prob_def]
- >> `0 / prob p B = 0` by METIS_TAC [REAL_DIV_LZERO]
- >> METIS_TAC [REAL_LT_IMP_NE]);
-
-val COND_PROB_BOUNDS = store_thm
-    ("COND_PROB_BOUNDS",
-    ``!p A B. prob_space p /\ A IN events p /\ B IN events p ==>
-        0 <= cond_prob p A B /\ cond_prob p A B <= 1``,
-     RW_TAC std_ss []
-  >- METIS_TAC [cond_prob_def, EVENTS_INTER, PROB_POSITIVE, REAL_LE_DIV]
-  >> Cases_on `prob p B = 0` >- METIS_TAC [COND_PROB_ZERO, REAL_LE_01]
-  >> `0 < prob p B` by METIS_TAC [PROB_POSITIVE, REAL_LT_LE]
-  >> `(cond_prob p A B <= 1) = (cond_prob p A B * prob p B <= 1 * prob p B)`
-  	by RW_TAC std_ss [REAL_LE_RMUL] >> POP_ORW
-  >> RW_TAC std_ss [REAL_MUL_LID, cond_prob_def, REAL_DIV_RMUL]
-  >> `(A INTER B) SUBSET B` by RW_TAC std_ss [INTER_SUBSET]
-  >> FULL_SIMP_TAC std_ss [PROB_INCREASING, EVENTS_INTER]);
-
-val COND_PROB_ITSELF = store_thm
-  ("COND_PROB_ITSELF",
-  ``!p B. (prob_space p) /\(B IN events p) /\ (0 < prob p B) ==>
-            ((cond_prob p B B = 1))``,
-	RW_TAC real_ss [cond_prob_def, INTER_IDEMPOT]
- >> `prob p B <> 0` by METIS_TAC [REAL_NEG_NZ]
- >> METIS_TAC [REAL_DIV_REFL]);
-
-val COND_PROB_COMPL = store_thm
-  ("COND_PROB_COMPL",
-  ``!A B p . (prob_space p) /\ (A IN events p) /\ (COMPL A IN events p) /\
-               (B IN events p) /\ (0 < (prob p B)) ==>
-        (cond_prob p (COMPL A) B = 1 - cond_prob p A B)``,
-    RW_TAC std_ss [cond_prob_def]
- >> `prob p B <> 0` by METIS_TAC [REAL_NEG_NZ]
- >> `(prob p (COMPL A INTER B) / prob p B = 1 - prob p (A INTER B) / prob p B) =
-     (prob p (COMPL A INTER B) / prob p B * prob p B = (1 - prob p (A INTER B) / prob p B) * prob p B)`
-     by METIS_TAC [REAL_EQ_RMUL] >> POP_ORW
- >> RW_TAC std_ss [REAL_DIV_RMUL, REAL_SUB_RDISTRIB, REAL_MUL_LID, REAL_EQ_SUB_LADD]
- >> `prob p ((COMPL A) INTER B) + prob p (A INTER B) =
-       prob p (((COMPL A) INTER B) UNION (A INTER B))`
-       by (ONCE_REWRITE_TAC [EQ_SYM_EQ] >> MATCH_MP_TAC PROB_ADDITIVE
-          >> RW_TAC std_ss [EVENTS_INTER, DISJOINT_DEF, EXTENSION]
-          >> RW_TAC std_ss [NOT_IN_EMPTY, IN_COMPL, IN_INTER] >> METIS_TAC []) >> POP_ORW
- >> `(COMPL A INTER B UNION A INTER B) = B`
-        by (PSET_TAC [EXTENSION, IN_INTER, IN_UNION, IN_COMPL] >> METIS_TAC [])
- >> RW_TAC std_ss []);
-
 (*===========================================================*)
 val COND_PROB_DIFF = store_thm
   ("COND_PROB_DIFF",
-  ``!p A1 A2 B.(prob_space p) /\ (A1 IN events p) /\ (A2 IN events p) /\ (B IN events p) ==>
+  (--`!p A1 A2 B.(prob_space p) /\ (A1 IN events p) /\ (A2 IN events p) /\ (B IN events p) ==>
         (cond_prob p (A1 DIFF A2) B =
-         cond_prob p A1 B - cond_prob p (A1 INTER A2) B)``,
+         cond_prob p A1 B - cond_prob p (A1 INTER A2) B)`--),
     RW_TAC std_ss []
  >> Cases_on `prob p B = 0`
  >- RW_TAC std_ss [COND_PROB_ZERO, REAL_SUB_RZERO, EVENTS_INTER, EVENTS_DIFF]
@@ -180,8 +58,8 @@ val COND_PROB_DIFF = store_thm
 
 val COND_PROB_MUL_RULE = store_thm
   ("COND_PROB_MUL_RULE",
-  ``! p A B. (prob_space p) /\ (A IN events p) /\ (B IN events p) ==>
-               (prob p (A INTER B) = (prob p B) * (cond_prob p A B))``,
+  (--`! p A B. (prob_space p) /\ (A IN events p) /\ (B IN events p) ==>
+               (prob p (A INTER B) = (prob p B) * (cond_prob p A B))`--),
 	RW_TAC std_ss [] THEN Cases_on `prob p B = 0` THEN1
 		RW_TAC std_ss [COND_PROB_ZERO, REAL_MUL_RZERO, PROB_INTER_ZERO] THEN
 	RW_TAC std_ss [cond_prob_def, REAL_DIV_LMUL]);
@@ -289,8 +167,8 @@ val COND_PROB_FINITE_ADDITIVE = store_thm
 
 val BAYES_RULE = store_thm
   ("BAYES_RULE",
-  ``!A B p. (prob_space p) /\ (A IN events p) /\ (B IN events p) ==>
-	(cond_prob p B A = ((cond_prob p A B) * prob p B)/(prob p A))``,
+  (--`!A B p. (prob_space p) /\ (A IN events p) /\ (B IN events p) ==>
+	(cond_prob p B A = ((cond_prob p A B) * prob p B)/(prob p A))`--),
     RW_TAC std_ss []
  >> Cases_on `prob p B = 0`
  >- RW_TAC std_ss [COND_PROB_ZERO, COND_PROB_INTER_ZERO, REAL_MUL_LZERO, REAL_DIV_LZERO]
@@ -315,12 +193,12 @@ val TOTAL_PROB_SIGMA = store_thm
 
 val BAYES_RULE_GENERAL_SIGMA = store_thm
   ("BAYES_RULE_GENERAL_SIGMA",
-  ``!A B s k p. (prob_space p) /\ (A IN events p) /\ FINITE s /\
+  (--`!A B s k p. (prob_space p) /\ (A IN events p) /\ FINITE s /\
 	(!x . x IN s ==> B x IN events p) /\ (k IN s) /\
         (!a b. a IN s /\ b IN s /\ ~(a = b) ==> DISJOINT (B a) (B b)) /\
         (BIGUNION (IMAGE B s) = p_space p) ==>
         (cond_prob p (B k) A = ((cond_prob p A (B k)) * prob p (B k))/
-                (SIGMA (\i. (prob p (B i)) * (cond_prob p A (B i)))) s)``,
+                (SIGMA (\i. (prob p (B i)) * (cond_prob p A (B i)))) s)`--),
 	RW_TAC std_ss [GSYM TOTAL_PROB_SIGMA] THEN MATCH_MP_TAC BAYES_RULE THEN
 	RW_TAC std_ss [] THEN POP_ASSUM MP_TAC THEN NTAC 3 (POP_ASSUM K_TAC) THEN
 	POP_ASSUM MP_TAC THEN RW_TAC std_ss [IN_FUNSET, IN_COUNT]);
