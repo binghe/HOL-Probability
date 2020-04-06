@@ -16,19 +16,6 @@
 (*                                                                           *)
 (* ========================================================================= *)
 
-(* set_trace "Unicode" 0; *)
-
-(*app load ["HolKernel", "Parse", "boolLib", "bossLib", "numLib", "unwindLib", 
-"tautLib", "Arith", "prim_recTheory", "combinTheory", "quotientTheory", 
-"arithmeticTheory", "realTheory", "hrealTheory", "realaxTheory", "realLib",  
-"jrhUtils", "pairTheory", "seqTheory", "limTheory", "transcTheory", "listTheory", 
-"mesonLib", "boolTheory", "topologyTheory", "pred_setTheory", "util_probTheory", 
-"optionTheory", "numTheory", "sumTheory", "InductiveDefinition", "ind_typeTheory",
-"pred_setLib", "iterate_hvgTheory", "card_hvgTheory", "product_hvgTheory", 
-"topology_hvgTheory", "derivative_hvgTheory", "integration_hvgTheory",
-"real_sigmaTheory", "extreal_hvgTheory", "measure_hvgTheory", "lebesgue_hvgTheory",
-"probability_hvgTheory", "lebesgue_measure_hvgTheory"];*)
-
 open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith prim_recTheory 
 combinTheory quotientTheory arithmeticTheory hrealTheory realaxTheory realTheory 
 realLib jrhUtils pairTheory seqTheory limTheory transcTheory listTheory mesonLib 
@@ -55,17 +42,7 @@ val IN_REST = store_thm ("IN_REST",
  ``!x:'a. !s. x IN (REST s) <=> x IN s /\ ~(x = CHOICE s)``,
   REWRITE_TAC[REST_DEF, IN_DELETE]);
 
-fun SET_TAC L = 
-    POP_ASSUM_LIST(K ALL_TAC) THEN REPEAT COND_CASES_TAC THEN
-    REWRITE_TAC (append [EXTENSION, SUBSET_DEF, PSUBSET_DEF, DISJOINT_DEF,
-    SING_DEF] L) THEN
-    SIMP_TAC std_ss [NOT_IN_EMPTY, IN_UNIV, IN_UNION, IN_INTER, IN_DIFF, 
-      IN_INSERT, IN_DELETE, IN_REST, IN_BIGINTER, IN_BIGUNION, IN_IMAGE, 
-      GSPECIFICATION, IN_DEF, EXISTS_PROD] THEN METIS_TAC [];
-
 fun ASSERT_TAC tm = SUBGOAL_THEN tm STRIP_ASSUME_TAC;
-fun SET_RULE tm = prove(tm,SET_TAC []);
-fun ASM_SET_TAC L = REPEAT (POP_ASSUM MP_TAC) THEN SET_TAC L;
 
 val ASM_ARITH_TAC = REPEAT (POP_ASSUM MP_TAC) THEN ARITH_TAC;
 val ASM_REAL_ARITH_TAC = REPEAT (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC;
@@ -200,6 +177,10 @@ val RN_deriv_positive_integral = store_thm ("RN_deriv_positive_integral",
 (* PDF_def                                                                   *)
 (* ------------------------------------------------------------------------- *)
 
+Definition PDF :
+    PDF p X = RN_deriv (distribution p X) lborel
+End
+
 (* simplifed as (\s. distribution p X) *)
 val measurable_distr = new_definition ("measurable_distr",
   ``measurable_distr p X = (\s. if s IN subsets borel then distribution p X s else 0)``);
@@ -208,18 +189,10 @@ val measurable_distr = new_definition ("measurable_distr",
 (* normal_density                                                            *)
 (* ------------------------------------------------------------------------- *)
 
-val _ = hide "extreal_exp";
-
-val extreal_exp_def = Define
-  `(extreal_exp (Normal x) = Normal (exp x)) /\
-   (extreal_exp PosInf = PosInf) /\
-   (extreal_exp NegInf = Normal 0)`;
-
-val _ = overload_on ("exp",   Term `extreal_exp`);
-
-val normal_density = new_definition("normal_density",
-  ``normal_density mu sig x = (1 / sqrt (2 * pi * sig pow 2)) *
-                              exp (-((x - mu) pow 2) / (2 * sig pow 2))``);
+Definition normal_density_def :
+    normal_density m s x =
+      (1 / sqrt (2 * pi * s pow 2)) * exp (-((x - m) pow 2) / (2 * s pow 2))
+End
 
 val std_normal_density = new_definition("std_normal_density",
   ``std_normal_density = normal_density 0 1``);
@@ -1450,6 +1423,7 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
 (*                                                                           *)
 (* ------------------------------------------------------------------------- *)
 
+(* DFUNSET *)
 val Pi = new_definition("Pi",``Pi A B = {f | !x. x IN A ==> f x IN B x}``);
 
 val Pi_iff = store_thm ("Pi_iff",
@@ -2099,6 +2073,7 @@ val indep_var_compose = store_thm ("indep_var_compose",
   MATCH_MP_TAC indep_vars_compose THEN Q.EXISTS_TAC `(\i. if i = 0 then M1 else M2)` THEN
   METIS_TAC []);
 
+(* TODO *)
 val pair_measure = new_definition ("pair_measure",
   ``pair_measure A B = measure_of ((m_space A CROSS m_space B), 
      {a CROSS b | a IN measurable_sets A /\ b IN measurable_sets B},
