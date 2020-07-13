@@ -2075,9 +2075,11 @@ val indep_var_compose = store_thm ("indep_var_compose",
 
 (* TODO *)
 val pair_measure = new_definition ("pair_measure",
-  ``pair_measure A B = measure_of ((m_space A CROSS m_space B), 
-     {a CROSS b | a IN measurable_sets A /\ b IN measurable_sets B},
-     (\X. pos_fn_integral A (\x. pos_fn_integral B (\y. indicator_fn X (x,y)))))``);
+  ``pair_measure A B =
+    measure_of
+      ((m_space A CROSS m_space B), 
+       {a CROSS b | a IN measurable_sets A /\ b IN measurable_sets B},
+       (\X. pos_fn_integral A (\x. pos_fn_integral B (\y. indicator_fn X (x,y)))))``);
 
 val measurable_sigma_sets = store_thm ("measurable_sigma_sets",
   ``!M N f sp A. measure_space M /\ measure_space N /\
@@ -5105,10 +5107,12 @@ val pos_fn_integral_snd = store_thm ("pos_fn_integral_snd",
   GEN_TAC THEN `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN
   ASM_SIMP_TAC std_ss []);
 
+(* done by martingaleTheory.TONELLI *)
 val fubini = store_thm ("fubini",
   ``!f M1 M2. measure_space M1 /\ measure_space M2 /\
        sigma_finite_measure M1 /\ sigma_finite_measure M2 /\
-       (!x. 0 <= f x) /\ f IN measurable 
+       (!x. 0 <= f x) /\
+       f IN measurable 
         (m_space (pair_measure M1 M2), measurable_sets (pair_measure M1 M2)) Borel ==>
        (pos_fn_integral M1 (\x. pos_fn_integral M2 (\y. f (x,y))) =
         pos_fn_integral M2 (\y. pos_fn_integral M1 (\x. f (x,y))))``,
@@ -6365,7 +6369,8 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
   ASM_SIMP_TAC std_ss [convolution, distr, measurable_sets_def] THEN
   METIS_TAC [lborel, measurable_sets_def]);
 
-val conv_normal_density_zero_mean = store_thm ("conv_normal_density_zero_mean",
+val conv_normal_density_zero_mean = store_thm
+  ("conv_normal_density_zero_mean",
   ``!sig1 sig2 p X Y x. 0 < sig1 /\ 0 < sig2 /\
       normal_rv X p 0 sig1 ==>
        (pos_fn_integral lborel 
