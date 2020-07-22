@@ -37,7 +37,7 @@ val extreal_sub_def = Define
 (* removed antecedents:
      (x <> NegInf /\ y <> NegInf) \/ (x <> PosInf /\ y <> PosInf)
  *)
-Theorem add_comm :
+Theorem add_comm__custom :
     !x y. x + y = y + x
 Proof
     Cases >> Cases_on `y`
@@ -47,7 +47,7 @@ QED
 (* removed antecedents:
      (x <> NegInf /\ y <> PosInf) \/ (x <> PosInf /\ y <> NegInf)
  *)
-Theorem extreal_sub_add :
+Theorem extreal_sub_add__custom :
     !x y. x - y = x + -y
 Proof
     rpt Cases
@@ -55,7 +55,7 @@ Proof
 QED
 
 (* removed antecedents: x <> NegInf /\ y <> NegInf *)
-Theorem lt_sub_imp :
+Theorem lt_sub_imp__custom :
     !x y z. y + x < z ==> y < z - x
 Proof
     rpt Cases
@@ -64,7 +64,7 @@ Proof
 QED
 
 (* removed antecedents: x <> NegInf /\ y <> NegInf *)
-Theorem lt_sub :
+Theorem lt_sub__custom :
     !x y z. z <> NegInf /\ z <> PosInf ==> (y + x < z <=> y < z - x)
 Proof
     rpt Cases
@@ -74,10 +74,17 @@ Proof
 QED
 
 (* removed antecedents:
+
      (!x. x IN space a ==> (f x <> NegInf /\ g x <> NegInf) \/
                            (f x <> PosInf /\ g x <> PosInf))
+
+   used custom theorems:
+
+   1. lt_sub_imp__custom
+   2. lt_sub_custom
+   3. add_comm__custom
  *)
-Theorem IN_MEASURABLE_BOREL_ADD :
+Theorem IN_MEASURABLE_BOREL_ADD__custom :
     !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\
               (!x. x IN space a ==> (h x = f x + g x))
           ==> h IN measurable a Borel
@@ -89,11 +96,11 @@ Proof
  >- (RW_TAC std_ss [EXTENSION, GSPECIFICATION, IN_BIGUNION_IMAGE, IN_UNIV, IN_INTER] \\
      EQ_TAC >- (RW_TAC std_ss [] \\
                 MATCH_MP_TAC Q_DENSE_IN_R \\
-                METIS_TAC [lt_sub_imp]) \\
+                METIS_TAC [lt_sub_imp__custom]) \\
      reverse (RW_TAC std_ss []) >- art [] \\
     ‘h x = f x + g x’ by PROVE_TAC [] >> POP_ORW \\
     ‘f x < Normal c - g x’ by PROVE_TAC [lt_trans] \\
-     METIS_TAC [lt_sub , extreal_not_infty])
+     METIS_TAC [lt_sub__custom, extreal_not_infty])
  >> DISCH_TAC
  >> FULL_SIMP_TAC std_ss []
  >> MATCH_MP_TAC BIGUNION_IMAGE_Q
@@ -105,7 +112,7 @@ Proof
  >> `({x | f x < Normal y} INTER space a) IN subsets a` by RW_TAC std_ss [IN_MEASURABLE_BOREL_ALL]
  >> Know `!x. x IN space a ==> (Normal y < Normal c - g x <=> g x < Normal c - Normal y)`
  >- (rpt STRIP_TAC \\
-     METIS_TAC [lt_sub , extreal_not_infty, add_comm])
+     METIS_TAC [lt_sub__custom, extreal_not_infty, add_comm__custom])
  >> DISCH_TAC
  >> `{x | Normal y < Normal c - g x} INTER space a = {x | g x < Normal c - Normal y} INTER space a`
      by (RW_TAC std_ss [IN_INTER, EXTENSION, GSPECIFICATION] >> METIS_TAC [])
@@ -119,16 +126,22 @@ Proof
 QED
 
 (* removed antecedents:
+
      (!x. x IN space a ==> (f x <> NegInf /\ g x <> PosInf) \/
                            (f x <> PosInf /\ g x <> NegInf))
+
+   used custom theorems:
+
+   1. IN_MEASURABLE_BOREL_ADD__custom
+   2. extreal_sub_add__custom
  *)
-Theorem IN_MEASURABLE_BOREL_SUB :
+Theorem IN_MEASURABLE_BOREL_SUB__custom :
     !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\
              (!x. x IN space a ==> (h x = f x - g x))
           ==> h IN measurable a Borel
 Proof
     RW_TAC std_ss []
- >> MATCH_MP_TAC IN_MEASURABLE_BOREL_ADD
+ >> MATCH_MP_TAC IN_MEASURABLE_BOREL_ADD__custom
  >> qexistsl_tac [`f`, `\x. - g x`]
  >> RW_TAC std_ss []
  >| [ (* goal 1 (of 3) *)
@@ -137,13 +150,18 @@ Proof
       Q.EXISTS_TAC `-1` \\
       RW_TAC std_ss [GSYM extreal_ainv_def, GSYM extreal_of_num_def, GSYM neg_minus1],
       (* goal 3 (of 3) *)
-      REWRITE_TAC [extreal_sub_add] ]
+      REWRITE_TAC [extreal_sub_add__custom] ]
 QED
 
 (* removed antecedents:
+
      (!x. x IN m_space m ==> f1 x <> PosInf \/ f2 x <> PosInf)
+
+   used custom theorems:
+
+   - none (except for extreal_add_def and extreal_sub_def)
  *)
-Theorem integral_add_lemma :
+Theorem integral_add_lemma__custom :
     !m f f1 f2.
        measure_space m /\ integrable m f /\
        integrable m f1 /\ integrable m f2 /\
@@ -166,7 +184,6 @@ Proof
      FULL_SIMP_TAC std_ss [extreal_sub_def, extreal_add_def, extreal_ainv_def,
                            extreal_11, add_lzero, extreal_of_num_def, GSYM lt_infty,
                            extreal_lt_eq, extreal_not_infty] \\
-
      Cases_on ‘0 < r - r'’
      >- (‘~(r - r' < 0)’ by METIS_TAC [REAL_LT_ANTISYM] \\
          fs [extreal_add_def, extreal_sub_def, add_lzero] >> REAL_ARITH_TAC) \\
@@ -204,10 +221,16 @@ Proof
 QED
 
 (* removed antecedents:
+
      (!y. y IN Y ==> pos_fn_integral (X,A,u) (\x. (abs o f) (x,y)) <> PosInf) /\
      (!x. x IN X ==> pos_fn_integral (Y,B,v) (\y. (abs o f) (x,y)) <> PosInf)
+
+   used custom theorems:
+
+   1. IN_MEASURABLE_BOREL_SUB__custom
+   2. integral_add_lemma__custom
  *)
-Theorem FUBINI :
+Theorem FUBINI__custom :
     !(X :'a set) (Y :'b set) A B u v f.
         sigma_finite_measure_space (X,A,u) /\
         sigma_finite_measure_space (Y,B,v) /\
@@ -439,9 +462,7 @@ Proof
        Q.EXISTS_TAC ‘\x. pos_fn_integral (Y,B,v) (\y. fn_plus f (x,y)) -
                          pos_fn_integral (Y,B,v) (\y. fn_minus f (x,y))’ >> BETA_TAC \\
        CONJ_TAC >- RW_TAC std_ss [integral_def] \\
-
-
-       MATCH_MP_TAC IN_MEASURABLE_BOREL_SUB \\
+       MATCH_MP_TAC IN_MEASURABLE_BOREL_SUB__custom \\
        FULL_SIMP_TAC std_ss [measure_space_def, space_def, m_space_def, measurable_sets_def] \\
        qexistsl_tac [‘\x. pos_fn_integral (Y,B,v) (\y. fn_plus f (x,y))’,
                      ‘\x. pos_fn_integral (Y,B,v) (\y. fn_minus f (x,y))’] >> simp [],
@@ -484,7 +505,7 @@ Proof
        Q.EXISTS_TAC ‘\y. pos_fn_integral (X,A,u) (\x. fn_plus f (x,y)) -
                          pos_fn_integral (X,A,u) (\x. fn_minus f (x,y))’ >> BETA_TAC \\
        CONJ_TAC >- RW_TAC std_ss [integral_def] \\
-       MATCH_MP_TAC IN_MEASURABLE_BOREL_SUB \\
+       MATCH_MP_TAC IN_MEASURABLE_BOREL_SUB__custom \\
        FULL_SIMP_TAC std_ss [measure_space_def, space_def, m_space_def, measurable_sets_def] \\
        qexistsl_tac [‘\y. pos_fn_integral (X,A,u) (\x. fn_plus f (x,y))’,
                      ‘\y. pos_fn_integral (X,A,u) (\x. fn_minus f (x,y))’] >> simp [],
@@ -532,7 +553,7 @@ Proof
                      pos_fn_integral (Y,B,v) (\y. pos_fn_integral (X,A,u) (\x. fn_minus f (x,y)))’
           (ONCE_REWRITE_TAC o wrap) \\
       MATCH_MP_TAC EQ_SYM \\
-      MATCH_MP_TAC integral_add_lemma >> rw [] >| (* 5 subgoals *)
+      MATCH_MP_TAC integral_add_lemma__custom >> rw [] >| (* 5 subgoals *)
       [ (* goal 1.1 (of 5) *)
         MATCH_MP_TAC integrable_eq >> simp [] \\
         Q.EXISTS_TAC ‘\y. integral (X,A,u) (\x. f (x,y))’ >> simp [integral_def],
@@ -574,7 +595,7 @@ Proof
                      pos_fn_integral (X,A,u) (\x. pos_fn_integral (Y,B,v) (\y. fn_minus f (x,y)))’
           (ONCE_REWRITE_TAC o wrap) \\
       MATCH_MP_TAC EQ_SYM \\
-      MATCH_MP_TAC integral_add_lemma >> rw [] >| (* 5 subgoals *)
+      MATCH_MP_TAC integral_add_lemma__custom >> rw [] >| (* 5 subgoals *)
       [ (* goal 2.1 (of 5) *)
         MATCH_MP_TAC integrable_eq >> simp [] \\
         Q.EXISTS_TAC ‘\x. integral (Y,B,v) (\y. f (x,y))’ >> simp [integral_def],
