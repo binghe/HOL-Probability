@@ -1,9 +1,9 @@
-# Customized HOL-Probability with old definitions of extreal add/sub #
+# Customized HOL-Probability with old definitions of extreal_add/sub
 
-## Introduction
+## Changed definitions
 
-The old definitions of `extreal_add` and `extreal_sub` wrongly allows `PosInf + NegInf = PosInf`,
-`PosInf - PosInf = PosInf` and  `NegInf - NegInf = PosInf`:
+The old definitions of `extreal_add` and `extreal_sub` wrongly allows
+`PosInf + NegInf = PosInf`, `PosInf - PosInf = PosInf` and  `NegInf - NegInf = PosInf`:
 
 ```
 val extreal_add_def = Define
@@ -22,7 +22,10 @@ val extreal_sub_def = Define
    (extreal_sub c NegInf = PosInf)`;
 ```
 
-But it turns out that, with these definitions the commutativity and associativity of extreals are preserved, and this allows simplified antecedents of many lemmas, and makes the original version of Fubini's theorem provable.
+But it turns out that, with these definitions the commutativity and
+associativity of extreals are preserved, and this allows simplified
+antecedents of many lemmas, and makes the original version of Fubini's
+theorem provable.
 
-## Changed Theorems
+## Added theorems
 

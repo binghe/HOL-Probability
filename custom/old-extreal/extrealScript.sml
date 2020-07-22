@@ -75,7 +75,7 @@ QED
 
 (* old definition, which (wrongly) allows `PosInf + NegInf = PosInf`: *)
 val extreal_add_def = Define
-  `(extreal_add (Normal x) (Normal y) = (Normal (x + y))) /\
+  `(extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
    (extreal_add PosInf a = PosInf) /\
    (extreal_add a PosInf = PosInf) /\
    (extreal_add NegInf b = NegInf) /\
@@ -83,7 +83,7 @@ val extreal_add_def = Define
 
 (* new definition of `extreal_add`:
 Definition extreal_add_def :
-   (extreal_add (Normal x) (Normal y) = (Normal (x + y))) /\
+   (extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
    (extreal_add (Normal _) a = a) /\
    (extreal_add b (Normal _) = b) /\
    (extreal_add NegInf NegInf = NegInf) /\
