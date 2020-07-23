@@ -689,6 +689,19 @@ Theorem SIGMA_ALGEBRA_PROD_SIGMA' =
           (REWRITE_RULE [space_def, subsets_def]
                         (Q.SPECL [‘(X,A)’, ‘(Y,B)’] SIGMA_ALGEBRA_PROD_SIGMA));
 
+Theorem SPACE_PROD_SIGMA :
+    !a b. space (prod_sigma a b) = space a CROSS space b
+Proof
+    rw [SPACE_SIGMA, prod_sigma_def]
+QED
+
+Theorem SIGMA_ALGEBRA_BOREL_2D :
+    sigma_algebra (Borel CROSS Borel)
+Proof
+    MATCH_MP_TAC SIGMA_ALGEBRA_PROD_SIGMA
+ >> rw [SPACE_BOREL, subset_class_def]
+QED
+
 (* FCP version of ‘prod_sigma’ *)
 val fcp_sigma_def = Define
    ‘fcp_sigma a b =
@@ -2614,7 +2627,7 @@ QED
 (* Application: 2-dimensional Borel measure space *)
 local
   val thm = Q.prove (
-     ‘?m. measure_space m /\ sigma_finite m /\
+     ‘?m. sigma_finite_measure_space m /\
          (m_space m = UNIV CROSS UNIV) /\
          (measurable_sets m = subsets ((UNIV,subsets borel) CROSS (UNIV,subsets borel))) /\
          (!s t. s IN subsets borel /\ t IN subsets borel ==>

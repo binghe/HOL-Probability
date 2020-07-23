@@ -2762,12 +2762,12 @@ Proof
       METIS_TAC [le_infty, extreal_ainv_def, extreal_sub_def, extreal_add_def, real_sub] ]
 QED
 
-(* cf. lebesgueTheory.IN_MEASURABLE_BOREL_TIMES for a more general version *)
+(* cf. IN_MEASURABLE_BOREL_TIMES for a more general version *)
 Theorem IN_MEASURABLE_BOREL_MUL :
-    !a f g h. sigma_algebra a /\ f IN measurable a Borel  /\
+    !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\ 
+             (!x. x IN space a ==> (h x = f x * g x)) /\
              (!x. x IN space a ==> f x <> NegInf /\ f x <> PosInf /\
-                                   g x <> NegInf /\ g x <> PosInf) /\
-              g IN measurable a Borel /\ (!x. x IN space a ==> (h x = f x * g x))
+                                   g x <> NegInf /\ g x <> PosInf)
           ==> h IN measurable a Borel
 Proof
     RW_TAC std_ss []
@@ -3158,15 +3158,14 @@ Proof
       METIS_TAC [le_antisym, extreal_lt_def] ]
 QED
 
-val measurable_If = MEASURABLE_IF;
-
-val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
- ``!m f g h.
+Theorem IN_MEASURABLE_BOREL_TIMES :
+  !m f g h.
      measure_space m /\
      f IN measurable (m_space m, measurable_sets m) Borel /\
      g IN measurable (m_space m, measurable_sets m) Borel /\
      (!x. x IN m_space m ==> (h x = f x * g x)) ==>
-     h IN measurable (m_space m, measurable_sets m) Borel``,
+     h IN measurable (m_space m, measurable_sets m) Borel
+Proof
   RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `(\x. f x * g x) IN measurable (m_space m,measurable_sets m) Borel` THENL
   [RW_TAC std_ss [IN_MEASURABLE, space_def] THENL
@@ -3202,7 +3201,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
    GEN_REWR_TAC (LAND_CONV o RAND_CONV) [GSYM SPECIFICATION] THEN
    SIMP_TAC std_ss [GSPECIFICATION] THEN METIS_TAC [normal_real]] THEN
 
-  MATCH_MP_TAC measurable_If THEN
+  MATCH_MP_TAC MEASURABLE_IF THEN
   RW_TAC std_ss [m_space_def, measurable_sets_def, SPACE] THENL
   [ALL_TAC, ALL_TAC,
    Q_TAC SUFF_TAC
@@ -3236,7 +3235,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
     POP_ASSUM MP_TAC THEN
     GEN_REWR_TAC (LAND_CONV o RAND_CONV) [GSYM SPECIFICATION] THEN
     SIMP_TAC std_ss [GSPECIFICATION] THEN METIS_TAC [normal_real]] THEN
-   MATCH_MP_TAC measurable_If THEN
+   MATCH_MP_TAC MEASURABLE_IF THEN
    RW_TAC std_ss [m_space_def, measurable_sets_def, SPACE] THENL
    [ALL_TAC,
     `(\x. 0) IN measurable (m_space m,measurable_sets m) Borel` by
@@ -3260,7 +3259,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
       POP_ASSUM MP_TAC THEN
       GEN_REWR_TAC (LAND_CONV o RAND_CONV) [GSYM SPECIFICATION] THEN
       SIMP_TAC std_ss [GSPECIFICATION] THEN METIS_TAC [normal_real]] THEN
-     MATCH_MP_TAC measurable_If THEN
+     MATCH_MP_TAC MEASURABLE_IF THEN
      RW_TAC std_ss [m_space_def, measurable_sets_def, SPACE] THENL
      [ALL_TAC, METIS_TAC [measure_space_def]] THEN
      Q_TAC SUFF_TAC `{x | x IN m_space m /\
@@ -3288,7 +3287,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
       POP_ASSUM MP_TAC THEN
       GEN_REWR_TAC (LAND_CONV o RAND_CONV) [GSYM SPECIFICATION] THEN
       SIMP_TAC std_ss [GSPECIFICATION] THEN METIS_TAC [normal_real]] THEN
-     MATCH_MP_TAC measurable_If THEN
+     MATCH_MP_TAC MEASURABLE_IF THEN
      RW_TAC std_ss [m_space_def, measurable_sets_def, SPACE] THENL
      [ALL_TAC, METIS_TAC [measure_space_def]] THEN
      Q_TAC SUFF_TAC `{x | x IN m_space m /\
@@ -3328,7 +3327,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
     `(\x. 0) IN measurable (m_space m,measurable_sets m) Borel` by
      (MATCH_MP_TAC IN_MEASURABLE_BOREL_CONST THEN
       METIS_TAC [measure_space_def]) THEN
-    MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+    MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
 
     [SIMP_TAC std_ss [extreal_mul_def] THEN
      Q_TAC SUFF_TAC `(\x. if real (f x) = 0 then Normal 0
@@ -3337,7 +3336,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
                     (\x. if (\x. real (f x) = 0) x then (\x. Normal 0) x
                          else (\x. if 0 < real (f x) then PosInf
                          else NegInf) x)` THENL
-     [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC measurable_If THEN
+     [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC MEASURABLE_IF THEN
      RW_TAC std_ss [] THENL
      [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE, GSYM extreal_of_num_def],
       ALL_TAC,
@@ -3363,7 +3362,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
      Q_TAC SUFF_TAC `(\x. if 0 < real (f x) then PosInf else NegInf) =
                 (\x. if (\x. 0 < real (f x)) x then (\x. PosInf) x else (\x. NegInf) x)` THENL
      [DISC_RW_KILL, SIMP_TAC std_ss []] THEN
-     MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+     MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
      [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
       ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
       ALL_TAC] THEN
@@ -3407,7 +3406,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
                     (\x. if (\x. real (f x) = 0) x then (\x. Normal 0) x
                          else (\x. if 0 < real (f x) then NegInf
                          else PosInf) x)` THENL
-     [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC measurable_If THEN
+     [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC MEASURABLE_IF THEN
      RW_TAC std_ss [] THENL
      [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE, GSYM extreal_of_num_def],
       ALL_TAC,
@@ -3433,7 +3432,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
      Q_TAC SUFF_TAC `(\x. if 0 < real (f x) then NegInf else PosInf) =
                 (\x. if (\x. 0 < real (f x)) x then (\x. NegInf) x else (\x. PosInf) x)` THENL
      [DISC_RW_KILL, SIMP_TAC std_ss []] THEN
-     MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+     MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
      [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
       ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
       ALL_TAC] THEN
@@ -3467,7 +3466,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
                                (m_space (space Borel,subsets Borel,(\x. 0)),
                                 measurable_sets (space Borel,subsets Borel,(\x. 0)))` THENL
   [SIMP_TAC std_ss [], ALL_TAC] THEN
-  MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+  MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
   [Q_TAC SUFF_TAC `(\x. PosInf * g x) =
                    (\x. if {x | ((g x = PosInf) \/ (g x = NegInf))} x
                         then (\x. if g x = PosInf then PosInf else NegInf) x
@@ -3480,11 +3479,11 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
     POP_ASSUM MP_TAC THEN GEN_REWR_TAC (LAND_CONV o RAND_CONV) [GSYM SPECIFICATION] THEN
     SIMP_TAC std_ss [GSPECIFICATION] THEN
     METIS_TAC [normal_real]] THEN
-   MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+   MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
    [Q_TAC SUFF_TAC `(\x. if g x = PosInf then PosInf else NegInf) =
                (\x. if (\x. g x = PosInf) x then (\x. PosInf) x else (\x. NegInf) x)` THENL
     [DISC_RW_KILL, SIMP_TAC std_ss []] THEN
-    MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+    MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
     [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
      ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
      ALL_TAC] THEN
@@ -3522,7 +3521,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
                    (\x. if (\x. real (g x) = 0) x then (\x. Normal 0) x
                         else (\x. if 0 < real (g x) then PosInf
                         else NegInf) x)` THENL
-   [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC measurable_If THEN
+   [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC MEASURABLE_IF THEN
    RW_TAC std_ss [] THENL
    [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE, GSYM extreal_of_num_def],
     ALL_TAC,
@@ -3547,7 +3546,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
    Q_TAC SUFF_TAC `(\x. if 0 < real (g x) then PosInf else NegInf) =
               (\x. if (\x. 0 < real (g x)) x then (\x. PosInf) x else (\x. NegInf) x)` THENL
    [DISC_RW_KILL, SIMP_TAC std_ss []] THEN
-   MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+   MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
    [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
     ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
     ALL_TAC] THEN
@@ -3596,11 +3595,11 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
     POP_ASSUM MP_TAC THEN GEN_REWR_TAC (LAND_CONV o RAND_CONV) [GSYM SPECIFICATION] THEN
     SIMP_TAC std_ss [GSPECIFICATION] THEN
     METIS_TAC [normal_real]] THEN
-   MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+   MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
    [Q_TAC SUFF_TAC `(\x. if g x = PosInf then NegInf else PosInf) =
                (\x. if (\x. g x = PosInf) x then (\x. NegInf) x else (\x. PosInf) x)` THENL
     [DISC_RW_KILL, SIMP_TAC std_ss []] THEN
-    MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+    MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
     [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
      ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
      ALL_TAC] THEN
@@ -3638,7 +3637,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
                    (\x. if (\x. real (g x) = 0) x then (\x. Normal 0) x
                         else (\x. if 0 < real (g x) then NegInf
                         else PosInf) x)` THENL
-   [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC measurable_If THEN
+   [DISC_RW_KILL, SIMP_TAC std_ss []] THEN MATCH_MP_TAC MEASURABLE_IF THEN
    RW_TAC std_ss [] THENL
    [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE, GSYM extreal_of_num_def],
     ALL_TAC,
@@ -3663,7 +3662,7 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
    Q_TAC SUFF_TAC `(\x. if 0 < real (g x) then NegInf else PosInf) =
               (\x. if (\x. 0 < real (g x)) x then (\x. NegInf) x else (\x. PosInf) x)` THENL
    [DISC_RW_KILL, SIMP_TAC std_ss []] THEN
-   MATCH_MP_TAC measurable_If THEN RW_TAC std_ss [] THENL
+   MATCH_MP_TAC MEASURABLE_IF THEN RW_TAC std_ss [] THENL
    [ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
     ASM_SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE],
     ALL_TAC] THEN
@@ -3688,14 +3687,25 @@ val IN_MEASURABLE_BOREL_TIMES = store_thm ("IN_MEASURABLE_BOREL_TIMES",
    ASM_SIMP_TAC std_ss [BOREL_MEASURABLE_SETS_OR, extreal_of_num_def] THEN
    MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [GSYM SPACE_BOREL] THEN
    CONJ_TAC THEN (MATCH_MP_TAC ALGEBRA_DIFF THEN
-    ASM_SIMP_TAC std_ss [BOREL_MEASURABLE_INFINITY, ALGEBRA_SPACE]));
+    ASM_SIMP_TAC std_ss [BOREL_MEASURABLE_INFINITY, ALGEBRA_SPACE])
+QED
 
-val sigma_algebra_iff2 = sigma_algebra_alt_pow;
+Theorem IN_MEASURABLE_BOREL_TIMES' :
+    !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\ 
+             (!x. x IN space a ==> (h x = f x * g x)) ==> h IN measurable a Borel
+Proof
+    rpt STRIP_TAC
+ >> MP_TAC (Q.SPECL [‘(space a,subsets a,(\s. 0))’, ‘f’, ‘g’, ‘h’]
+                    IN_MEASURABLE_BOREL_TIMES)
+ >> Know ‘sigma_finite_measure_space (space a,subsets a,(\s. 0))’
+ >- (MATCH_MP_TAC measure_space_trivial >> art [])
+ >> rw [sigma_finite_measure_space_def]
+QED
 
-val IN_MEASURABLE_BOREL_IMP_BOREL = store_thm ((* was: borel_IMP_Borel *)
-   "IN_MEASURABLE_BOREL_IMP_BOREL",
-  ``!f m. f IN measurable (m_space m,measurable_sets m) borel ==>
-          (Normal o f) IN measurable (m_space m,measurable_sets m) Borel``,
+Theorem IN_MEASURABLE_BOREL_IMP_BOREL : (* was: borel_IMP_Borel *)
+    !f m. f IN measurable (m_space m,measurable_sets m) borel ==>
+          (Normal o f) IN measurable (m_space m,measurable_sets m) Borel
+Proof
   RW_TAC std_ss [IN_MEASURABLE, SIGMA_ALGEBRA_BOREL, o_DEF] THENL
   [EVAL_TAC THEN SRW_TAC[] [IN_DEF,IN_FUNSET], ALL_TAC] THEN
   FULL_SIMP_TAC std_ss [space_def, subsets_def] THEN
@@ -3722,7 +3732,7 @@ val IN_MEASURABLE_BOREL_IMP_BOREL = store_thm ((* was: borel_IMP_Borel *)
     ALL_TAC] THEN Q.EXISTS_TAC `Normal x` THEN
    ASM_SIMP_TAC std_ss [extreal_lt_eq, extreal_not_infty, real_normal],
    ALL_TAC] THEN
-  POP_ASSUM MP_TAC THEN RW_TAC std_ss [sigma_algebra_iff2] THENL
+  POP_ASSUM MP_TAC THEN RW_TAC std_ss [sigma_algebra_alt_pow] THENL
   [SIMP_TAC std_ss [SUBSET_DEF, IN_POW, IN_UNIV],
    SIMP_TAC std_ss [GSPECIFICATION, real_set_def, NOT_IN_EMPTY] THEN
    ASM_SIMP_TAC std_ss [SET_RULE ``{real x | F} = {}``],
@@ -3762,7 +3772,8 @@ val IN_MEASURABLE_BOREL_IMP_BOREL = store_thm ((* was: borel_IMP_Borel *)
   UNDISCH_TAC ``(x:real) IN s'`` THEN ASM_REWRITE_TAC [] THEN
   RW_TAC std_ss [] THEN Q.EXISTS_TAC `x'` THEN
   ASM_REWRITE_TAC [IN_UNIV] THEN Q.EXISTS_TAC `A i` THEN
-  METIS_TAC []);
+  METIS_TAC []
+QED
 
 (* ------------------------------------------------------------------------- *)
 (*  Construction of Borel measure space by CARATHEODORY_SEMIRING             *)
@@ -4215,13 +4226,13 @@ Proof
      FIRST_X_ASSUM MATCH_MP_TAC \\
      Q.UNABBREV_TAC `h` >> rw [o_DEF])
  (* Part V: h-property of lowerbounds *)
- >> Know `!i j. i < j /\ j < n0 ==>
-                interval_lowerbound (h i) <= interval_lowerbound (h j)`
- >- (rpt STRIP_TAC \\
-     Q.PAT_X_ASSUM `transitive R`
-       (STRIP_ASSUME_TAC o (MATCH_MP SORTED_EL_LESS)) \\
-     POP_ASSUM (MP_TAC o (Q.SPEC `sorted`)) \\
-     Q.UNABBREV_TAC `R` >> RW_TAC std_ss []) >> DISCH_TAC
+ >> ‘!i j. i < j /\ j < n0 ==>
+           interval_lowerbound (h i) <= interval_lowerbound (h j)’
+      by (STRIP_TAC \\
+          Q.PAT_X_ASSUM `transitive R`
+                        (STRIP_ASSUME_TAC o (MATCH_MP SORTED_EL_LESS)) \\
+          pop_assum (qspec_then ‘sorted’ mp_tac) \\
+          simp[])
  (* h-property of upper- and lowerbounds *)
  >> Know `!i j. i < j /\ j < n0 ==>
                 interval_upperbound (h i) <= interval_lowerbound (h j)`
@@ -5406,7 +5417,7 @@ val LIMSEQ_indicator_UN = limseq_indicator_BIGUNION;
 Theorem sigma_algebra_lebesgue :
     sigma_algebra (UNIV, {A | !n. (indicator A) integrable_on (line n)})
 Proof
-    RW_TAC std_ss [sigma_algebra_iff2]
+    RW_TAC std_ss [sigma_algebra_alt_pow]
  >- (REWRITE_TAC [POW_DEF] >> SET_TAC [])
  >- (SIMP_TAC std_ss [GSPECIFICATION] \\
      Know `indicator {} = (\x. 0)` >- SET_TAC [indicator] \\

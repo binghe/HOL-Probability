@@ -5550,12 +5550,12 @@ val integrable_indicator_pow = store_thm (* new *)
 (* this result is used to simplify the definition of `RN_deriv`,
 
    added `!x. x IN m_space m ==> f x <> NegInf /\ f x <> PosInf`
-   *)
-val integrable_mul_indicator = store_thm
-  ("integrable_mul_indicator",
-  ``!m s f. measure_space m /\ s IN measurable_sets m /\ measure m s < PosInf /\
+ *)
+Theorem integrable_mul_indicator :
+    !m s f. measure_space m /\ s IN measurable_sets m /\ measure m s < PosInf /\
             (!x. x IN m_space m ==> f x <> NegInf /\ f x <> PosInf) /\
-            integrable m f ==> integrable m (\x. f x * indicator_fn s x)``,
+            integrable m f ==> integrable m (\x. f x * indicator_fn s x)
+Proof
     rpt STRIP_TAC
  >> MATCH_MP_TAC integrable_bounded
  >> Q.EXISTS_TAC `abs o f`
@@ -5565,17 +5565,16 @@ val integrable_mul_indicator = store_thm
  >- (RW_TAC std_ss [] \\
      Cases_on `x IN s` >- ASM_SIMP_TAC std_ss [indicator_fn_def, mul_rone, le_refl] \\
      ASM_SIMP_TAC std_ss [indicator_fn_def, mul_rzero, abs_0, abs_pos])
- >> MATCH_MP_TAC IN_MEASURABLE_BOREL_MUL
+ >> MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES
  >> BETA_TAC
- >> Q.EXISTS_TAC `f` >> Q.EXISTS_TAC `indicator_fn s`
+ >> qexistsl_tac [`f`, `indicator_fn s`]
  >> ASM_SIMP_TAC std_ss [space_def]
- >> CONJ_TAC >- PROVE_TAC [measure_space_def]
  >> CONJ_TAC >- PROVE_TAC [integrable_def]
- >> CONJ_TAC >- PROVE_TAC [INDICATOR_FN_NOT_INFTY]
  >> MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR
  >> Q.EXISTS_TAC `s`
  >> CONJ_TAC >- PROVE_TAC [measure_space_def]
- >> fs [space_def, subsets_def]);
+ >> fs [space_def, subsets_def]
+QED
 
 (* IMPORTANT: all posinf-valued points (which forms a null set) in an integrable
    function can be safely removed without changing its overall integral.
@@ -5934,34 +5933,40 @@ Proof
  >- (RW_TAC std_ss [Abbr ‘h1’, Abbr ‘h2’] \\
      Q.PAT_X_ASSUM ‘!x. x IN m_space m ==> P \/ Q’ (MP_TAC o (Q.SPEC ‘x’)) \\
      reverse (RW_TAC std_ss [])
-     >- (SIMP_TAC std_ss [fn_plus_def, fn_minus_def, add_lzero] \\
-         Cases_on `0 < f1 x - f2 x`
-         >- (RW_TAC std_ss [add_lzero] >- PROVE_TAC [lt_antisym] \\
-             MATCH_MP_TAC sub_add >> rw []) \\
-         RW_TAC std_ss [add_lzero] \\
+     >- (‘f1 x <> NegInf /\ f2 x <> NegInf’ by PROVE_TAC [] \\
+         SIMP_TAC std_ss [fn_plus_def, fn_minus_def, add_lzero] \\
          Cases_on `f1 x` >> Cases_on `f2 x` \\
          FULL_SIMP_TAC std_ss [extreal_sub_def, extreal_add_def, extreal_ainv_def,
-                               extreal_11, add_lzero] \\
-         METIS_TAC [real_sub, REAL_SUB_SUB2, REAL_ADD_COMM, lt_infty, lt_antisym,
-                    extreal_lt_def, extreal_of_num_def, REAL_LE_ANTISYM,
-                    extreal_le_def, REAL_SUB_0]) \\
+                               extreal_11, add_lzero, extreal_of_num_def, GSYM lt_infty,
+                               extreal_lt_eq, extreal_not_infty] \\
+         Cases_on ‘0 < r - r'’
+         >- (‘~(r - r' < 0)’ by METIS_TAC [REAL_LT_ANTISYM] \\
+             fs [extreal_add_def, extreal_sub_def, add_lzero] >> REAL_ARITH_TAC) \\
+         Cases_on ‘r - r' < 0’
+         >- (fs [extreal_add_def, extreal_sub_def, add_lzero] >> REAL_ARITH_TAC) \\
+         fs [extreal_add_def, extreal_11] \\
+        ‘r - r' = 0’ by METIS_TAC [REAL_LE_ANTISYM, real_lt] >> POP_ASSUM MP_TAC \\
+         REAL_ARITH_TAC) \\
      Cases_on ‘f2 x = PosInf’
      >- (‘?r. f1 x = Normal r’ by METIS_TAC [extreal_cases] \\
          ‘f x = NegInf’ by METIS_TAC [extreal_sub_def] \\
          ‘fn_minus f x = PosInf’ by METIS_TAC [FN_MINUS_ALT, min_infty, extreal_ainv_def] \\
          ‘fn_plus f x = 0’ by METIS_TAC [FN_MINUS_INFTY_IMP] \\
          rw [extreal_add_def]) \\
+    ‘f1 x <> NegInf /\ f2 x <> NegInf’ by PROVE_TAC [] \\
      SIMP_TAC std_ss [fn_plus_def, fn_minus_def, add_lzero] \\
-     Cases_on `0 < f1 x - f2 x`
-     >- (RW_TAC std_ss [add_lzero] >- PROVE_TAC [lt_antisym] \\
-         MATCH_MP_TAC sub_add >> rw []) \\
-     RW_TAC std_ss [add_lzero] \\
      Cases_on `f1 x` >> Cases_on `f2 x` \\
      FULL_SIMP_TAC std_ss [extreal_sub_def, extreal_add_def, extreal_ainv_def,
-                           extreal_11, add_lzero] \\
-     METIS_TAC [real_sub, REAL_SUB_SUB2, REAL_ADD_COMM, lt_infty, lt_antisym,
-                extreal_lt_def, extreal_of_num_def, REAL_LE_ANTISYM,
-                extreal_le_def, REAL_SUB_0])
+                           extreal_11, add_lzero, extreal_of_num_def, GSYM lt_infty,
+                           extreal_lt_eq, extreal_not_infty] \\
+     Cases_on ‘0 < r - r'’
+     >- (‘~(r - r' < 0)’ by METIS_TAC [REAL_LT_ANTISYM] \\
+         fs [extreal_add_def, extreal_sub_def, add_lzero] >> REAL_ARITH_TAC) \\
+     Cases_on ‘r - r' < 0’
+     >- (fs [extreal_add_def, extreal_sub_def, add_lzero] >> REAL_ARITH_TAC) \\
+     fs [extreal_add_def, extreal_11] \\
+    ‘r - r' = 0’ by METIS_TAC [REAL_LE_ANTISYM, real_lt] >> POP_ASSUM MP_TAC \\
+     REAL_ARITH_TAC)
  >> DISCH_TAC
  >> Know `pos_fn_integral m h1 = pos_fn_integral m h2`
  >- (MATCH_MP_TAC pos_fn_integral_cong >> simp [] \\
@@ -8787,28 +8792,35 @@ Proof
            METIS_TAC [MEASURE_SPACE_CMUL, REAL_LT_IMP_LE, mul_not_infty, extreal_not_infty])
  >> Q.ABBREV_TAC `g' = (\x. g x + Normal e * indicator_fn (A') x)`
  >> `!A. A IN measurable_sets m ==>
-        (pos_fn_integral m (\x. g' x * indicator_fn A x) =
-         pos_fn_integral m (\x. g x * indicator_fn A x) + Normal e * measure m (A INTER A'))`
-       by (rpt STRIP_TAC
-           >> `measure m (A'' INTER A') = pos_fn_integral m (indicator_fn (A'' INTER A'))`
-                by METIS_TAC [pos_fn_integral_indicator,MEASURE_SPACE_INTER]
-           >> POP_ORW
-           >> `Normal e * pos_fn_integral m (indicator_fn (A'' INTER A')) =
-               pos_fn_integral m (\x. Normal e * indicator_fn (A'' INTER A') x)`
-                by ((MATCH_MP_TAC o GSYM) pos_fn_integral_cmul
-                    >> RW_TAC real_ss [REAL_LT_IMP_LE,indicator_fn_def,le_01,le_refl])
-           >> POP_ORW
-           >> Q.UNABBREV_TAC `g'`
-           >> `(\x. (\x. g x + Normal e * indicator_fn A' x) x * indicator_fn A'' x) =
-               (\x. (\x. g x * indicator_fn A'' x) x + (\x. Normal e * indicator_fn (A'' INTER A') x) x)`
-                by (RW_TAC std_ss [FUN_EQ_THM, indicator_fn_def, IN_INTER] \\
-                    METIS_TAC [mul_rone, mul_rzero, add_rzero, indicator_fn_def, IN_INTER])
-           >> POP_ORW
-           >> MATCH_MP_TAC pos_fn_integral_add
-           >> FULL_SIMP_TAC std_ss []
-           >> CONJ_TAC >- (RW_TAC std_ss [indicator_fn_def,le_01,le_refl,mul_rone,mul_rzero]
-                           >> FULL_SIMP_TAC std_ss [extreal_of_num_def,extreal_le_def,REAL_LT_IMP_LE])
-           >> RW_TAC std_ss []
+         pos_fn_integral m (\x. g' x * indicator_fn A x) =
+         pos_fn_integral m (\x. g x * indicator_fn A x) +
+         Normal e * measure m (A INTER A')`
+   by (rpt STRIP_TAC
+       >> `measure m (A'' INTER A') =
+             pos_fn_integral m (indicator_fn (A'' INTER A'))`
+         by METIS_TAC [pos_fn_integral_indicator,MEASURE_SPACE_INTER]
+       >> POP_ORW
+       >> `Normal e * pos_fn_integral m (indicator_fn (A'' INTER A')) =
+             pos_fn_integral m (\x. Normal e * indicator_fn (A'' INTER A') x)`
+         by ((MATCH_MP_TAC o GSYM) pos_fn_integral_cmul
+             >> RW_TAC real_ss [REAL_LT_IMP_LE,indicator_fn_def,le_01,le_refl])
+       >> POP_ORW
+       >> Q.UNABBREV_TAC `g'`
+       >> `(\x. (\x. g x + Normal e * indicator_fn A' x) x * indicator_fn A'' x)
+              =
+           (\x. (\x. g x * indicator_fn A'' x) x +
+                (\x. Normal e * indicator_fn (A'' INTER A') x) x)`
+         by (RW_TAC std_ss [FUN_EQ_THM, indicator_fn_def, IN_INTER] \\
+             METIS_TAC [mul_rone, mul_rzero, add_rzero, indicator_fn_def,
+                        IN_INTER])
+       >> POP_ORW
+       >> MATCH_MP_TAC pos_fn_integral_add
+       >> FULL_SIMP_TAC std_ss []
+       >> CONJ_TAC
+       >- (RW_TAC std_ss [indicator_fn_def,le_01,le_refl,mul_rone,mul_rzero]
+           >> FULL_SIMP_TAC std_ss [extreal_of_num_def,extreal_le_def,
+                                    REAL_LT_IMP_LE])
+       >> RW_TAC std_ss []
            >- METIS_TAC [IN_MEASURABLE_BOREL_MUL_INDICATOR, measure_space_def,
                          measurable_sets_def, subsets_def]
            >> MATCH_MP_TAC IN_MEASURABLE_BOREL_CMUL
