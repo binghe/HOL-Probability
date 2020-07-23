@@ -27,5 +27,13 @@ associativity of extreals are preserved, and this allows simplified
 antecedents of many lemmas, and makes the original version of Fubini's
 theorem provable.
 
-## Added theorems
+## Added theorems (in newly added `fubiniTheory`)
 
+* `add_comm`
+* `extreal_sub_add`
+* `lt_sub`
+* `lt_sub_imp`
+* `IN_MEASURABLE_BOREL_ADD`
+* `IN_MEASURABLE_BOREL_SUB`
+* `integral_add_lemma`
+* `FUBINI`
