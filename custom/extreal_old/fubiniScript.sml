@@ -81,7 +81,7 @@ QED
    used custom theorems:
 
    1. lt_sub_imp__new
-   2. lt_sub_custom
+   2. lt_sub__new
    3. add_comm__new
  *)
 Theorem IN_MEASURABLE_BOREL_ADD__new :
