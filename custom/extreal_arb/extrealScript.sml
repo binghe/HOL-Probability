@@ -74,29 +74,35 @@ QED
 (* ********************************************* *)
 
 (* old definition, which (wrongly) allows `PosInf + NegInf = PosInf`:
-
 val extreal_add_def = Define
   `(extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
    (extreal_add PosInf a = PosInf) /\
    (extreal_add a PosInf = PosInf) /\
    (extreal_add NegInf b = NegInf) /\
    (extreal_add c NegInf = NegInf)`;
-
-   new definition:
  *)
+
+(* intermediate definition, which allows `PosInf + NegInf = NegInf` *)
+Definition extreal_add_def :
+   (extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
+   (extreal_add NegInf b = NegInf) /\
+   (extreal_add c NegInf = NegInf) /\
+   (extreal_add PosInf a = PosInf) /\
+   (extreal_add a PosInf = PosInf)
+End
+
+(* new definition of `extreal_add`:
 Definition extreal_add_def :
    (extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
    (extreal_add (Normal _) a = a) /\
    (extreal_add b (Normal _) = b) /\
    (extreal_add NegInf NegInf = NegInf) /\
-   (extreal_add PosInf PosInf = PosInf) /\
-   (extreal_add PosInf NegInf = ARB) (* here *) /\
-   (extreal_add NegInf PosInf = ARB) (* here *)
+   (extreal_add PosInf PosInf = PosInf)
 End
+ *)
 
 (* old definition, which (wrongly) allows `PosInf - PosInf = PosInf` and
    `NegInf - NegInf = PosInf`:
-
 val extreal_sub_def = Define
   `(extreal_sub (Normal x) (Normal y) = Normal (x - y)) /\
    (extreal_sub PosInf a = PosInf) /\
@@ -104,19 +110,30 @@ val extreal_sub_def = Define
    (extreal_sub NegInf NegInf = PosInf) /\
    (extreal_sub NegInf c = NegInf) /\
    (extreal_sub c NegInf = PosInf)`;
-
-   new definition:
  *)
+
+(* intermediate definition, which prefers
+
+   ‘PosInf - PosInf = NegInf - NegInf = NegInf’:
+ *)
+Definition extreal_sub_def :
+   (extreal_sub (Normal x) (Normal y) = Normal (x - y)) /\
+   (extreal_sub NegInf c = NegInf) /\
+   (extreal_sub b PosInf = NegInf) /\
+   (extreal_sub c NegInf = PosInf) /\
+   (extreal_sub PosInf a = PosInf)
+End
+
+(* new definition of `extreal_sub`:
 Definition extreal_sub_def :
    (extreal_sub (Normal x) (Normal y) = Normal (x - y)) /\
    (extreal_sub a (Normal _) = a) /\
    (extreal_sub (Normal _) NegInf = PosInf) /\
    (extreal_sub (Normal _) PosInf = NegInf) /\
    (extreal_sub NegInf PosInf = NegInf) /\
-   (extreal_sub PosInf NegInf = PosInf) /\
-   (extreal_sub PosInf PosInf = ARB) (* here *) /\
-   (extreal_sub NegInf NegInf = ARB) (* here *)
+   (extreal_sub PosInf NegInf = PosInf)
 End
+ *)
 
 Definition extreal_le_def :
    (extreal_le (Normal x) (Normal y) = (x <= y)) /\
