@@ -16,11 +16,11 @@
 (*                                                                           *)
 (* ========================================================================= *)
 
-open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith prim_recTheory 
-combinTheory quotientTheory arithmeticTheory hrealTheory realaxTheory realTheory 
-realLib jrhUtils pairTheory seqTheory limTheory transcTheory listTheory mesonLib 
-boolTheory topologyTheory pred_setTheory util_probTheory optionTheory numTheory 
-sumTheory InductiveDefinition ind_typeTheory pred_setLib iterate_hvgTheory 
+open HolKernel Parse boolLib bossLib numLib unwindLib tautLib Arith prim_recTheory
+combinTheory quotientTheory arithmeticTheory hrealTheory realaxTheory realTheory
+realLib jrhUtils pairTheory seqTheory limTheory transcTheory listTheory mesonLib
+boolTheory topologyTheory pred_setTheory util_probTheory optionTheory numTheory
+sumTheory InductiveDefinition ind_typeTheory pred_setLib iterate_hvgTheory
 card_hvgTheory product_hvgTheory topology_hvgTheory derivative_hvgTheory
 integration_hvgTheory real_sigmaTheory extreal_hvgTheory measure_hvgTheory
 lebesgue_hvgTheory probability_hvgTheory lebesgue_measure_hvgTheory;
@@ -35,9 +35,9 @@ fun K_TAC _ = ALL_TAC;
 fun MESON ths tm = prove(tm,MESON_TAC ths);
 fun METIS ths tm = prove(tm,METIS_TAC ths);
 
-val DISC_RW_KILL = DISCH_TAC THEN ONCE_ASM_REWRITE_TAC [] THEN 
+val DISC_RW_KILL = DISCH_TAC THEN ONCE_ASM_REWRITE_TAC [] THEN
                    POP_ASSUM K_TAC;
-				   
+
 val IN_REST = store_thm ("IN_REST",
  ``!x:'a. !s. x IN (REST s) <=> x IN s /\ ~(x = CHOICE s)``,
   REWRITE_TAC[REST_DEF, IN_DELETE]);
@@ -72,12 +72,12 @@ val RN_deriv = new_definition ("RN_deriv",
                       measure v A)``);
 
 val RN_derivI = store_thm ("RN_derivI",
-  ``!f M N. f IN measurable (m_space M, measurable_sets M) Borel /\ 
+  ``!f M N. f IN measurable (m_space M, measurable_sets M) Borel /\
             (!x. 0 <= f x) /\ (density M f = measure_of N) /\
-             measure_space M /\ measure_space N /\ 
-            (measurable_sets M = measurable_sets N) ==> 
+             measure_space M /\ measure_space N /\
+            (measurable_sets M = measurable_sets N) ==>
             (density M (RN_deriv M N) = measure_of N)``,
-  RW_TAC std_ss [RN_deriv] THEN SELECT_ELIM_TAC THEN 
+  RW_TAC std_ss [RN_deriv] THEN SELECT_ELIM_TAC THEN
   `m_space M = m_space N` by METIS_TAC [sets_eq_imp_space_eq] THEN
   Q_TAC SUFF_TAC `measurable_sets N SUBSET POW (m_space N)` THENL
   [DISCH_TAC,
@@ -101,11 +101,11 @@ val RN_derivI = store_thm ("RN_derivI",
 
 val density_RN_deriv = store_thm ("density_RN_deriv",
   ``!M N. sigma_finite_measure M /\ measure_space M /\ measure_space N /\
-          measure_absolutely_continuous N M /\ 
+          measure_absolutely_continuous N M /\
          (measurable_sets M = measurable_sets N) ==>
          (density M (RN_deriv M N) = measure_of N)``,
   RW_TAC std_ss [] THEN MATCH_MP_TAC RN_derivI THEN
-  Q_TAC SUFF_TAC `sigma_finite_measure M /\ measure_space M /\ 
+  Q_TAC SUFF_TAC `sigma_finite_measure M /\ measure_space M /\
     measure_space N /\ measure_absolutely_continuous N M /\
    (measurable_sets M = measurable_sets N)` THENL
   [DISCH_THEN (MP_TAC o MATCH_MP RADON_NIKODYM),
@@ -124,15 +124,15 @@ val density_RN_deriv = store_thm ("density_RN_deriv",
 
 val RN_deriv_positive_integral = store_thm ("RN_deriv_positive_integral",
   ``!M N f. sigma_finite_measure M /\ measure_space M /\ measure_space N /\
-          measure_absolutely_continuous N M /\ 
+          measure_absolutely_continuous N M /\
           (measurable_sets M = measurable_sets N) /\
           f IN measurable (m_space M, measurable_sets M) Borel ==>
-          (pos_fn_integral N f = 
+          (pos_fn_integral N f =
            pos_fn_integral (density M (RN_deriv M N)) f)``,
   RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `pos_fn_integral N f = pos_fn_integral (measure_of N) f` THENL
   [METIS_TAC [density_RN_deriv], ALL_TAC] THEN
-  ONCE_REWRITE_TAC [METIS [MEASURE_SPACE_REDUCE] 
+  ONCE_REWRITE_TAC [METIS [MEASURE_SPACE_REDUCE]
    ``measure_of N = measure_of (m_space N, measurable_sets N, measure N)``] THEN
   Q_TAC SUFF_TAC `measurable_sets N SUBSET POW (m_space N)` THENL
   [DISCH_TAC,
@@ -141,10 +141,10 @@ val RN_deriv_positive_integral = store_thm ("RN_deriv_positive_integral",
    by METIS_TAC [sigma_sets_eq, measure_space_def] THEN
   ASM_SIMP_TAC std_ss [measure_of] THEN
   SIMP_TAC std_ss [pos_fn_integral_def] THEN AP_TERM_TAC THEN
-  AP_TERM_TAC THEN ABS_TAC THEN AP_TERM_TAC THEN AP_TERM_TAC THEN 
+  AP_TERM_TAC THEN ABS_TAC THEN AP_TERM_TAC THEN AP_TERM_TAC THEN
   ABS_TAC THEN AP_THM_TAC THEN AP_TERM_TAC THEN
   ASM_SIMP_TAC std_ss [IN_psfis_eq, MEASURE_SPACE_REDUCE] THEN
-  AP_TERM_TAC THEN ABS_TAC THEN AP_TERM_TAC THEN ABS_TAC THEN 
+  AP_TERM_TAC THEN ABS_TAC THEN AP_TERM_TAC THEN ABS_TAC THEN
   AP_TERM_TAC THEN ABS_TAC THEN
   Q_TAC SUFF_TAC `pos_simple_fn N g s a x =
    pos_simple_fn (m_space N,measurable_sets N,
@@ -154,23 +154,23 @@ val RN_deriv_positive_integral = store_thm ("RN_deriv_positive_integral",
    RW_TAC std_ss [measure_of, m_space_def, measurable_sets_def, measure_def]] THEN
   MATCH_MP_TAC (METIS [] ``(a ==> (b = c)) ==> (a /\ b = a /\ c)``) THEN
   POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN
-  POP_ASSUM (fn th => REWRITE_TAC [th]) THEN DISCH_TAC THEN 
+  POP_ASSUM (fn th => REWRITE_TAC [th]) THEN DISCH_TAC THEN
   AP_TERM_TAC THEN SIMP_TAC std_ss [pos_simple_fn_integral_def] THEN
   FULL_SIMP_TAC std_ss [pos_simple_fn_def] THEN
   FIRST_ASSUM (MATCH_MP_TAC o MATCH_MP EXTREAL_SUM_IMAGE_EQ) THEN
   CONJ_TAC THENL [ALL_TAC, RW_TAC std_ss [measure_def]] THEN
   DISJ1_TAC THEN RW_TAC std_ss [] THENL
   [SIMP_TAC std_ss [lt_infty] THEN MATCH_MP_TAC lte_trans THEN
-   Q.EXISTS_TAC `0` THEN CONJ_TAC THENL 
+   Q.EXISTS_TAC `0` THEN CONJ_TAC THENL
    [METIS_TAC [lt_infty, num_not_infty, extreal_of_num_def], ALL_TAC] THEN
    MATCH_MP_TAC le_mul THEN ASM_SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def] THEN
    ASM_SIMP_TAC std_ss [GSYM extreal_of_num_def] THEN
    METIS_TAC [measure_space_def, positive_def], ALL_TAC] THEN
   SIMP_TAC std_ss [lt_infty] THEN MATCH_MP_TAC lte_trans THEN
-  Q.EXISTS_TAC `0` THEN CONJ_TAC THENL 
+  Q.EXISTS_TAC `0` THEN CONJ_TAC THENL
   [METIS_TAC [lt_infty, num_not_infty, extreal_of_num_def], ALL_TAC] THEN
   MATCH_MP_TAC le_mul THEN ASM_SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def] THEN
-  ASM_SIMP_TAC std_ss [GSYM extreal_of_num_def, measure_def] THEN 
+  ASM_SIMP_TAC std_ss [GSYM extreal_of_num_def, measure_def] THEN
   METIS_TAC [measure_space_def, positive_def]);
 
 (* ------------------------------------------------------------------------- *)
@@ -223,9 +223,9 @@ val normal_density_pos = store_thm ("normal_density_pos",
 (* normal_density IN measurable borel Borel *)
 
 val restrict_space = new_definition ("restrict_space",
-  ``restrict_space M sp = 
-    (sp INTER m_space M, 
-     IMAGE (\a. a INTER sp) (measurable_sets M), 
+  ``restrict_space M sp =
+    (sp INTER m_space M,
+     IMAGE (\a. a INTER sp) (measurable_sets M),
      measure M)``);
 
 val space_restrict_space = store_thm ("space_restrict_space",
@@ -233,7 +233,7 @@ val space_restrict_space = store_thm ("space_restrict_space",
   SIMP_TAC std_ss [restrict_space, m_space_def]);
 
 val space_restrict_space2 = store_thm ("space_restrict_space2",
-  ``!M sp. measure_space M /\ sp IN measurable_sets M ==> 
+  ``!M sp. measure_space M /\ sp IN measurable_sets M ==>
          (m_space (restrict_space M sp) = sp)``,
   RW_TAC std_ss [restrict_space, m_space_def] THEN
   `sp SUBSET m_space M` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -256,15 +256,15 @@ val IN_MEASURABLE_BOREL_normal_density = store_thm ("IN_MEASURABLE_BOREL_normal_
   Q_TAC SUFF_TAC `(\x. Normal ((\x. exp (-((x - mu) pow 2) / (2 * sig pow 2))) x)) IN
                     measurable (m_space lborel,measurable_sets lborel) Borel` THENL
   [SIMP_TAC std_ss [], ALL_TAC] THEN MATCH_MP_TAC borel_IMP_Borel THEN
-  SIMP_TAC std_ss [lborel, m_space_def, measurable_sets_def] THEN 
-  SIMP_TAC std_ss [GSYM space_borel, SPACE, GSYM borel_measurable] THEN 
+  SIMP_TAC std_ss [lborel, m_space_def, measurable_sets_def] THEN
+  SIMP_TAC std_ss [GSYM space_borel, SPACE, GSYM borel_measurable] THEN
   MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-  Q_TAC SUFF_TAC `(\x. exp ((\x. -((x - mu) pow 2) / (2 * sig pow 2)) x)) 
+  Q_TAC SUFF_TAC `(\x. exp ((\x. -((x - mu) pow 2) / (2 * sig pow 2)) x))
                        continuous_on univ(:real)` THENL
   [SIMP_TAC std_ss [], ALL_TAC] THEN
   MATCH_MP_TAC (SIMP_RULE std_ss [o_DEF] CONTINUOUS_ON_COMPOSE) THEN
   SIMP_TAC std_ss [CONTINUOUS_ON_EXP, real_div] THEN
-  Q_TAC SUFF_TAC `(\x. -inv (2 * sig pow 2) * (\x. ((x - mu) pow 2)) x) 
+  Q_TAC SUFF_TAC `(\x. -inv (2 * sig pow 2) * (\x. ((x - mu) pow 2)) x)
                        continuous_on univ(:real)` THENL
   [SIMP_TAC real_ss [REAL_MUL_COMM], ALL_TAC] THEN
   MATCH_MP_TAC CONTINUOUS_ON_CMUL THEN
@@ -273,7 +273,7 @@ val IN_MEASURABLE_BOREL_normal_density = store_thm ("IN_MEASURABLE_BOREL_normal_
   Q_TAC SUFF_TAC `(\x. (\x. x) x - (\x. mu) x) continuous_on univ(:real)` THENL
   [SIMP_TAC std_ss [], ALL_TAC] THEN MATCH_MP_TAC CONTINUOUS_ON_SUB THEN
   SIMP_TAC std_ss [CONTINUOUS_ON_ID, CONTINUOUS_ON_CONST]);
-  
+
 val _ = hide "normal_pmeasure";
 
 val normal_pmeasure = new_definition("normal_pmeasure",
@@ -466,9 +466,9 @@ val normal_pdf_integral_eq_1 = store_thm ("normal_pdf_integral_eq_1",
   RW_TAC std_ss [prob_space_def, normal_measure_space, m_space_def,
                  normal_measure_abs_continuous, measure_def, p_space_def] THEN
   POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN
-  FULL_SIMP_TAC std_ss [random_variable_def, distribution_def, 
+  FULL_SIMP_TAC std_ss [random_variable_def, distribution_def,
                         measurable_distr, prob_space_def] THEN
-  `space borel IN subsets borel` by 
+  `space borel IN subsets borel` by
    METIS_TAC [ALGEBRA_SPACE, sigma_algebra_borel, sigma_algebra_def] THEN
   ASM_SIMP_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `PREIMAGE X (space borel) INTER p_space p = p_space p` THENL
@@ -497,7 +497,7 @@ val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density
   RW_TAC std_ss [normal_rv, PDF_def] THEN ONCE_REWRITE_TAC [EQ_SYM_EQ] THEN
   Q_TAC SUFF_TAC `pos_fn_integral lborel (\x. f x *
      RN_deriv lborel (space borel,subsets borel,normal_pmeasure mu sig) x) =
-   pos_fn_integral (density lborel 
+   pos_fn_integral (density lborel
     (RN_deriv lborel (space borel,subsets borel,normal_pmeasure mu sig))) f` THENL
   [DISC_RW_KILL,
    `f = (\x. max 0 (f x))` by METIS_TAC [FUN_EQ_THM, extreal_max_def] THEN
@@ -553,11 +553,11 @@ val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density
    CONJ_TAC THENL [METIS_TAC [m_space_def, lborel, space_borel], ALL_TAC] THEN
    CONJ_TAC THENL [METIS_TAC [measurable_sets_def, lborel], ALL_TAC] THEN
    SIMP_TAC std_ss [normal_pmeasure] THEN ABS_TAC THEN RW_TAC std_ss [] THEN
-   `!x. 0 <= g x` by (Q.UNABBREV_TAC `g` THEN 
+   `!x. 0 <= g x` by (Q.UNABBREV_TAC `g` THEN
      SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def] THEN
      METIS_TAC [normal_density_nonneg]) THEN
    ASM_SIMP_TAC std_ss [extreal_max_def, le_mul, indicator_fn_pos_le]] THEN
-  `!x. 0 <= g x` by (Q.UNABBREV_TAC `g` THEN 
+  `!x. 0 <= g x` by (Q.UNABBREV_TAC `g` THEN
      SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def] THEN
      METIS_TAC [normal_density_nonneg]) THEN
   Q_TAC SUFF_TAC `pos_fn_integral (density lborel g) (\x. max 0 (f x)) =
@@ -565,7 +565,7 @@ val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density
   [ASM_SIMP_TAC std_ss [extreal_max_def, le_mul, ETA_AX], ALL_TAC] THEN
   MATCH_MP_TAC (REWRITE_RULE [GSYM density] pos_fn_integral_density') THEN
   ASM_SIMP_TAC std_ss [measure_space_lborel, GSPEC_T] THEN
-  CONJ_TAC THENL [Q.UNABBREV_TAC `g` THEN 
+  CONJ_TAC THENL [Q.UNABBREV_TAC `g` THEN
    SIMP_TAC std_ss [IN_MEASURABLE_BOREL_normal_density], ALL_TAC] THEN
   SIMP_TAC std_ss [AE, ae_filter, GSPECIFICATION] THEN Q.EXISTS_TAC `{}` THEN
   SIMP_TAC std_ss [null_sets, GSPECIFICATION] THEN RW_TAC std_ss [] THENL
@@ -712,7 +712,7 @@ val integral_normal_pdf_half1 = store_thm ("integral_normal_pdf_half1",
    SIMP_TAC std_ss [CLOSED_HALFSPACE_COMPONENT_LE] THEN
    ONCE_REWRITE_TAC [GSYM real_ge] THEN SIMP_TAC std_ss [CLOSED_HALFSPACE_COMPONENT_GE]] THEN
   STRIP_TAC THEN FIRST_ASSUM (ASSUME_TAC o MATCH_MP normal_pdf_integral_eq_1) THEN
-  `UNIV IN measurable_sets lborel` by (SIMP_TAC std_ss [lborel, measurable_sets_def] THEN 
+  `UNIV IN measurable_sets lborel` by (SIMP_TAC std_ss [lborel, measurable_sets_def] THEN
     METIS_TAC [space_in_borel]) THEN
   `pos_fn_integral lborel (\x. PDF p X x * indicator_fn UNIV x) =
    pos_fn_integral lborel
@@ -724,7 +724,7 @@ val integral_normal_pdf_half1 = store_thm ("integral_normal_pdf_half1",
    REAL_ARITH_TAC] THEN
   `pos_fn_integral lborel (PDF p X) = 1`
     by METIS_TAC [integral_pos_fn, normal_pdf_nonneg, measure_space_lborel] THEN
-  Q_TAC SUFF_TAC `pos_fn_integral lborel 
+  Q_TAC SUFF_TAC `pos_fn_integral lborel
    (\x. PDF p X x * indicator_fn univ(:real) x) = 1` THENL
   [DISCH_TAC,
    SIMP_TAC std_ss [indicator_fn_def, IN_UNIV, mul_rone] THEN
@@ -733,7 +733,7 @@ val integral_normal_pdf_half1 = store_thm ("integral_normal_pdf_half1",
   `1 = pos_fn_integral lborel (\x. f x *
            indicator_fn ({x | x <= mu} UNION {x | mu < x}) x)` by
     (Q.UNABBREV_TAC `f` THEN METIS_TAC []) THEN
-  Q_TAC SUFF_TAC 
+  Q_TAC SUFF_TAC
   `pos_fn_integral lborel (\x. f x *
            indicator_fn ({x | x <= mu} UNION {x | mu < x}) x) =
    pos_fn_integral lborel (\x. f x *
@@ -788,7 +788,7 @@ val integral_normal_pdf_half1 = store_thm ("integral_normal_pdf_half1",
     SIMP_TAC real_ss [GSPECIFICATION] THEN REAL_ARITH_TAC,
     ALL_TAC] THEN
    SIMP_TAC std_ss [lborel, measurable_sets_def] THEN CONJ_TAC THENL
-   [MATCH_MP_TAC borel_open THEN SIMP_TAC std_ss [OPEN_INTERVAL_RIGHT], 
+   [MATCH_MP_TAC borel_open THEN SIMP_TAC std_ss [OPEN_INTERVAL_RIGHT],
     ALL_TAC] THEN
    MATCH_MP_TAC borel_closed THEN SIMP_TAC std_ss [CLOSED_SING]] THEN
   DISC_RW_KILL THEN
@@ -862,13 +862,13 @@ val integral_normal_pdf_split = store_thm ("integral_normal_pdf_split",
    SIMP_TAC std_ss [CLOSED_HALFSPACE_COMPONENT_LE] THEN
    ONCE_REWRITE_TAC [GSYM real_ge] THEN SIMP_TAC std_ss [CLOSED_HALFSPACE_COMPONENT_GE]] THEN
   STRIP_TAC THEN FIRST_ASSUM (ASSUME_TAC o MATCH_MP normal_pdf_integral_eq_1) THEN
-  `UNIV IN measurable_sets lborel` by (SIMP_TAC std_ss [lborel, measurable_sets_def] THEN 
+  `UNIV IN measurable_sets lborel` by (SIMP_TAC std_ss [lborel, measurable_sets_def] THEN
     METIS_TAC [space_in_borel]) THEN
   `pos_fn_integral lborel (\x. PDF p X x * indicator_fn UNIV x) =
    pos_fn_integral lborel
     (\x. Normal (normal_density mu sig x) * indicator_fn UNIV x)`
     by METIS_TAC [integral_normal_pdf_eq_density] THEN
-  `pos_fn_integral lborel (\x. PDF p X x) = 
+  `pos_fn_integral lborel (\x. PDF p X x) =
    pos_fn_integral lborel (\x. PDF p X x * indicator_fn univ(:real) x)`
     by SIMP_TAC std_ss [indicator_fn_def, IN_UNIV, mul_rone] THEN
   `pos_fn_integral lborel (\x. PDF p X x * indicator_fn {x | x <= mu} x) =
@@ -890,7 +890,7 @@ val integral_normal_pdf_split = store_thm ("integral_normal_pdf_split",
                   pos_fn_integral lborel
   (\x. Normal (normal_density mu sig x) * indicator_fn {x | mu < x} x)` THENL
   [DISC_RW_KILL THEN
-   ONCE_REWRITE_TAC [METIS [] ``Normal (normal_density mu sig x) = 
+   ONCE_REWRITE_TAC [METIS [] ``Normal (normal_density mu sig x) =
                           (\x. Normal (normal_density mu sig x)) x``] THEN
    MATCH_MP_TAC pos_fn_integral_disjoint_sets THEN
    ASM_SIMP_TAC std_ss [measure_space_lborel, IN_MEASURABLE_BOREL_normal_density] THEN
@@ -907,11 +907,11 @@ val integral_normal_pdf_split = store_thm ("integral_normal_pdf_split",
    SIMP_TAC std_ss [EXTENSION, IN_UNION, GSPECIFICATION, IN_SING] THEN
    REAL_ARITH_TAC] THEN
   Q_TAC SUFF_TAC  `pos_fn_integral lborel
-    (\x. (\x. Normal (normal_density mu sig x)) x * 
+    (\x. (\x. Normal (normal_density mu sig x)) x *
    indicator_fn ({x | mu < x} UNION {mu}) x) =
-   pos_fn_integral lborel (\x. (\x. Normal (normal_density mu sig x)) x * 
+   pos_fn_integral lborel (\x. (\x. Normal (normal_density mu sig x)) x *
                                       indicator_fn ({x | mu < x}) x) +
-   pos_fn_integral lborel (\x. (\x. Normal (normal_density mu sig x)) x * 
+   pos_fn_integral lborel (\x. (\x. Normal (normal_density mu sig x)) x *
                                               indicator_fn ({mu}) x)` THENL
   [ALL_TAC,
    MATCH_MP_TAC pos_fn_integral_disjoint_sets THEN
@@ -922,14 +922,14 @@ val integral_normal_pdf_split = store_thm ("integral_normal_pdf_split",
     SIMP_TAC real_ss [GSPECIFICATION] THEN REAL_ARITH_TAC,
     ALL_TAC] THEN
    SIMP_TAC std_ss [lborel, measurable_sets_def] THEN CONJ_TAC THENL
-   [MATCH_MP_TAC borel_open THEN SIMP_TAC std_ss [OPEN_INTERVAL_RIGHT], 
+   [MATCH_MP_TAC borel_open THEN SIMP_TAC std_ss [OPEN_INTERVAL_RIGHT],
     ALL_TAC] THEN
    MATCH_MP_TAC borel_closed THEN SIMP_TAC std_ss [CLOSED_SING]] THEN
   SIMP_TAC std_ss [] THEN DISC_RW_KILL THEN
-  Q_TAC SUFF_TAC `pos_fn_integral lborel 
+  Q_TAC SUFF_TAC `pos_fn_integral lborel
    (\x. Normal (normal_density mu sig x) * indicator_fn {mu} x) = 0` THENL
   [METIS_TAC [add_rzero], ALL_TAC] THEN
-  Q_TAC SUFF_TAC `(\x. Normal (normal_density mu sig x) * indicator_fn {mu} x) = 
+  Q_TAC SUFF_TAC `(\x. Normal (normal_density mu sig x) * indicator_fn {mu} x) =
                   (\x. Normal (normal_density mu sig mu) * indicator_fn {mu} x)` THENL
   [DISC_RW_KILL,
    ABS_TAC THEN SIMP_TAC std_ss [indicator_fn_def, IN_SING] THEN
@@ -1020,8 +1020,8 @@ val normal_rv_affine = store_thm ("normal_rv_affine",
     FULL_SIMP_TAC std_ss [space_borel, INTER_UNIV],
     ALL_TAC] THEN
    MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-   ONCE_REWRITE_TAC [METIS [] ``(\x. x + b) = 
-              (\x:real. (\x. x) x + (\x. b) x)``] THEN MATCH_MP_TAC CONTINUOUS_ON_ADD THEN 
+   ONCE_REWRITE_TAC [METIS [] ``(\x. x + b) =
+              (\x:real. (\x. x) x + (\x. b) x)``] THEN MATCH_MP_TAC CONTINUOUS_ON_ADD THEN
    SIMP_TAC std_ss [CONTINUOUS_ON_CONST, CONTINUOUS_ON_ID],
    ALL_TAC] THEN
   FULL_SIMP_TAC std_ss [measurable_distr, distribution_def, normal_pmeasure] THEN
@@ -1029,7 +1029,7 @@ val normal_rv_affine = store_thm ("normal_rv_affine",
   `A IN subsets borel = A IN measurable_sets lborel`
    by METIS_TAC [lborel, measurable_sets_def] THEN
   POP_ASSUM MP_TAC THEN RW_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `PREIMAGE Y A = 
+  Q_TAC SUFF_TAC `PREIMAGE Y A =
                   PREIMAGE X {x | x + b IN A}` THENL
   [DISC_RW_KILL,
    SIMP_TAC std_ss [PREIMAGE_def] THEN ASM_SET_TAC []] THEN
@@ -1045,18 +1045,18 @@ val normal_rv_affine = store_thm ("normal_rv_affine",
     FULL_SIMP_TAC std_ss [space_borel, INTER_UNIV],
     ALL_TAC] THEN
    MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-   ONCE_REWRITE_TAC [METIS [] ``(\x. x + b) = 
-              (\x:real. (\x. x) x + (\x. b) x)``] THEN MATCH_MP_TAC CONTINUOUS_ON_ADD THEN 
+   ONCE_REWRITE_TAC [METIS [] ``(\x. x + b) =
+              (\x:real. (\x. x) x + (\x. b) x)``] THEN MATCH_MP_TAC CONTINUOUS_ON_ADD THEN
    SIMP_TAC std_ss [CONTINUOUS_ON_CONST, CONTINUOUS_ON_ID]] THEN
   ASM_SIMP_TAC std_ss [] THEN
   Q.ABBREV_TAC `f = (\x. Normal (normal_density mu sig x) *
                          indicator_fn {x | x + b IN A} x)` THEN
-  ONCE_REWRITE_TAC [METIS [ETA_AX] 
+  ONCE_REWRITE_TAC [METIS [ETA_AX]
    ``pos_fn_integral lborel f = pos_fn_integral lborel (\x. f x)``] THEN
   Q_TAC SUFF_TAC `pos_fn_integral lborel
-   (\x. (\x. Normal (normal_density (mu + b) sig x) * indicator_fn A x) x) = 
+   (\x. (\x. Normal (normal_density (mu + b) sig x) * indicator_fn A x) x) =
    Normal (abs 1) * pos_fn_integral lborel (\x. f (-b + 1 * x))` THENL
-  [SIMP_TAC std_ss [] THEN DISC_RW_KILL THEN 
+  [SIMP_TAC std_ss [] THEN DISC_RW_KILL THEN
    Q_TAC SUFF_TAC `pos_fn_integral lborel (\x. max 0 (f x)) =
     Normal (abs 1) * pos_fn_integral lborel (\x. max 0 (f (-b + 1 * x)))` THENL
    [Q_TAC SUFF_TAC `!x. 0 <= f x` THENL
@@ -1071,7 +1071,7 @@ val normal_rv_affine = store_thm ("normal_rv_affine",
     ALL_TAC] THEN
    MATCH_MP_TAC lebesgue_pos_integral_real_affine THEN
    Q.UNABBREV_TAC `f` THEN SIMP_TAC real_ss [] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_MUL THEN 
+   MATCH_MP_TAC IN_MEASURABLE_BOREL_MUL THEN
    Q.EXISTS_TAC `(\x. Normal (normal_density mu sig x))` THEN
    Q.EXISTS_TAC `indicator_fn {x | x + b IN A}` THEN
    SIMP_TAC std_ss [sigma_algebra_borel, extreal_not_infty] THEN CONJ_TAC THENL
@@ -1092,7 +1092,7 @@ val normal_rv_affine = store_thm ("normal_rv_affine",
   ONCE_REWRITE_TAC [REAL_ARITH ``-b + x - mu = x - (mu + b:real)``] THEN
   SIMP_TAC std_ss []);
 
-val normal_rv_affine' = store_thm ("normal_rv_affine'", 
+val normal_rv_affine' = store_thm ("normal_rv_affine'",
   ``!X p mu sig Y a b. a <> 0 /\ 0 < sig /\
      normal_rv X p mu sig /\ (!x. Y x = b + a * X x) ==>
      normal_rv Y p (b + a * mu) (abs a * sig)``,
@@ -1112,11 +1112,11 @@ val normal_rv_affine' = store_thm ("normal_rv_affine'",
     FULL_SIMP_TAC std_ss [space_borel, INTER_UNIV],
     ALL_TAC] THEN
    MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. b) x + (\x:real. a * x) x) continuous_on UNIV` THENL
-   [SIMP_TAC std_ss [], ALL_TAC] THEN 
+   [SIMP_TAC std_ss [], ALL_TAC] THEN
    MATCH_MP_TAC CONTINUOUS_ON_ADD THEN SIMP_TAC std_ss [CONTINUOUS_ON_CONST] THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. a) x * (\x. x) x) continuous_on UNIV` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN MATCH_MP_TAC CONTINUOUS_ON_MUL THEN
    SIMP_TAC std_ss [CONTINUOUS_ON_CONST, CONTINUOUS_ON_ID],
@@ -1140,17 +1140,17 @@ val normal_rv_affine' = store_thm ("normal_rv_affine'",
     REWRITE_TAC [GSYM PREIMAGE_def, GSYM space_borel] THEN
     METIS_TAC [], ALL_TAC] THEN
    MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. b) x + (\x:real. a * x) x) continuous_on UNIV` THENL
-   [SIMP_TAC std_ss [], ALL_TAC] THEN 
+   [SIMP_TAC std_ss [], ALL_TAC] THEN
    MATCH_MP_TAC CONTINUOUS_ON_ADD THEN SIMP_TAC std_ss [CONTINUOUS_ON_CONST] THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. a) x * (\x. x) x) continuous_on UNIV` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN MATCH_MP_TAC CONTINUOUS_ON_MUL THEN
    SIMP_TAC std_ss [CONTINUOUS_ON_CONST, CONTINUOUS_ON_ID]] THEN
   `{x | b + a * x IN s} IN subsets borel` by METIS_TAC [lborel, measurable_sets_def] THEN
   FULL_SIMP_TAC std_ss [normal_pmeasure] THEN
-  Q_TAC SUFF_TAC `!x. Normal (normal_density mu sig x) * 
+  Q_TAC SUFF_TAC `!x. Normal (normal_density mu sig x) *
                       indicator_fn {x | b + a * x IN s} x =
      Normal (abs a) * Normal (normal_density (b + a * mu) (abs a * sig) (b + a * x)) *
                       indicator_fn s (b + a * x)` THENL
@@ -1180,14 +1180,14 @@ val normal_rv_affine' = store_thm ("normal_rv_affine'",
                          extreal_of_num_def, extreal_le_def],
     ALL_TAC] THEN
    MATCH_MP_TAC lebesgue_pos_integral_real_affine THEN ASM_SIMP_TAC std_ss [] THEN
-   ONCE_REWRITE_TAC [METIS [lborel, m_space_def, measurable_sets_def, 
+   ONCE_REWRITE_TAC [METIS [lborel, m_space_def, measurable_sets_def,
     space_borel, SPACE] ``borel = (m_space lborel, measurable_sets lborel)``] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN
    Q.EXISTS_TAC `(\x. Normal (normal_density (b + a * mu) (abs a * sig) x))` THEN
    Q.EXISTS_TAC `(\x. indicator_fn s x)` THEN SIMP_TAC std_ss [measure_space_lborel] THEN
    SIMP_TAC std_ss [IN_MEASURABLE_BOREL_normal_density] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN Q.EXISTS_TAC `s` THEN
-   ASSUME_TAC measure_space_lborel THEN 
+   ASSUME_TAC measure_space_lborel THEN
    FULL_SIMP_TAC std_ss [measure_space_def, subsets_def],
    ALL_TAC] THEN
   SIMP_TAC std_ss [indicator_fn_def, GSPECIFICATION] THEN GEN_TAC THEN
@@ -1202,7 +1202,7 @@ val normal_rv_affine' = store_thm ("normal_rv_affine'",
    ONCE_REWRITE_TAC [REAL_ARITH ``2 * pi * abs a * sig * abs a * sig =
      (2:real * pi:real * sig * sig:real) * (abs a * abs a:real)``] THEN
    Q_TAC SUFF_TAC `0 < 2 * pi * sig * sig` THENL
-   [DISCH_TAC, ASSUME_TAC PI_POS THEN 
+   [DISCH_TAC, ASSUME_TAC PI_POS THEN
     MATCH_MP_TAC REAL_LT_MUL THEN ASM_SIMP_TAC real_ss [] THEN
     MATCH_MP_TAC REAL_LT_MUL THEN ASM_SIMP_TAC real_ss [] THEN
     MATCH_MP_TAC REAL_LT_MUL THEN ASM_SIMP_TAC real_ss []] THEN
@@ -1221,7 +1221,7 @@ val normal_rv_affine' = store_thm ("normal_rv_affine'",
    `0 < abs a` by FULL_SIMP_TAC std_ss [ABS_NZ] THEN
    `abs a <> 0` by METIS_TAC [REAL_LT_IMP_NE] THEN
    FULL_SIMP_TAC std_ss [REAL_MUL_RINV, REAL_MUL_RID]] THEN
-  AP_TERM_TAC THEN AP_TERM_TAC THEN 
+  AP_TERM_TAC THEN AP_TERM_TAC THEN
   ONCE_REWRITE_TAC [REAL_ARITH ``b + a * x - (b + a * mu) =
                     a:real * (x:real - mu:real)``] THEN
   SIMP_TAC real_ss [POW_MUL, real_div, REAL_MUL_ASSOC] THEN
@@ -1244,10 +1244,10 @@ val normal_rv_affine' = store_thm ("normal_rv_affine'",
   ONCE_REWRITE_TAC [GSYM REAL_POW2_ABS] THEN
   ASM_SIMP_TAC real_ss [REAL_MUL_LINV, ABS_ABS]);
 
-val normal_distribution_affine = store_thm ("normal_distribution_affine", 
+val normal_distribution_affine = store_thm ("normal_distribution_affine",
   ``!X p mu sig Y a b. a <> 0 /\ 0 < sig /\
      random_variable X p borel /\
-     (!s. s IN subsets borel ==> (distribution p X s = normal_pmeasure mu sig s)) /\ 
+     (!s. s IN subsets borel ==> (distribution p X s = normal_pmeasure mu sig s)) /\
      (!x. Y x = b + a * X x)  ==>
      random_variable Y p borel /\ (!s. s IN subsets borel ==>
       (distribution p Y s = normal_pmeasure (b + a * mu) (abs a * sig) s))``,
@@ -1267,11 +1267,11 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
     FULL_SIMP_TAC std_ss [space_borel, INTER_UNIV],
     ALL_TAC] THEN
    MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. b) x + (\x:real. a * x) x) continuous_on UNIV` THENL
-   [SIMP_TAC std_ss [], ALL_TAC] THEN 
+   [SIMP_TAC std_ss [], ALL_TAC] THEN
    MATCH_MP_TAC CONTINUOUS_ON_ADD THEN SIMP_TAC std_ss [CONTINUOUS_ON_CONST] THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. a) x * (\x. x) x) continuous_on UNIV` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN MATCH_MP_TAC CONTINUOUS_ON_MUL THEN
    SIMP_TAC std_ss [CONTINUOUS_ON_CONST, CONTINUOUS_ON_ID],
@@ -1290,18 +1290,18 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
     REWRITE_TAC [GSYM PREIMAGE_def, GSYM space_borel] THEN
     METIS_TAC [], ALL_TAC] THEN
    MATCH_MP_TAC borel_measurable_continuous_on1 THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. b) x + (\x:real. a * x) x) continuous_on UNIV` THENL
-   [SIMP_TAC std_ss [], ALL_TAC] THEN 
+   [SIMP_TAC std_ss [], ALL_TAC] THEN
    MATCH_MP_TAC CONTINUOUS_ON_ADD THEN SIMP_TAC std_ss [CONTINUOUS_ON_CONST] THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `(\x:real. (\x. a) x * (\x. x) x) continuous_on UNIV` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN MATCH_MP_TAC CONTINUOUS_ON_MUL THEN
    SIMP_TAC std_ss [CONTINUOUS_ON_CONST, CONTINUOUS_ON_ID]] THEN
   `s IN measurable_sets lborel` by METIS_TAC [lborel, measurable_sets_def] THEN
   `{x | b + a * x IN s} IN subsets borel` by METIS_TAC [lborel, measurable_sets_def] THEN
   ASM_SIMP_TAC std_ss [normal_pmeasure] THEN RW_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `!x. Normal (normal_density mu sig x) * 
+  Q_TAC SUFF_TAC `!x. Normal (normal_density mu sig x) *
                       indicator_fn {x | b + a * x IN s} x =
      Normal (abs a) * Normal (normal_density (b + a * mu) (abs a * sig) (b + a * x)) *
                       indicator_fn s (b + a * x)` THENL
@@ -1331,14 +1331,14 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
                          extreal_of_num_def, extreal_le_def],
     ALL_TAC] THEN
    MATCH_MP_TAC lebesgue_pos_integral_real_affine THEN ASM_SIMP_TAC std_ss [] THEN
-   ONCE_REWRITE_TAC [METIS [lborel, m_space_def, measurable_sets_def, 
+   ONCE_REWRITE_TAC [METIS [lborel, m_space_def, measurable_sets_def,
     space_borel, SPACE] ``borel = (m_space lborel, measurable_sets lborel)``] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN
    Q.EXISTS_TAC `(\x. Normal (normal_density (b + a * mu) (abs a * sig) x))` THEN
    Q.EXISTS_TAC `(\x. indicator_fn s x)` THEN SIMP_TAC std_ss [measure_space_lborel] THEN
    SIMP_TAC std_ss [IN_MEASURABLE_BOREL_normal_density] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN Q.EXISTS_TAC `s` THEN
-   ASSUME_TAC measure_space_lborel THEN 
+   ASSUME_TAC measure_space_lborel THEN
    FULL_SIMP_TAC std_ss [measure_space_def, subsets_def],
    ALL_TAC] THEN
   SIMP_TAC std_ss [indicator_fn_def, GSPECIFICATION] THEN GEN_TAC THEN
@@ -1353,7 +1353,7 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
    ONCE_REWRITE_TAC [REAL_ARITH ``2 * pi * abs a * sig * abs a * sig =
      (2:real * pi:real * sig * sig:real) * (abs a * abs a:real)``] THEN
    Q_TAC SUFF_TAC `0 < 2 * pi * sig * sig` THENL
-   [DISCH_TAC, ASSUME_TAC PI_POS THEN 
+   [DISCH_TAC, ASSUME_TAC PI_POS THEN
     MATCH_MP_TAC REAL_LT_MUL THEN ASM_SIMP_TAC real_ss [] THEN
     MATCH_MP_TAC REAL_LT_MUL THEN ASM_SIMP_TAC real_ss [] THEN
     MATCH_MP_TAC REAL_LT_MUL THEN ASM_SIMP_TAC real_ss []] THEN
@@ -1372,7 +1372,7 @@ val normal_distribution_affine = store_thm ("normal_distribution_affine",
    `0 < abs a` by FULL_SIMP_TAC std_ss [ABS_NZ] THEN
    `abs a <> 0` by METIS_TAC [REAL_LT_IMP_NE] THEN
    FULL_SIMP_TAC std_ss [REAL_MUL_RINV, REAL_MUL_RID]] THEN
-  AP_TERM_TAC THEN AP_TERM_TAC THEN 
+  AP_TERM_TAC THEN AP_TERM_TAC THEN
   ONCE_REWRITE_TAC [REAL_ARITH ``b + a * x - (b + a * mu) =
                     a:real * (x:real - mu:real)``] THEN
   SIMP_TAC real_ss [POW_MUL, real_div, REAL_MUL_ASSOC] THEN
@@ -1406,21 +1406,21 @@ val Pi_iff = store_thm ("Pi_iff",
   ``!f I X. f IN Pi I X = (!i. i IN I ==> f i IN X i)``,
   SET_TAC [Pi]);
 
-val indep_sets = new_definition("indep_sets",``indep_sets p ff ii = prob_space p /\ 
+val indep_sets = new_definition("indep_sets",``indep_sets p ff ii = prob_space p /\
      (!i. i IN (ii:num->bool) ==> (ff i) SUBSET events p) /\
-     (!J. J SUBSET ii /\ J <> {} /\ FINITE J ==> 
-       !A. A IN (Pi J ff) ==> (prob p (BIGINTER {A j | j IN J}) = 
+     (!J. J SUBSET ii /\ J <> {} /\ FINITE J ==>
+       !A. A IN (Pi J ff) ==> (prob p (BIGINTER {A j | j IN J}) =
                        Normal (product J (\j. real (prob p (A j))))))``);
 
-val indep_set = new_definition("indep_set",``indep_set p A B = prob_space p /\ 
+val indep_set = new_definition("indep_set",``indep_set p A B = prob_space p /\
    indep_sets p (\i. if i = 0 then A else B) UNIV``);
 
-val indep_vars = new_definition("indep_vars",``indep_vars p M X ii = 
+val indep_vars = new_definition("indep_vars",``indep_vars p M X ii =
   (!i. i IN ii ==> random_variable (X i) p (m_space (M i), measurable_sets (M i))) /\
   indep_sets p (\i. {(PREIMAGE f A) INTER p_space p | (f = X i) /\ A IN measurable_sets (M i)}) ii``);
 
-val indep_var = new_definition("indep_var",``indep_var p Ma A Mb B = 
-                        indep_vars p (\i. if i = 0 then Ma else Mb) 
+val indep_var = new_definition("indep_var",``indep_var p Ma A Mb B =
+                        indep_vars p (\i. if i = 0 then Ma else Mb)
                                      (\i. if i = 0 then A else B) {x | (x = 0) \/ (x = 1)}``);
 
 val indep_sets_cong = store_thm ("indep_sets_cong",
@@ -1435,7 +1435,7 @@ val indep_sets_mono_index = store_thm ("indep_sets_mono_index",
   ASM_SET_TAC []);
 
 val indep_sets_finite_index_sets = store_thm ("indep_sets_finite_index_sets",
-  ``!p ff ii. prob_space p ==> (indep_sets p ff ii = 
+  ``!p ff ii. prob_space p ==> (indep_sets p ff ii =
     (!J. J SUBSET ii /\ J <> {} /\ FINITE J ==> indep_sets p ff J))``,
   RW_TAC std_ss [indep_sets] THEN EQ_TAC THEN RW_TAC std_ss [] THENL
   [ASM_SET_TAC [], ASM_SET_TAC [], ALL_TAC, ASM_SET_TAC []] THEN
@@ -1443,7 +1443,7 @@ val indep_sets_finite_index_sets = store_thm ("indep_sets_finite_index_sets",
   ASM_SET_TAC [FINITE_SING]);
 
 val indep_sets_mono_sets = store_thm ("indep_sets_mono_sets",
-  ``!p ff G ii. indep_sets p ff ii /\ 
+  ``!p ff G ii. indep_sets p ff ii /\
       (!i. i IN ii ==> G i SUBSET ff i) ==> indep_sets p G ii``,
   RW_TAC std_ss [indep_sets] THENL [ASM_SET_TAC [], ALL_TAC] THEN
   FIRST_X_ASSUM (MP_TAC o Q.SPEC `J:num->bool`) THEN
@@ -1462,7 +1462,7 @@ val indep_setsI = store_thm ("indep_setsI",
 val indep_setsD = store_thm ("indep_setsD",
   ``!p ff ii A J. prob_space p /\ indep_sets p ff ii /\ J SUBSET ii /\ J <> {} /\
      FINITE J /\ (!j. j IN J ==> A j IN ff j) ==>
-     (prob p (BIGINTER {A j | j IN J}) = 
+     (prob p (BIGINTER {A j | j IN J}) =
       Normal (product J (\j. real (prob p (A j)))))``,
   RW_TAC std_ss [indep_sets] THEN ASM_SET_TAC [Pi_iff]);
 
@@ -1470,23 +1470,23 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
   ``!p ff ii. prob_space p /\ indep_sets p ff ii ==>
       indep_sets p (\i. dynkin (p_space p) (ff i)) ii``,
   REPEAT STRIP_TAC THEN
-  Q_TAC SUFF_TAC `!J. J SUBSET ii /\ J <> {} /\ FINITE J ==> 
+  Q_TAC SUFF_TAC `!J. J SUBSET ii /\ J <> {} /\ FINITE J ==>
    indep_sets p (\i. dynkin (p_space p) (ff i)) J` THENL
   [METIS_TAC [indep_sets_finite_index_sets], ALL_TAC] THEN
   RW_TAC std_ss [] THEN
   `indep_sets p ff J` by METIS_TAC [indep_sets_finite_index_sets] THEN
-  Q.ABBREV_TAC `gg = 
+  Q.ABBREV_TAC `gg =
    (\s i. if i IN s then (\i. dynkin (p_space p) (ff i)) i else ff i)` THEN
   Q_TAC SUFF_TAC `indep_sets p (gg J) ii` THENL
   [DISCH_TAC,
    UNDISCH_TAC ``J <> {}:num->bool`` THEN
-   UNDISCH_TAC ``indep_sets p ff J`` THEN 
+   UNDISCH_TAC ``indep_sets p ff J`` THEN
    UNDISCH_TAC ``J SUBSET ii:num->bool`` THEN
    UNDISCH_TAC ``FINITE (J:num->bool)`` THEN
    Q.SPEC_TAC (`J`,`J`) THEN SET_INDUCT_TAC THENL
    [METIS_TAC [NOT_IN_EMPTY, ETA_AX], ALL_TAC] THEN
-   Q.ABBREV_TAC `G = gg s` THEN RW_TAC std_ss [] THEN 
-   Q_TAC SUFF_TAC `indep_sets p G ii /\ 
+   Q.ABBREV_TAC `G = gg s` THEN RW_TAC std_ss [] THEN
+   Q_TAC SUFF_TAC `indep_sets p G ii /\
     (!i. i IN ii ==> G i SUBSET events p) /\ e IN ii` THENL
    [STRIP_TAC,
     `e IN ii` by ASM_SET_TAC [] THEN ASM_SIMP_TAC std_ss [] THEN
@@ -1495,16 +1495,16 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
     [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
      ASM_CASES_TAC ``s = {}:num->bool`` THENL
      [Q.UNABBREV_TAC `G` THEN Q.UNABBREV_TAC `gg` THEN
-      ASM_SIMP_TAC std_ss [NOT_IN_EMPTY] THEN METIS_TAC [ETA_AX], 
+      ASM_SIMP_TAC std_ss [NOT_IN_EMPTY] THEN METIS_TAC [ETA_AX],
       ALL_TAC] THEN
      `indep_sets p ff s` by METIS_TAC [indep_sets_finite_index_sets] THEN
      METIS_TAC []] THEN
     POP_ASSUM MP_TAC THEN RW_TAC std_ss [indep_sets]] THEN
-   Q.ABBREV_TAC `dd = {E | E IN events p /\ 
+   Q.ABBREV_TAC `dd = {E | E IN events p /\
     indep_sets p (\i. if i = e then {E} else G i) ii}` THEN
    Q_TAC SUFF_TAC `!X. X IN events p /\
-    (!J A. J <> {} /\ J SUBSET ii /\ FINITE J /\ e NOTIN J /\ 
-     (!i. i IN J ==> A i IN G i) ==> 
+    (!J A. J <> {} /\ J SUBSET ii /\ FINITE J /\ e NOTIN J /\
+     (!i. i IN J ==> A i IN G i) ==>
      (prob p (BIGINTER {A j | j IN J} INTER X) = prob p X *
       Normal (product J (\j. real (prob p (A j)))))) ==>
     indep_sets p (\i. if i = e then {X} else G i) ii` THENL
@@ -1513,20 +1513,20 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
     ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
     [RW_TAC std_ss [] THEN ASM_SET_TAC [], ALL_TAC] THEN
     RW_TAC std_ss [] THEN ASM_CASES_TAC ``e IN J:num->bool`` THENL
-    [`A e = X` by 
+    [`A e = X` by
      (FIRST_X_ASSUM (MP_TAC o Q.SPEC `e`) THEN ASM_SIMP_TAC std_ss [IN_SING]) THEN
      ASM_CASES_TAC ``J = {e:num}`` THENL
-     [ASM_SIMP_TAC std_ss [IN_SING] THEN 
-      `{A j | j = e} = {X}` by ASM_SET_TAC [] THEN 
+     [ASM_SIMP_TAC std_ss [IN_SING] THEN
+      `{A j | j = e} = {X}` by ASM_SET_TAC [] THEN
       ASM_SIMP_TAC std_ss [PRODUCT_SING, BIGINTER_SING] THEN
       METIS_TAC [normal_real, PROB_FINITE], ALL_TAC] THEN
-     Q_TAC SUFF_TAC `prob p (BIGINTER {A j | j IN J}) = 
+     Q_TAC SUFF_TAC `prob p (BIGINTER {A j | j IN J}) =
                      prob p (BIGINTER {A j | j IN J DIFF {e}} INTER X)` THENL
      [DISCH_TAC, AP_TERM_TAC THEN ASM_SET_TAC []] THEN
      Q_TAC SUFF_TAC `prob p (BIGINTER {A j | j IN J DIFF {e}} INTER X) =
           prob p X * Normal (product (J DIFF {e}) (\j. real (prob p (A j))))` THENL
      [DISCH_TAC,
-      FIRST_X_ASSUM MATCH_MP_TAC THEN 
+      FIRST_X_ASSUM MATCH_MP_TAC THEN
       ASM_SIMP_TAC std_ss [FINITE_DIFF, FINITE_SING] THEN ASM_SET_TAC []] THEN
      ASM_SIMP_TAC std_ss [] THEN UNDISCH_TAC ``A (e:num) = X:'a->bool`` THEN
      DISCH_THEN (fn th => ASSUME_TAC (GSYM th) THEN ASM_REWRITE_TAC [GSYM th]) THEN
@@ -1543,9 +1543,9 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
     DISCH_TAC THEN MATCH_MP_TAC indep_setsD THEN METIS_TAC []] THEN
    Q_TAC SUFF_TAC `dynkin_system (p_space p) dd` THENL
    [DISCH_TAC,
-    MATCH_MP_TAC dynkin_systemI THEN Q.UNABBREV_TAC `dd` THEN 
+    MATCH_MP_TAC dynkin_systemI THEN Q.UNABBREV_TAC `dd` THEN
     SIMP_TAC std_ss [GSPECIFICATION] THEN CONJ_TAC THENL
-    [RW_TAC std_ss [events_def, p_space_def] THEN 
+    [RW_TAC std_ss [events_def, p_space_def] THEN
      MATCH_MP_TAC MEASURE_SPACE_SUBSET_MSPACE THEN METIS_TAC [prob_space_def],
      ALL_TAC] THEN
     CONJ_TAC THENL
@@ -1572,7 +1572,7 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
      ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [] THEN
      Q.ABBREV_TAC `eJ = e INSERT J` THEN
      Q_TAC SUFF_TAC `prob p (BIGINTER {A' j | j IN J} INTER (p_space p DIFF A)) =
-       prob p (BIGINTER {A' j | j IN J} DIFF 
+       prob p (BIGINTER {A' j | j IN J} DIFF
                BIGINTER {(\j. if j = e then A else A' j) j | j IN eJ})` THENL
      [DISC_RW_KILL,
       Q_TAC SUFF_TAC `BIGINTER {A' j | j IN J} SUBSET p_space p` THENL
@@ -1582,7 +1582,7 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
        RW_TAC std_ss [GSPECIFICATION] THEN MATCH_MP_TAC MEASURE_SPACE_SUBSET_MSPACE THEN
        ASM_SET_TAC []] THEN
       AP_TERM_TAC THEN ASM_SET_TAC []] THEN
-     Q_TAC SUFF_TAC `prob p (BIGINTER {A' j | j IN J} DIFF 
+     Q_TAC SUFF_TAC `prob p (BIGINTER {A' j | j IN J} DIFF
           BIGINTER {(\j. if j = e then A else A' j) j | j IN eJ}) =
        prob p (BIGINTER {A' j | j IN J}) -
        prob p (BIGINTER {(\j. if j = e then A else A' j) j | j IN eJ})` THENL
@@ -1603,7 +1603,7 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
        `BIGINTER {if j = e then A else A' j | j IN eJ} =
         BIGINTER {A' j | j IN J} INTER A` by ASM_SET_TAC [] THEN
        POP_ASSUM (fn th => REWRITE_TAC [th]) THEN
-       ONCE_REWRITE_TAC [METIS [subsets_def] 
+       ONCE_REWRITE_TAC [METIS [subsets_def]
         ``events p = subsets (p_space p, events p)``] THEN
        MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [subsets_def] THEN
        FULL_SIMP_TAC std_ss [prob_space_def, p_space_def, events_def] THEN
@@ -1678,13 +1678,13 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
     Q_TAC SUFF_TAC `prob p (BIGINTER {A' j | j IN J} INTER BIGUNION (IMAGE A univ(:num))) =
       prob p (BIGUNION {BIGINTER {if i = e then A k else A' i | i IN eJ} | k IN UNIV})` THENL
     [DISC_RW_KILL,
-     AP_TERM_TAC THEN 
-     SIMP_TAC std_ss [INTER_DEF, GSPECIFICATION, 
+     AP_TERM_TAC THEN
+     SIMP_TAC std_ss [INTER_DEF, GSPECIFICATION,
       IN_BIGINTER, IN_BIGUNION, IMAGE_DEF, EXTENSION] THEN
      GEN_TAC THEN EQ_TAC THENL [ALL_TAC, ASM_SET_TAC []] THEN
      RW_TAC std_ss [IN_UNIV] THEN
      Q.EXISTS_TAC `BIGINTER {if i = e then A x' else A' i | i IN eJ}` THEN
-     RW_TAC std_ss [] THENL 
+     RW_TAC std_ss [] THENL
      [ASM_SIMP_TAC std_ss [IN_BIGINTER, GSPECIFICATION] THEN RW_TAC std_ss [] THEN
       COND_CASES_TAC THEN FULL_SIMP_TAC std_ss [] THEN FIRST_X_ASSUM MATCH_MP_TAC THEN
       ASM_SET_TAC [], ALL_TAC] THEN
@@ -1711,7 +1711,7 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
     Q_TAC SUFF_TAC `!k. prob p (BIGINTER {(\j. if j = e then A k else A' j) j | j IN eJ}) =
                         prob p (A k) * Normal (product J (\j. real (prob p (A' j))))` THENL
     [DISCH_TAC,
-     GEN_TAC THEN 
+     GEN_TAC THEN
      Q_TAC SUFF_TAC `prob p (BIGINTER {(\j. if j = e then A k else A' j) j | j IN eJ}) =
       Normal (product (e INSERT J) (\j. real (prob p ((\j. if j = e then A k else A' j) j))))` THENL
      [DISCH_TAC,
@@ -1741,7 +1741,7 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
      SIMP_TAC std_ss []] THEN
     Q_TAC SUFF_TAC `!k. prob p (A k) * Normal (product J (\j. real (prob p (A' j)))) =
                         prob p (A k) * prob p (BIGINTER {A' j | j IN J})` THENL
-    [DISCH_TAC, GEN_TAC THEN AP_TERM_TAC THEN 
+    [DISCH_TAC, GEN_TAC THEN AP_TERM_TAC THEN
      MATCH_MP_TAC (GSYM indep_setsD) THEN METIS_TAC []] THEN
     Q_TAC SUFF_TAC `suminf (\k. prob p (A k) * prob p (BIGINTER {A' j | j IN J})) =
            prob p (BIGUNION {A k | k IN UNIV}) * prob p (BIGINTER {A' j | j IN J})` THENL
@@ -1749,29 +1749,29 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
      ONCE_REWRITE_TAC [mul_comm] THEN
      Q_TAC SUFF_TAC `suminf (\k. prob p (BIGINTER {A' j | j IN J}) * (\k. prob p (A k)) k) =
                      prob p (BIGINTER {A' j | j IN J}) * suminf (\k. prob p (A k))` THENL
-     [SIMP_TAC std_ss [] THEN DISC_RW_KILL,     
+     [SIMP_TAC std_ss [] THEN DISC_RW_KILL,
       MATCH_MP_TAC ext_suminf_cmul THEN RW_TAC std_ss [] THENL
       [ALL_TAC, MATCH_MP_TAC PROB_POSITIVE THEN ASM_SIMP_TAC std_ss []] THEN
       MATCH_MP_TAC PROB_POSITIVE THEN ASM_SIMP_TAC std_ss [] THEN
       MATCH_MP_TAC EVENTS_COUNTABLE_INTER THEN ASM_SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN
       CONJ_TAC THENL [ASM_SET_TAC [IMAGE_DEF], ALL_TAC] THEN
-      CONJ_TAC THENL [ALL_TAC, ASM_SET_TAC []] THEN 
+      CONJ_TAC THENL [ALL_TAC, ASM_SET_TAC []] THEN
       MATCH_MP_TAC pred_setTheory.image_countable THEN METIS_TAC [finite_countable]] THEN
-     AP_TERM_TAC THEN SIMP_TAC std_ss [GSYM o_DEF, prob_def] THEN 
-     MATCH_MP_TAC MEASURE_COUNTABLY_ADDITIVE THEN 
+     AP_TERM_TAC THEN SIMP_TAC std_ss [GSYM o_DEF, prob_def] THEN
+     MATCH_MP_TAC MEASURE_COUNTABLY_ADDITIVE THEN
      CONJ_TAC THENL [METIS_TAC [prob_space_def], ALL_TAC] THEN
      ASM_SIMP_TAC std_ss [IN_FUNSET, GSYM events_def, IMAGE_DEF] THEN
      ASM_SET_TAC [DISJOINT_DEF, disjoint_family, disjoint_family_on]] THEN
-    Q_TAC SUFF_TAC `prob p (BIGINTER {A' j | j IN J}) = 
+    Q_TAC SUFF_TAC `prob p (BIGINTER {A' j | j IN J}) =
             Normal (product J (\j. real (prob p (A' j))))` THENL
     [DISCH_TAC, MATCH_MP_TAC indep_setsD THEN METIS_TAC []] THEN
     POP_ASSUM MP_TAC THEN POP_ASSUM MP_TAC THEN POP_ASSUM MP_TAC THEN
     POP_ASSUM MP_TAC THEN POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN
     ASM_SIMP_TAC std_ss [] THEN REWRITE_TAC [o_DEF] THEN REPEAT STRIP_TAC THEN
     SIMP_TAC std_ss [] THEN ONCE_ASM_REWRITE_TAC [] THEN ONCE_ASM_REWRITE_TAC [] THEN
-    ONCE_ASM_REWRITE_TAC [] THEN ONCE_ASM_REWRITE_TAC [] THEN 
+    ONCE_ASM_REWRITE_TAC [] THEN ONCE_ASM_REWRITE_TAC [] THEN
     SIMP_TAC std_ss [IMAGE_DEF]] THEN
-   Q_TAC SUFF_TAC `dynkin (p_space p) (G e) SUBSET 
+   Q_TAC SUFF_TAC `dynkin (p_space p) (G e) SUBSET
     {E | E IN events p /\ indep_sets p (\i. if i = e then {E} else G i) ii}` THENL
    [DISCH_TAC,
     MATCH_MP_TAC dynkin_subset THEN ASM_SIMP_TAC std_ss [] THEN
@@ -1797,11 +1797,11 @@ val indep_sets_dynkin = store_thm ("indep_sets_dynkin",
     ASM_SIMP_TAC std_ss [SUBSET_DEF] THEN RW_TAC std_ss [] THEN
     ASM_SET_TAC []] THEN
    Q.UNABBREV_TAC `gg` THEN SIMP_TAC std_ss [] THEN
-   MATCH_MP_TAC indep_sets_mono_sets THEN 
+   MATCH_MP_TAC indep_sets_mono_sets THEN
    Q.EXISTS_TAC `(\i. if i = e then dynkin (p_space p) (G e) else G i)` THEN
    ASM_SIMP_TAC std_ss [] THEN ASM_SET_TAC []] THEN
   Q.UNABBREV_TAC `gg` THEN FULL_SIMP_TAC std_ss [] THEN
-  MATCH_MP_TAC indep_sets_mono_sets THEN 
+  MATCH_MP_TAC indep_sets_mono_sets THEN
   Q.EXISTS_TAC `(\i. if i IN J then dynkin (p_space p) (ff i) else ff i)` THEN
   ASM_SIMP_TAC std_ss [SUBSET_REFL] THEN ASM_SET_TAC [indep_sets]);
 
@@ -1812,7 +1812,7 @@ val indep_sets_sigma = store_thm ("indep_sets_sigma",
   RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `indep_sets p (\i. dynkin (p_space p) (ff i)) ii` THENL
   [ALL_TAC, ASM_SIMP_TAC std_ss [indep_sets_dynkin]] THEN
-  Q_TAC SUFF_TAC `!i. i IN ii ==> 
+  Q_TAC SUFF_TAC `!i. i IN ii ==>
    (subsets (sigma (p_space p) (ff i)) = dynkin (p_space p) (ff i))` THENL
   [RW_TAC std_ss [Pi_iff, indep_sets] THEN ASM_SET_TAC [], ALL_TAC] THEN
   RW_TAC std_ss [] THEN MATCH_MP_TAC sigma_eq_dynkin THEN
@@ -1824,7 +1824,7 @@ val indep_sets_sigma = store_thm ("indep_sets_sigma",
 val sigma_eq_dynkin' = store_thm ("sigma_eq_dynkin'",
   ``!sp M. M SUBSET POW sp /\ Int_stable M ==>
              (sigma_sets sp M = dynkin sp M)``,
-  RW_TAC std_ss [] THEN   
+  RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `dynkin sp M SUBSET (sigma_sets sp M)` THENL
   [DISCH_TAC,
    SIMP_TAC std_ss [dynkin, SUBSET_DEF, IN_BIGINTER, GSPECIFICATION] THEN
@@ -1874,8 +1874,8 @@ val sigma_eq_dynkin' = store_thm ("sigma_eq_dynkin'",
   SET_TAC [dynkin]);
 
 val dynkin_lemma' = store_thm ("dynkin_lemma'",
-  ``!sp E M. Int_stable E /\ E SUBSET M /\ 
-             M SUBSET sigma_sets sp E /\ dynkin_system sp M ==> 
+  ``!sp E M. Int_stable E /\ E SUBSET M /\
+             M SUBSET sigma_sets sp E /\ dynkin_system sp M ==>
              (sigma_sets sp E = M)``,
   RW_TAC std_ss [] THEN
   `E SUBSET POW sp` by ASM_SET_TAC [POW_DEF, dynkin_system, subset_class_def] THEN
@@ -1888,14 +1888,14 @@ val sigma_sets_induct_disjoint' = store_thm ("sigma_sets_induct_disjoint'",
     Int_stable G /\ G SUBSET POW sp /\ A IN sigma_sets sp G /\
     (!A. A IN G ==> P A) /\ P {} /\
     (!A. A IN sigma_sets sp G ==> P A ==> P (sp DIFF A)) /\
-    (!A. disjoint_family A ==> IMAGE A UNIV SUBSET sigma_sets sp G 
+    (!A. disjoint_family A ==> IMAGE A UNIV SUBSET sigma_sets sp G
          ==> (!i. P (A i)) ==> P (BIGUNION (IMAGE A univ(:num)))) ==>
     P A``,
   RW_TAC std_ss [] THEN
   Q.ABBREV_TAC `dd = {A | A IN sigma_sets sp G /\ P A}` THEN
   Q_TAC SUFF_TAC `sigma_algebra (sp, sigma_sets sp G)` THENL
   [DISCH_TAC,
-   MATCH_MP_TAC sigma_algebra_sigma_sets THEN 
+   MATCH_MP_TAC sigma_algebra_sigma_sets THEN
    ASM_SIMP_TAC std_ss []] THEN
   Q_TAC SUFF_TAC `P (sp DIFF {})` THENL
   [RW_TAC std_ss [DIFF_EMPTY],
@@ -1910,9 +1910,9 @@ val sigma_sets_induct_disjoint' = store_thm ("sigma_sets_induct_disjoint'",
     Q.SPEC_TAC (`A'`, `A'`) THEN MATCH_MP_TAC sigma_sets_into_sp THEN
     ASM_SIMP_TAC std_ss [],
     ASM_SIMP_TAC std_ss [sigma_sets_top],
-    ONCE_REWRITE_TAC [METIS [subsets_def] 
+    ONCE_REWRITE_TAC [METIS [subsets_def]
      ``sigma_sets sp G = subsets (sp, sigma_sets sp G)``] THEN
-    MATCH_MP_TAC ALGEBRA_DIFF THEN 
+    MATCH_MP_TAC ALGEBRA_DIFF THEN
     FULL_SIMP_TAC std_ss [sigma_sets_top, subsets_def, sigma_algebra_def],
     MATCH_MP_TAC (SIMP_RULE std_ss [GSYM IMAGE_DEF] sigma_sets_union) THEN
     ASM_SET_TAC [], ALL_TAC] THEN
@@ -1932,7 +1932,7 @@ val indep_sets_sigma' = store_thm ("indep_sets_sigma'",
   RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `indep_sets p (\i. dynkin (p_space p) (ff i)) ii` THENL
   [ALL_TAC, ASM_SIMP_TAC std_ss [indep_sets_dynkin]] THEN
-  Q_TAC SUFF_TAC `!i. i IN ii ==> 
+  Q_TAC SUFF_TAC `!i. i IN ii ==>
    (sigma_sets (p_space p) (ff i) = dynkin (p_space p) (ff i))` THENL
   [RW_TAC std_ss [Pi_iff, indep_sets] THEN ASM_SET_TAC [], ALL_TAC] THEN
   RW_TAC std_ss [] THEN MATCH_MP_TAC sigma_eq_dynkin' THEN
@@ -1944,7 +1944,7 @@ val indep_sets_sigma' = store_thm ("indep_sets_sigma'",
 val indep_sets_sigma_sets_iff = store_thm ("indep_sets_sigma_sets_iff",
   ``!p ff ii.
      prob_space p /\ (!i. i IN ii ==> Int_stable (ff i)) ==>
-     (indep_sets p (\i. subsets (sigma (p_space p) (ff i))) ii = 
+     (indep_sets p (\i. subsets (sigma (p_space p) (ff i))) ii =
       indep_sets p ff ii)``,
   RW_TAC std_ss [] THEN EQ_TAC THENL
   [DISCH_TAC, METIS_TAC [indep_sets_sigma]] THEN
@@ -1955,7 +1955,7 @@ val indep_sets_sigma_sets_iff = store_thm ("indep_sets_sigma_sets_iff",
 val indep_sets_sigma_sets_iff' = store_thm ("indep_sets_sigma_sets_iff'",
   ``!p ff ii.
      prob_space p /\ (!i. i IN ii ==> Int_stable (ff i)) ==>
-     (indep_sets p (\i. sigma_sets (p_space p) (ff i)) ii = 
+     (indep_sets p (\i. sigma_sets (p_space p) (ff i)) ii =
       indep_sets p ff ii)``,
   RW_TAC std_ss [] THEN EQ_TAC THENL
   [DISCH_TAC, METIS_TAC [indep_sets_sigma']] THEN
@@ -1964,10 +1964,10 @@ val indep_sets_sigma_sets_iff' = store_thm ("indep_sets_sigma_sets_iff'",
   ASM_SIMP_TAC std_ss [] THEN METIS_TAC [sigma_sets_superset_generator]);
 
 val indep_vars_def = store_thm ("indep_vars_def",
-  ``!p M X ii. prob_space p /\ (!i. i IN ii ==> measure_space (M i)) ==> 
+  ``!p M X ii. prob_space p /\ (!i. i IN ii ==> measure_space (M i)) ==>
      (indep_vars p M X ii =
-     ((!i. i IN ii ==> random_variable (X i) p (m_space (M i), measurable_sets (M i))) /\ 
-      indep_sets p (\i. subsets (sigma (p_space p) 
+     ((!i. i IN ii ==> random_variable (X i) p (m_space (M i), measurable_sets (M i))) /\
+      indep_sets p (\i. subsets (sigma (p_space p)
        ((\i. {PREIMAGE f A INTER p_space p | (f = X i) /\ A IN measurable_sets (M i)}) i))) ii))``,
   RW_TAC std_ss [indep_vars] THEN
   MATCH_MP_TAC (METIS [] ``(a ==> (b = c)) ==> (a /\ b = a /\ c)``) THEN
@@ -1992,27 +1992,27 @@ val indep_vars_compose = store_thm ("indep_vars_compose",
   ``!p M N X Y ii. prob_space p /\ indep_vars p M X ii /\
       (!i. i IN ii ==> measure_space (M i)) /\
       (!i. i IN ii ==> measure_space (N i)) /\
-      (!i. i IN ii ==> (Y i) IN 
-         measurable (m_space (M i), measurable_sets (M i)) 
+      (!i. i IN ii ==> (Y i) IN
+         measurable (m_space (M i), measurable_sets (M i))
                     (m_space (N i), measurable_sets (N i))) ==>
       indep_vars p N (\i. Y i o X i) ii``,
   RW_TAC std_ss [indep_vars_def] THENL
   [FULL_SIMP_TAC std_ss [indep_vars] THEN
    FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN
-   FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN 
    FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN
-   FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN 
+   FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN
+   FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN
    ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [random_variable_def] THEN
    FULL_SIMP_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
    FULL_SIMP_TAC std_ss [IN_FUNSET, PREIMAGE_def] THEN RW_TAC std_ss [] THEN
-   Q_TAC SUFF_TAC `{x | Y i (X i x) IN s} INTER p_space p = 
+   Q_TAC SUFF_TAC `{x | Y i (X i x) IN s} INTER p_space p =
     {x | (X i x) IN ({x | Y i (x) IN s} INTER m_space (M i))} INTER p_space p` THENL
    [DISC_RW_KILL, ASM_SET_TAC []] THEN
    FIRST_X_ASSUM MATCH_MP_TAC THEN FIRST_X_ASSUM MATCH_MP_TAC THEN
    ASM_SIMP_TAC std_ss [],
    ALL_TAC] THEN
-  Q_TAC SUFF_TAC `indep_sets p 
-   (\i. subsets (sigma (p_space p) ((\i. {(PREIMAGE f A) INTER p_space p | 
+  Q_TAC SUFF_TAC `indep_sets p
+   (\i. subsets (sigma (p_space p) ((\i. {(PREIMAGE f A) INTER p_space p |
         (f = X i) /\ A IN measurable_sets (M i)}) i))) ii` THENL
   [RW_TAC std_ss [], METIS_TAC [indep_vars_def]] THEN
   MATCH_MP_TAC indep_sets_mono_sets THEN
@@ -2023,11 +2023,11 @@ val indep_vars_compose = store_thm ("indep_vars_compose",
   FULL_SIMP_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
   FULL_SIMP_TAC std_ss [IN_FUNSET, PREIMAGE_def] THEN
   UNDISCH_TAC ``indep_vars p M X ii`` THEN RW_TAC std_ss [indep_vars] THEN
-  FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN 
+  FIRST_X_ASSUM (MP_TAC o Q.SPEC `i:num`) THEN
   ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [random_variable_def] THEN
   FULL_SIMP_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
   FULL_SIMP_TAC std_ss [IN_FUNSET, PREIMAGE_def] THEN RW_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `{x | Y i (X i x) IN s} INTER p_space p = 
+  Q_TAC SUFF_TAC `{x | Y i (X i x) IN s} INTER p_space p =
    {x | (X i x) IN ({x | Y i (x) IN s} INTER m_space (M i))} INTER p_space p` THENL
   [DISC_RW_KILL, ASM_SET_TAC []] THEN
   Q.EXISTS_TAC `{x | Y i x IN p_2} INTER m_space (M i)` THEN ASM_SET_TAC []);
@@ -2035,14 +2035,14 @@ val indep_vars_compose = store_thm ("indep_vars_compose",
 val indep_var_compose = store_thm ("indep_var_compose",
  ``!p M1 N1 X1 Y1 M2 N2 X2 Y2. prob_space p /\
     measure_space M1 /\ measure_space M2 /\ measure_space N1 /\ measure_space N2 /\
-    indep_var p M1 X1 M2 X2 /\ 
+    indep_var p M1 X1 M2 X2 /\
     Y1 IN measurable (m_space M1, measurable_sets M1) (m_space N1, measurable_sets N1) /\
     Y2 IN measurable (m_space M2, measurable_sets M2) (m_space N2, measurable_sets N2) ==>
     indep_var p N1 (Y1 o X1) N2 (Y2 o X2)``,
   RW_TAC std_ss [indep_var] THEN
   Q.ABBREV_TAC `Y = (\i:num. if i = 0 then Y1 else Y2)` THEN
   Q.ABBREV_TAC `X = (\i:num. if i = 0 then X1 else X2)` THEN
-  Q_TAC SUFF_TAC `indep_vars p (\i. if i = 0 then N1 else N2) (\i. Y i o X i) 
+  Q_TAC SUFF_TAC `indep_vars p (\i. if i = 0 then N1 else N2) (\i. Y i o X i)
                    {x | (x = 0) \/ (x = 1)}` THENL
   [MATCH_MP_TAC EQ_IMPLIES THEN AP_THM_TAC THEN AP_TERM_TAC THEN
    METIS_TAC [o_DEF], ALL_TAC] THEN
@@ -2079,7 +2079,7 @@ val measurable_sigma_sets = store_thm ("measurable_sigma_sets",
   [ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN
    SIMP_TAC std_ss [PREIMAGE_EMPTY, INTER_EMPTY] THEN
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
-   ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN 
+   ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN
    FIRST_X_ASSUM MATCH_MP_TAC THEN
    ASM_SIMP_TAC std_ss [SPECIFICATION],
    POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) THEN
@@ -2093,13 +2093,13 @@ val measurable_sigma_sets = store_thm ("measurable_sigma_sets",
    METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE],
    ALL_TAC] THEN
   ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN POP_ASSUM MP_TAC THEN
-  GEN_REWR_TAC (LAND_CONV o QUANT_CONV) [GSYM SPECIFICATION] THEN  
+  GEN_REWR_TAC (LAND_CONV o QUANT_CONV) [GSYM SPECIFICATION] THEN
   DISCH_TAC THEN SIMP_TAC std_ss [PREIMAGE_BIGUNION] THEN
   Q_TAC SUFF_TAC `(IMAGE (PREIMAGE f) {A' i | i IN univ(:num)}) =
                   (IMAGE (\i. PREIMAGE f (A' i)) UNIV)` THENL
   [DISC_RW_KILL,
    SIMP_TAC std_ss [IMAGE_DEF, PREIMAGE_def] THEN ASM_SET_TAC []] THEN
-  SIMP_TAC std_ss [INTER_BIGUNION, GSYM IMAGE_DEF] THEN 
+  SIMP_TAC std_ss [INTER_BIGUNION, GSYM IMAGE_DEF] THEN
   Q_TAC SUFF_TAC `(IMAGE (\x. x INTER m_space M)
      (IMAGE (\i. PREIMAGE f (A' i)) univ(:num))) =
      (IMAGE (\x. PREIMAGE f (A' x) INTER m_space M) univ(:num))` THENL
@@ -2111,7 +2111,7 @@ val measurable_measure_of = store_thm ("measurable_measure_of",
   ``!sp N mu f M. measure_space M /\
      N SUBSET POW sp /\ f IN (m_space M -> sp) /\
      (!y. y IN N ==> PREIMAGE f y INTER m_space M IN measurable_sets M) ==>
-     f IN measurable (m_space M, measurable_sets M) 
+     f IN measurable (m_space M, measurable_sets M)
                      (m_space (measure_of (sp,N,mu)), measurable_sets (measure_of (sp,N,mu)))``,
   RW_TAC std_ss [] THEN MATCH_MP_TAC measurable_sigma_sets THEN
   Q.EXISTS_TAC `sp` THEN Q.EXISTS_TAC `N` THEN
@@ -2138,7 +2138,7 @@ val measurable_pair_measureI = store_thm ("measurable_pair_measureI",
      f IN (m_space M -> m_space M1 CROSS m_space M2) /\
      (!A B. A IN measurable_sets M1 /\ B IN measurable_sets M2 ==>
       PREIMAGE f (A CROSS B) INTER m_space M IN measurable_sets M) ==>
-     f IN measurable (m_space M, measurable_sets M) 
+     f IN measurable (m_space M, measurable_sets M)
          (m_space (pair_measure M1 M2), measurable_sets (pair_measure M1 M2))``,
   RW_TAC std_ss [pair_measure] THEN MATCH_MP_TAC measurable_measure_of THEN
   ASM_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, POW_DEF] THEN
@@ -2150,11 +2150,11 @@ val measurable_pair_measureI = store_thm ("measurable_pair_measureI",
   ASM_SET_TAC []);
 
 val measurable_Pair = store_thm ("measurable_Pair",
-  ``!f g M M1 M2. 
+  ``!f g M M1 M2.
      measure_space M /\ measure_space M1 /\ measure_space M2 /\
-     f IN measurable (m_space M, measurable_sets M) (m_space M1, measurable_sets M1) /\ 
+     f IN measurable (m_space M, measurable_sets M) (m_space M1, measurable_sets M1) /\
      g IN measurable (m_space M, measurable_sets M) (m_space M2, measurable_sets M2) ==>
-     (\x. (f x, g x)) IN measurable (m_space M, measurable_sets M) 
+     (\x. (f x, g x)) IN measurable (m_space M, measurable_sets M)
          (m_space (pair_measure M1 M2), measurable_sets (pair_measure M1 M2))``,
   RW_TAC std_ss [] THEN MATCH_MP_TAC measurable_pair_measureI THEN
   FULL_SIMP_TAC std_ss [IN_MEASURABLE, IN_FUNSET, space_def, subsets_def] THEN
@@ -2168,8 +2168,8 @@ val measurable_Pair = store_thm ("measurable_Pair",
   MATCH_MP_TAC MEASURE_SPACE_INTER THEN ASM_SIMP_TAC std_ss []);
 
 val indep_var_rv = store_thm ("indep_var_rv",
-  ``!p M1 X M2 Y. indep_var p M1 X M2 Y ==> 
-      random_variable X p (m_space M1, measurable_sets M1) /\ 
+  ``!p M1 X M2 Y. indep_var p M1 X M2 Y ==>
+      random_variable X p (m_space M1, measurable_sets M1) /\
       random_variable Y p (m_space M2, measurable_sets M2)``,
   RW_TAC std_ss [indep_var, indep_vars, GSPECIFICATION] THENL
   [ASM_SET_TAC [], ALL_TAC] THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `1`) THEN
@@ -2181,7 +2181,7 @@ val indep_varsD = store_thm ("indep_varsD",
              (!i. i IN J ==> A i IN measurable_sets (M i)) ==>
              (prob p (BIGINTER {PREIMAGE (X i) (A i) INTER p_space p | i IN J}) =
              Normal (product J (\i. real (prob p (PREIMAGE (X i) (A i) INTER p_space p)))))``,
-  RW_TAC std_ss [] THEN 
+  RW_TAC std_ss [] THEN
   ONCE_REWRITE_TAC [METIS [] ``PREIMAGE (X i) (A i) INTER p_space p =
                           (\i. PREIMAGE (X i) (A i) INTER p_space p) i``] THEN
   MATCH_MP_TAC indep_setsD THEN FULL_SIMP_TAC std_ss [indep_vars] THEN
@@ -2197,12 +2197,12 @@ val indep_varD = store_thm ("indep_varD",
      prob p (PREIMAGE Y Y1 INTER p_space p))``,
   RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `prob p (PREIMAGE (\x. (X x,Y x)) (X1 CROSS Y1) INTER m_space p) =
-   prob p (BIGINTER {PREIMAGE ((\i. if i = 0 then X else Y) i) 
+   prob p (BIGINTER {PREIMAGE ((\i. if i = 0 then X else Y) i)
     ((\i. if i = 0 then X1 else Y1) i) INTER p_space p | i IN {z:num | (z = 0) \/ (z = 1)}})` THENL
   [DISC_RW_KILL,
    AP_TERM_TAC THEN SIMP_TAC std_ss [PREIMAGE_def, EXTENSION, GSPECIFICATION] THEN
    SIMP_TAC std_ss [CROSS_DEF, IN_INTER, IN_BIGINTER, GSPECIFICATION, EXISTS_PROD] THEN
-   RW_TAC std_ss [GSYM p_space_def] THEN EQ_TAC THEN 
+   RW_TAC std_ss [GSYM p_space_def] THEN EQ_TAC THEN
    RW_TAC std_ss [IN_UNIV, GSPECIFICATION, IN_INTER] THEN
    ASM_SIMP_TAC std_ss [GSPECIFICATION, IN_INTER] THENL
    [POP_ASSUM (MP_TAC o Q.SPEC `PREIMAGE X X1 INTER p_space p`) THEN
@@ -2239,7 +2239,7 @@ val indep_varD = store_thm ("indep_varD",
   SIMP_TAC std_ss [PRODUCT_CLAUSES, FINITE_SING, IN_SING] THEN
   SIMP_TAC std_ss [PRODUCT_SING, GSYM extreal_mul_def] THEN
   Q.UNABBREV_TAC `XX` THEN Q.UNABBREV_TAC `AA` THEN SIMP_TAC arith_ss [] THEN
-  `random_variable X p (m_space M1, measurable_sets M1) /\ 
+  `random_variable X p (m_space M1, measurable_sets M1) /\
    random_variable Y p (m_space M2, measurable_sets M2)`
    by METIS_TAC [indep_var_rv] THEN
   Q_TAC SUFF_TAC `PREIMAGE X X1 INTER p_space p IN events p` THENL
@@ -2252,19 +2252,19 @@ val indep_varD = store_thm ("indep_varD",
    FULL_SIMP_TAC std_ss [IN_FUNSET, space_def, subsets_def, prob_space_def]] THEN
   Q_TAC SUFF_TAC `prob p (PREIMAGE X X1 INTER p_space p) <> NegInf` THENL
   [DISCH_TAC,
-   RW_TAC std_ss [lt_infty, prob_def] THEN 
+   RW_TAC std_ss [lt_infty, prob_def] THEN
    MATCH_MP_TAC lte_trans THEN Q.EXISTS_TAC `0` THEN
    FULL_SIMP_TAC std_ss [prob_space_def, GSYM lt_infty, num_not_infty] THEN
    METIS_TAC [measure_space_def, positive_def, p_space_def, events_def]] THEN
   Q_TAC SUFF_TAC `prob p (PREIMAGE Y Y1 INTER p_space p) <> NegInf` THENL
   [DISCH_TAC,
-   RW_TAC std_ss [lt_infty, prob_def] THEN 
+   RW_TAC std_ss [lt_infty, prob_def] THEN
    MATCH_MP_TAC lte_trans THEN Q.EXISTS_TAC `0` THEN
    FULL_SIMP_TAC std_ss [prob_space_def, GSYM lt_infty, num_not_infty] THEN
    METIS_TAC [measure_space_def, positive_def, p_space_def, events_def]] THEN
   Q_TAC SUFF_TAC `prob p (PREIMAGE X X1 INTER p_space p) <> PosInf` THENL
   [DISCH_TAC,
-   RW_TAC std_ss [lt_infty, prob_def] THEN 
+   RW_TAC std_ss [lt_infty, prob_def] THEN
    MATCH_MP_TAC let_trans THEN Q.EXISTS_TAC `1` THEN
    FULL_SIMP_TAC std_ss [prob_space_def, GSYM lt_infty, num_not_infty] THEN
    MATCH_MP_TAC le_trans THEN Q.EXISTS_TAC `measure p (p_space p)` THEN
@@ -2274,7 +2274,7 @@ val indep_varD = store_thm ("indep_varD",
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE]] THEN
   Q_TAC SUFF_TAC `prob p (PREIMAGE Y Y1 INTER p_space p) <> PosInf` THENL
   [DISCH_TAC,
-   RW_TAC std_ss [lt_infty, prob_def] THEN 
+   RW_TAC std_ss [lt_infty, prob_def] THEN
    MATCH_MP_TAC let_trans THEN Q.EXISTS_TAC `1` THEN
    FULL_SIMP_TAC std_ss [prob_space_def, GSYM lt_infty, num_not_infty] THEN
    MATCH_MP_TAC le_trans THEN Q.EXISTS_TAC `measure p (p_space p)` THEN
@@ -2294,12 +2294,12 @@ val sigma_finite_incseq = store_thm ("sigma_finite_incseq",
   `?f. IMAGE f univ(:num) SUBSET measurable_sets M /\
       (BIGUNION {f i | i IN univ(:num)} = m_space M) /\
       !i. measure M (f i) <> PosInf` by METIS_TAC [sigma_finite] THEN
-  `BIGUNION {BIGUNION {f i | i IN {x | 0 <= x /\ x < n}} | n IN univ(:num)} = 
+  `BIGUNION {BIGUNION {f i | i IN {x | 0 <= x /\ x < n}} | n IN univ(:num)} =
    m_space M` by METIS_TAC [UN_UN_finite_eq] THEN
   Q.EXISTS_TAC `(\n. BIGUNION {f i | i IN {x | 0 <= x /\ x < n}})` THEN
   ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [] THENL
   [ALL_TAC, ASM_SET_TAC [],
-   `measure M (BIGUNION {f n | n IN {x | 0 <= x /\ x < i}}) <= 
+   `measure M (BIGUNION {f n | n IN {x | 0 <= x /\ x < i}}) <=
    SIGMA (\n. measure M (f n)) {x | 0 <= x /\ x < i}` by
    (MATCH_MP_TAC measure_subadditive_finite THEN
     ASM_SIMP_TAC std_ss [FINITE_COUNT, GSYM count_def] THEN
@@ -2320,7 +2320,7 @@ val sigma_finite_incseq = store_thm ("sigma_finite_incseq",
   FIRST_X_ASSUM MATCH_MP_TAC THEN CONJ_TAC THENL [ALL_TAC, ASM_SET_TAC []] THEN
   Q_TAC SUFF_TAC `countable {f i | i IN {x | x < n}}` THENL
   [SIMP_TAC std_ss [GSPECIFICATION], ALL_TAC] THEN
-  SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN 
+  SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN
   MATCH_MP_TAC pred_setTheory.image_countable THEN
   SIMP_TAC std_ss [COUNTABLE_COUNT, GSYM count_def]);
 
@@ -2372,7 +2372,7 @@ val sigma_finite_up_in_pair_measure_generator = store_thm ("sigma_finite_up_in_p
     POP_ASSUM (MP_TAC o Q.SPECL [`i'`,`MAX i i'`]) THEN
     SIMP_TAC arith_ss [] THEN ASM_SET_TAC []] THEN
    Q.EXISTS_TAC `f1 (MAX i i') CROSS f2 (MAX i i')` THEN CONJ_TAC THENL
-   [ASM_SIMP_TAC std_ss [CROSS_DEF, GSPECIFICATION, EXISTS_PROD] THEN 
+   [ASM_SIMP_TAC std_ss [CROSS_DEF, GSPECIFICATION, EXISTS_PROD] THEN
     `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
     FULL_SIMP_TAC std_ss [FST, SND], ALL_TAC] THEN
    Q.EXISTS_TAC `MAX i i'` THEN `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
@@ -2380,7 +2380,7 @@ val sigma_finite_up_in_pair_measure_generator = store_thm ("sigma_finite_up_in_p
    SIMP_TAC std_ss [IN_UNIV],
    ALL_TAC] THEN
   RW_TAC std_ss [pair_measure, measure_of, measure_def, num_not_infty] THEN
-  Q_TAC SUFF_TAC `!x y. indicator_fn (f1 i CROSS f2 i) (x,y) = 
+  Q_TAC SUFF_TAC `!x y. indicator_fn (f1 i CROSS f2 i) (x,y) =
                         indicator_fn (PREIMAGE (\y. (x,y)) (f1 i CROSS f2 i)) y` THENL
   [DISCH_TAC, SIMP_TAC std_ss [indicator_fn_def, IN_PREIMAGE]] THEN
   ASM_SIMP_TAC std_ss [] THEN
@@ -2404,13 +2404,13 @@ val sigma_finite_up_in_pair_measure_generator = store_thm ("sigma_finite_up_in_p
     AP_TERM_TAC THEN SET_TAC [], ALL_TAC] THEN
    ASM_SIMP_TAC std_ss [indicator_fn_def, mul_rzero, GSPEC_F] THEN
    METIS_TAC [measure_space_def, positive_def]] THEN
-  Q_TAC SUFF_TAC 
+  Q_TAC SUFF_TAC
   `pos_fn_integral M1 (\x. max 0 (measure M2 (f2 i) * indicator_fn (f1 i) x)) =
    measure M2 (f2 i) * pos_fn_integral M1 (\x. max 0 (indicator_fn (f1 i) x))` THENL
   [ALL_TAC,
    MATCH_MP_TAC pos_fn_integral_cmult THEN ASM_SIMP_TAC std_ss [] THEN
    CONJ_TAC THENL
-   [FULL_SIMP_TAC std_ss [measure_space_def, positive_def] THEN 
+   [FULL_SIMP_TAC std_ss [measure_space_def, positive_def] THEN
     FIRST_X_ASSUM MATCH_MP_TAC THEN ASM_SET_TAC [], ALL_TAC] THEN
    RULE_ASSUM_TAC (ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN ASM_SIMP_TAC std_ss [] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
@@ -2424,7 +2424,7 @@ val sigma_finite_up_in_pair_measure_generator = store_thm ("sigma_finite_up_in_p
   DISCH_TAC THEN ASM_SIMP_TAC std_ss [pos_fn_integral_indicator] THEN
   SIMP_TAC std_ss [lt_infty] THEN
   ONCE_REWRITE_TAC [METIS [extreal_mul_def] ``PosInf = PosInf * PosInf``] THEN
-  MATCH_MP_TAC lt_mul2 THEN 
+  MATCH_MP_TAC lt_mul2 THEN
   `(f2 i) IN measurable_sets M2` by ASM_SET_TAC [] THEN
   `0 <= measure M2 (f2 i) /\ 0 <= measure M1 (f1 i)` by
    METIS_TAC [measure_space_def, positive_def] THEN
@@ -2436,7 +2436,7 @@ val Int_stable_pair_measure_generator = store_thm ("Int_stable_pair_measure_gene
   RW_TAC std_ss [Int_stable, GSPECIFICATION, EXISTS_PROD] THEN
   Q.EXISTS_TAC `p_1 INTER p_1'` THEN Q.EXISTS_TAC `p_2 INTER p_2'` THEN
   SIMP_TAC std_ss [CROSS_DEF, INTER_DEF] THEN CONJ_TAC THENL
-  [ASM_SET_TAC [], ALL_TAC] THEN SIMP_TAC std_ss [GSYM INTER_DEF] THEN 
+  [ASM_SET_TAC [], ALL_TAC] THEN SIMP_TAC std_ss [GSYM INTER_DEF] THEN
   CONJ_TAC THEN (MATCH_MP_TAC MEASURE_SPACE_INTER) THEN METIS_TAC []);
 
 val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
@@ -2445,7 +2445,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
         (\x. measure M (\y. (x,y) IN Q)) IN measurable (m_space N, measurable_sets N) Borel``,
   RW_TAC std_ss [] THEN POP_ASSUM MP_TAC THEN
   SIMP_TAC std_ss [pair_measure, measure_of, measurable_sets_def] THEN
-  Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets N /\ b IN measurable_sets M} 
+  Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets N /\ b IN measurable_sets M}
                   SUBSET POW (m_space N CROSS m_space M)` THENL
   [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
    SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -2455,7 +2455,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
    ASM_SET_TAC []] THEN DISCH_TAC THEN
   Q_TAC SUFF_TAC `(\Q. (\x. measure M (\y. (x,y) IN Q)) IN
         measurable (m_space N,measurable_sets N) Borel) Q` THENL
-  [SIMP_TAC std_ss [SPECIFICATION], ALL_TAC] THEN  
+  [SIMP_TAC std_ss [SPECIFICATION], ALL_TAC] THEN
   MATCH_MP_TAC sigma_sets_induct_disjoint' THEN
   Q.EXISTS_TAC `{a CROSS b | a IN measurable_sets N /\ b IN measurable_sets M}` THEN
   Q.EXISTS_TAC `(m_space N CROSS m_space M)` THEN ASM_SIMP_TAC std_ss [] THEN
@@ -2463,7 +2463,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
   CONJ_TAC THENL
   [RW_TAC std_ss [CROSS_DEF, GSPECIFICATION, EXISTS_PROD] THEN
    SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
-   ONCE_REWRITE_TAC [SET_RULE 
+   ONCE_REWRITE_TAC [SET_RULE
     ``!x. (\y. x IN p_1 /\ y IN p_2) = {y | x IN p_1 /\ y IN p_2}``] THEN
    Q_TAC SUFF_TAC `!x. measure M {y | x IN p_1 /\ y IN p_2} =
                        measure M p_2 * indicator_fn p_1 x` THENL
@@ -2504,7 +2504,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
     ASM_CASES_TAC ``x:'b IN p_1`` THENL
     [ASM_SIMP_TAC std_ss [] THEN
-     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE, 
+     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE,
       SET_RULE ``(\x. x IN s) = s``], ALL_TAC] THEN
     ASM_SIMP_TAC std_ss [SET_RULE ``(\x. F) = {}``] THEN
     ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
@@ -2516,7 +2516,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
      ASM_SET_TAC []] THEN
     `{} IN measurable_sets M` by METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE] THEN
     COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-    MATCH_MP_TAC MEASURE_SPACE_DIFF THEN 
+    MATCH_MP_TAC MEASURE_SPACE_DIFF THEN
     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
     ALL_TAC] THEN
    Q_TAC SUFF_TAC `(\y. (x,y) IN BIGUNION {A i | i IN univ(:num)}) =
@@ -2525,7 +2525,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
     SIMP_TAC std_ss [EXTENSION, IN_BIGUNION, IN_INTER, GSPECIFICATION, EXISTS_PROD] THEN
     GEN_TAC THEN EQ_TAC THEN RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
     POP_ASSUM (MP_TAC o SIMP_RULE std_ss [IN_DEF]) THEN
-    RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN 
+    RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN
     CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN SET_TAC []] THEN
    SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN MATCH_MP_TAC MEASURE_SPACE_BIGUNION THEN
    ASM_SIMP_TAC std_ss []] THEN
@@ -2533,7 +2533,7 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
   [RW_TAC std_ss [] THEN
    `(\y. (x,y) IN A) IN measurable_sets M` by METIS_TAC [] THEN
    Q_TAC SUFF_TAC `!x. measure M (\y. (x,y) IN m_space N CROSS m_space M DIFF A) =
-     if x IN m_space N then measure M (m_space M) - 
+     if x IN m_space N then measure M (m_space M) -
              measure M ((\y. (x,y) IN A)) else 0` THENL
    [DISC_RW_KILL,
     RW_TAC std_ss [CROSS_DEF, GSPECIFICATION, EXISTS_PROD, IN_DIFF] THENL
@@ -2554,9 +2554,9 @@ val finite_measure_cut_measurable = store_thm ("finite_measure_cut_measurable",
     else (\x. 0) x) IN measurable (m_space N,measurable_sets N)
      (m_space (space Borel, subsets Borel, (\x. 0)),
       measurable_sets (space Borel, subsets Borel, (\x. 0)))` THENL
-   [SIMP_TAC std_ss [SPECIFICATION, m_space_def, measurable_sets_def, SPACE], 
+   [SIMP_TAC std_ss [SPECIFICATION, m_space_def, measurable_sets_def, SPACE],
     ALL_TAC] THEN
-   MATCH_MP_TAC measurable_If THEN 
+   MATCH_MP_TAC measurable_If THEN
    SIMP_TAC std_ss [m_space_def, measurable_sets_def, SPACE] THEN
    ASM_SIMP_TAC std_ss [SET_RULE ``{x | x IN s} = s``] THEN
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE] THEN
@@ -2654,7 +2654,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
     METIS_TAC [sigma_finite_disjoint] THEN
   `!i. ff i IN measurable_sets M` by ASM_SET_TAC [] THEN
   Q.ABBREV_TAC `C = (\x i. ff i INTER (\y. (x,y) IN Q))` THEN
-  Q_TAC SUFF_TAC `!i. (m_space N CROSS ff i) INTER (m_space N CROSS m_space M) = 
+  Q_TAC SUFF_TAC `!i. (m_space N CROSS ff i) INTER (m_space N CROSS m_space M) =
                       m_space N CROSS ff i` THENL
   [DISCH_TAC,
    GEN_TAC THEN `ff i SUBSET m_space M` by ASM_SET_TAC [] THEN
@@ -2681,12 +2681,12 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
    `ff i INTER a IN measurable_sets M` by METIS_TAC [MEASURE_SPACE_INTER] THEN
    ASM_SET_TAC []] THEN
   `!i. (indicator_fn (ff i)) IN measurable (m_space M, measurable_sets M) Borel` by
-   (GEN_TAC THEN MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN 
+   (GEN_TAC THEN MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
     Q.EXISTS_TAC `ff i` THEN METIS_TAC [subsets_def, measure_space_def]) THEN
   `!i. measure_space (density M (indicator_fn (ff i)))` by
     METIS_TAC [measure_space_density] THEN
 
-  Q_TAC SUFF_TAC `!i. (\x. measure (density M (indicator_fn (ff i))) 
+  Q_TAC SUFF_TAC `!i. (\x. measure (density M (indicator_fn (ff i)))
         (\y. (x,y) IN (m_space N CROSS m_space (density M (indicator_fn (ff i))) INTER Q)))
         IN measurable (m_space N, measurable_sets N) Borel` THENL
   [DISCH_TAC,
@@ -2696,7 +2696,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      b IN measurable_sets (density M (indicator_fn (ff i)))} SUBSET
      POW (m_space N CROSS m_space (density M (indicator_fn (ff i))))` by
     (SIMP_TAC std_ss [CROSS_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD, SUBSET_DEF] THEN
-     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN 
+     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      `p_1 SUBSET m_space N` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      `p_2 SUBSET m_space (density M (indicator_fn (ff i)))` by
       METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -2720,7 +2720,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      b IN measurable_sets (density M (indicator_fn (ff i)))} SUBSET
      POW (m_space N CROSS m_space (density M (indicator_fn (ff i))))` by
     (SIMP_TAC std_ss [CROSS_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD, SUBSET_DEF] THEN
-     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN 
+     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      `p_1 SUBSET m_space N` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      `p_2 SUBSET m_space (density M (indicator_fn (ff i)))` by
       METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -2750,7 +2750,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      ASM_CASES_TAC ``x:'b IN p_1`` THENL
      [ASM_SIMP_TAC std_ss [] THEN
-      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE, 
+      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE,
        SET_RULE ``(\x. x IN s) = s``], ALL_TAC] THEN
      ASM_SIMP_TAC std_ss [SET_RULE ``(\x. F) = {}``] THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
@@ -2762,7 +2762,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
       ASM_SET_TAC []] THEN
      `{} IN measurable_sets M` by METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE] THEN
      COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-     MATCH_MP_TAC MEASURE_SPACE_DIFF THEN 
+     MATCH_MP_TAC MEASURE_SPACE_DIFF THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
      ALL_TAC] THEN
     Q_TAC SUFF_TAC `(\y. (x,y) IN BIGUNION {A i | i IN univ(:num)}) =
@@ -2771,7 +2771,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      SIMP_TAC std_ss [EXTENSION, IN_BIGUNION, IN_INTER, GSPECIFICATION, EXISTS_PROD] THEN
      GEN_TAC THEN EQ_TAC THEN RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
      POP_ASSUM (MP_TAC o SIMP_RULE std_ss [IN_DEF]) THEN
-     RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN 
+     RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN
      CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN SET_TAC []] THEN
     SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN MATCH_MP_TAC MEASURE_SPACE_BIGUNION THEN
     ASM_SIMP_TAC std_ss []] THEN
@@ -2781,18 +2781,18 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
    `ff i INTER (\y. (x,y) IN Q) IN measurable_sets M` by
     METIS_TAC [MEASURE_SPACE_INTER] THEN
    Q.UNABBREV_TAC `C` THEN ASM_SIMP_TAC std_ss [GSYM pos_fn_integral_indicator] THEN
-   METIS_TAC [ETA_AX]] THEN 
+   METIS_TAC [ETA_AX]] THEN
   Q_TAC SUFF_TAC `!i x. ff i INTER
     (\y. (x,y) IN m_space N CROSS
                   m_space (density M (indicator_fn (ff i))) INTER Q) =
     C x i` THENL
-  [DISCH_TAC, 
+  [DISCH_TAC,
    SIMP_TAC std_ss [density, measure_def, m_space_def] THEN
    `{a CROSS b | a IN measurable_sets N /\
      b IN measurable_sets (density M (indicator_fn (ff i)))} SUBSET
      POW (m_space N CROSS m_space (density M (indicator_fn (ff i))))` by
     (SIMP_TAC std_ss [CROSS_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD, SUBSET_DEF] THEN
-     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN 
+     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      `p_1 SUBSET m_space N` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      `p_2 SUBSET m_space (density M (indicator_fn (ff i)))` by
       METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -2823,7 +2823,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      b IN measurable_sets (density M (indicator_fn (ff i)))} SUBSET
      POW (m_space N CROSS m_space (density M (indicator_fn (ff i))))` by
     (SIMP_TAC std_ss [CROSS_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD, SUBSET_DEF] THEN
-     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN 
+     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      `p_1 SUBSET m_space N` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      `p_2 SUBSET m_space (density M (indicator_fn (ff i)))` by
       METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -2850,7 +2850,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      ASM_CASES_TAC ``x:'b IN p_1`` THENL
      [ASM_SIMP_TAC std_ss [] THEN
-      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE, 
+      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE,
        SET_RULE ``(\x. x IN s) = s``], ALL_TAC] THEN
      ASM_SIMP_TAC std_ss [SET_RULE ``(\x. F) = {}``] THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
@@ -2862,7 +2862,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
       ASM_SET_TAC []] THEN
      `{} IN measurable_sets M` by METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE] THEN
      COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-     MATCH_MP_TAC MEASURE_SPACE_DIFF THEN 
+     MATCH_MP_TAC MEASURE_SPACE_DIFF THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
      ALL_TAC] THEN
     Q_TAC SUFF_TAC `(\y. (x,y) IN BIGUNION {A i | i IN univ(:num)}) =
@@ -2871,7 +2871,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      SIMP_TAC std_ss [EXTENSION, IN_BIGUNION, IN_INTER, GSPECIFICATION, EXISTS_PROD] THEN
      GEN_TAC THEN EQ_TAC THEN RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
      POP_ASSUM (MP_TAC o SIMP_RULE std_ss [IN_DEF]) THEN
-     RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN 
+     RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN
      CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN SET_TAC []] THEN
     SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN MATCH_MP_TAC MEASURE_SPACE_BIGUNION THEN
     ASM_SIMP_TAC std_ss []] THEN
@@ -2884,7 +2884,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      b IN measurable_sets (density M (indicator_fn (ff i)))} SUBSET
      POW (m_space N CROSS m_space (density M (indicator_fn (ff i))))` by
     (SIMP_TAC std_ss [CROSS_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD, SUBSET_DEF] THEN
-     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN 
+     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      `p_1 SUBSET m_space N` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      `p_2 SUBSET m_space (density M (indicator_fn (ff i)))` by
       METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -2914,7 +2914,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      ASM_CASES_TAC ``x:'b IN p_1`` THENL
      [ASM_SIMP_TAC std_ss [] THEN
-      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE, 
+      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE,
        SET_RULE ``(\x. x IN s) = s``], ALL_TAC] THEN
      ASM_SIMP_TAC std_ss [SET_RULE ``(\x. F) = {}``] THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
@@ -2926,7 +2926,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
       ASM_SET_TAC []] THEN
      `{} IN measurable_sets M` by METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE] THEN
      COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-     MATCH_MP_TAC MEASURE_SPACE_DIFF THEN 
+     MATCH_MP_TAC MEASURE_SPACE_DIFF THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
      ALL_TAC] THEN
     Q_TAC SUFF_TAC `(\y. (x,y) IN BIGUNION {A i | i IN univ(:num)}) =
@@ -2935,7 +2935,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      SIMP_TAC std_ss [EXTENSION, IN_BIGUNION, IN_INTER, GSPECIFICATION, EXISTS_PROD] THEN
      GEN_TAC THEN EQ_TAC THEN RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
      POP_ASSUM (MP_TAC o SIMP_RULE std_ss [IN_DEF]) THEN
-     RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN 
+     RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN
      CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN SET_TAC []] THEN
     SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN MATCH_MP_TAC MEASURE_SPACE_BIGUNION THEN
     ASM_SIMP_TAC std_ss []] THEN
@@ -2960,7 +2960,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      b IN measurable_sets (density M (indicator_fn (ff i)))} SUBSET
      POW (m_space N CROSS m_space (density M (indicator_fn (ff i))))` by
     (SIMP_TAC std_ss [CROSS_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD, SUBSET_DEF] THEN
-     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN 
+     RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      `p_1 SUBSET m_space N` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      `p_2 SUBSET m_space (density M (indicator_fn (ff i)))` by
       METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
@@ -2990,7 +2990,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
     ASM_CASES_TAC ``x:'b IN p_1`` THENL
     [ASM_SIMP_TAC std_ss [] THEN
-     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE, 
+     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE,
       SET_RULE ``(\x. x IN s) = s``], ALL_TAC] THEN
     ASM_SIMP_TAC std_ss [SET_RULE ``(\x. F) = {}``] THEN
     ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
@@ -3002,7 +3002,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
      ASM_SET_TAC []] THEN
     `{} IN measurable_sets M` by METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE] THEN
     COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-    MATCH_MP_TAC MEASURE_SPACE_DIFF THEN 
+    MATCH_MP_TAC MEASURE_SPACE_DIFF THEN
     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
     ALL_TAC] THEN
    Q_TAC SUFF_TAC `(\y. (x,y) IN BIGUNION {A i | i IN univ(:num)}) =
@@ -3011,7 +3011,7 @@ val measurable_measure_Pair = store_thm ("measurable_measure_Pair",
     SIMP_TAC std_ss [EXTENSION, IN_BIGUNION, IN_INTER, GSPECIFICATION, EXISTS_PROD] THEN
     GEN_TAC THEN EQ_TAC THEN RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
     POP_ASSUM (MP_TAC o SIMP_RULE std_ss [IN_DEF]) THEN
-    RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN 
+    RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN
     CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN SET_TAC []] THEN
    SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN MATCH_MP_TAC MEASURE_SPACE_BIGUNION THEN
    ASM_SIMP_TAC std_ss []] THEN
@@ -3051,13 +3051,13 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
            (measurable_sets M = sigma_sets sp E) /\
            (measurable_sets N = sigma_sets sp E) /\
            IMAGE A UNIV SUBSET E /\ (BIGUNION {A i | i IN UNIV} = sp) /\
-           (!i. measure M (A i) <> PosInf) ==> 
+           (!i. measure M (A i) <> PosInf) ==>
            (measure_of M = measure_of N)``,
   RW_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `sigma_algebra (BIGUNION {A i | i IN univ(:num)}, 
+  Q_TAC SUFF_TAC `sigma_algebra (BIGUNION {A i | i IN univ(:num)},
                      sigma_sets (BIGUNION {A i | i IN univ(:num)}) E)` THENL
   [DISCH_TAC,
-   MATCH_MP_TAC sigma_algebra_sigma_sets THEN 
+   MATCH_MP_TAC sigma_algebra_sigma_sets THEN
    ASM_SIMP_TAC std_ss []] THEN
   Q_TAC SUFF_TAC `m_space M = BIGUNION {A i | i IN univ(:num)}` THENL
   [DISCH_TAC,
@@ -3072,8 +3072,8 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
    ASM_SET_TAC []] THEN
   Q_TAC SUFF_TAC `!ff dd. ff IN E ==> measure M ff <> PosInf ==> dd IN measurable_sets M ==>
                     (measure M (ff INTER dd) = measure N (ff INTER dd))` THENL
-  [DISCH_TAC, 
-   RW_TAC std_ss [] THEN 
+  [DISCH_TAC,
+   RW_TAC std_ss [] THEN
    `ff IN sigma_sets (BIGUNION {A i | i IN univ(:num)}) E`
     by METIS_TAC [sigma_sets_basic] THEN
    Q_TAC SUFF_TAC `(\dd. measure M (ff INTER dd) = measure N (ff INTER dd)) dd` THENL
@@ -3088,7 +3088,7 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
     [DISCH_TAC THEN ASM_REWRITE_TAC [],
      Q_TAC SUFF_TAC `ff INTER A' IN sigma_sets sp E` THENL
      [DISCH_TAC,
-      ONCE_REWRITE_TAC [METIS [subsets_def] 
+      ONCE_REWRITE_TAC [METIS [subsets_def]
       ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
       MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [subsets_def] THEN
       FULL_SIMP_TAC std_ss [sigma_algebra_def]] THEN
@@ -3099,7 +3099,7 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
      MATCH_MP_TAC INCREASING THEN ASM_SIMP_TAC std_ss [MEASURE_SPACE_INCREASING] THEN
      Q_TAC SUFF_TAC `ff INTER A' IN sigma_sets sp E` THENL
      [DISCH_TAC,
-      ONCE_REWRITE_TAC [METIS [subsets_def] 
+      ONCE_REWRITE_TAC [METIS [subsets_def]
       ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
       MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [subsets_def] THEN
       FULL_SIMP_TAC std_ss [sigma_algebra_def]] THEN
@@ -3111,14 +3111,14 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
      MATCH_MP_TAC INCREASING THEN ASM_SIMP_TAC std_ss [MEASURE_SPACE_INCREASING] THEN
      Q_TAC SUFF_TAC `ff INTER A' IN sigma_sets sp E` THENL
      [DISCH_TAC,
-      ONCE_REWRITE_TAC [METIS [subsets_def] 
+      ONCE_REWRITE_TAC [METIS [subsets_def]
       ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
       MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [subsets_def] THEN
       FULL_SIMP_TAC std_ss [sigma_algebra_def]] THEN
      ASM_SET_TAC []] THEN
     Q_TAC SUFF_TAC `measure M (ff INTER A') <> PosInf` THENL
     [DISCH_TAC, METIS_TAC [let_trans, lt_infty]] THEN
-    Q_TAC SUFF_TAC `measure M (ff INTER (sp DIFF A')) = 
+    Q_TAC SUFF_TAC `measure M (ff INTER (sp DIFF A')) =
                     measure M ff - measure M (ff INTER A')` THENL
     [ASM_SIMP_TAC std_ss [] THEN DISCH_TAC,
      Q_TAC SUFF_TAC `measure M ff - measure M (ff INTER A') = measure M (ff DIFF ff INTER A')` THENL
@@ -3126,12 +3126,12 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
      MATCH_MP_TAC (GSYM MEASURE_SPACE_FINITE_DIFF_SUBSET) THEN
      Q_TAC SUFF_TAC `ff INTER A' IN sigma_sets sp E` THENL
      [DISCH_TAC,
-      ONCE_REWRITE_TAC [METIS [subsets_def] 
+      ONCE_REWRITE_TAC [METIS [subsets_def]
       ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
       MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [subsets_def] THEN
       FULL_SIMP_TAC std_ss [sigma_algebra_def]] THEN
      ASM_SET_TAC []] THEN
-    Q_TAC SUFF_TAC `measure N (ff INTER (sp DIFF A')) = 
+    Q_TAC SUFF_TAC `measure N (ff INTER (sp DIFF A')) =
                     measure N ff - measure M (ff INTER A')` THENL
     [DISCH_TAC,
      Q_TAC SUFF_TAC `measure N ff - measure N (ff INTER A') = measure N (ff DIFF ff INTER A')` THENL
@@ -3139,7 +3139,7 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
      MATCH_MP_TAC (GSYM MEASURE_SPACE_FINITE_DIFF_SUBSET) THEN
      Q_TAC SUFF_TAC `ff INTER A' IN sigma_sets sp E` THENL
      [DISCH_TAC,
-      ONCE_REWRITE_TAC [METIS [subsets_def] 
+      ONCE_REWRITE_TAC [METIS [subsets_def]
       ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
       MATCH_MP_TAC ALGEBRA_INTER THEN ASM_SIMP_TAC std_ss [subsets_def] THEN
       FULL_SIMP_TAC std_ss [sigma_algebra_def]] THEN
@@ -3148,21 +3148,21 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
     ALL_TAC] THEN
 
    SIMP_TAC std_ss [IMAGE_DEF, INTER_BIGUNION] THEN
-   ONCE_REWRITE_TAC [SET_RULE 
+   ONCE_REWRITE_TAC [SET_RULE
     ``{ff INTER x | x IN {A x | x IN univ(:num)}} =
               {ff INTER (A x) | x IN univ(:num)}``] THEN
    SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN
-   `IMAGE (\x. (\x. ff INTER A' x) x) univ(:num) SUBSET measurable_sets M` 
+   `IMAGE (\x. (\x. ff INTER A' x) x) univ(:num) SUBSET measurable_sets M`
     by (SIMP_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV] THEN
-        RW_TAC std_ss [] THEN 
-        ONCE_REWRITE_TAC [METIS [subsets_def] 
+        RW_TAC std_ss [] THEN
+        ONCE_REWRITE_TAC [METIS [subsets_def]
         ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
         MATCH_MP_TAC ALGEBRA_INTER THEN
         ASM_SET_TAC [sigma_algebra_def, subsets_def]) THEN
    `IMAGE (\x. (\x. ff INTER A' x) x)  univ(:num) SUBSET measurable_sets N`
     by (SIMP_TAC std_ss [SUBSET_DEF, IN_IMAGE, IN_UNIV] THEN
-        RW_TAC std_ss [] THEN 
-        ONCE_REWRITE_TAC [METIS [subsets_def] 
+        RW_TAC std_ss [] THEN
+        ONCE_REWRITE_TAC [METIS [subsets_def]
         ``sigma_sets sp E = subsets (sp, sigma_sets sp E)``] THEN
         MATCH_MP_TAC ALGEBRA_INTER THEN
         ASM_SET_TAC [sigma_algebra_def, subsets_def]) THEN
@@ -3185,7 +3185,7 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
   Q_TAC SUFF_TAC `A' = BIGUNION {dd i | i IN UNIV}` THENL
   [DISCH_TAC,
    Q.UNABBREV_TAC `dd` THEN SIMP_TAC std_ss [UN_disjointed_eq] THEN
-   ONCE_REWRITE_TAC [SET_RULE ``{A' INTER A i | i IN univ(:num)} = 
+   ONCE_REWRITE_TAC [SET_RULE ``{A' INTER A i | i IN univ(:num)} =
      {A' INTER x | x IN IMAGE A UNIV}``] THEN
    SIMP_TAC std_ss [GSYM INTER_BIGUNION] THEN
    MATCH_MP_TAC (GSYM SUBSET_INTER1) THEN
@@ -3195,11 +3195,11 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
    METIS_TAC []] THEN
   Q_TAC SUFF_TAC `!i. dd i IN measurable_sets M` THENL
   [DISCH_TAC, Q.UNABBREV_TAC `dd` THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
     `IMAGE (\i. disjointed (\i. A' INTER A i) i) UNIV SUBSET measurable_sets M` THENL
    [SET_TAC [], ALL_TAC] THEN
    MATCH_MP_TAC range_disjointed_sets THEN Q.EXISTS_TAC `m_space M` THEN
-   CONJ_TAC THENL 
+   CONJ_TAC THENL
    [METIS_TAC [measure_space_def, sigma_algebra_alt_eq, algebra_alt_eq],
     ALL_TAC] THEN
    SIMP_TAC std_ss [IN_IMAGE, SUBSET_DEF, IN_UNIV] THEN REPEAT STRIP_TAC THEN
@@ -3223,125 +3223,11 @@ val measure_eqI_generator_eq' = store_thm ("measure_eqI_generator_eq'",
   `IMAGE (\i. dd i) univ(:num) SUBSET measurable_sets N` by ASM_SET_TAC [] THEN
   ASM_SIMP_TAC std_ss [suminf_measure]);
 
-val pair_measure_eqI = store_thm ("pair_measure_eqI",
-  ``!M M1 M2. measure_space M /\ measure_space M1 /\ measure_space M2 /\
-     sigma_finite_measure M1 /\ sigma_finite_measure M2 /\
-     (measurable_sets (pair_measure M1 M2) = measurable_sets M) /\
-     (!A B. A IN measurable_sets M1 /\ B IN measurable_sets M2 ==>
-      (measure M1 A * measure M2 B = measure M (A CROSS B))) ==>
-     (measure_of (pair_measure M1 M2) = measure_of M)``,
-  RW_TAC std_ss [] THEN MATCH_MP_TAC measure_eqI_generator_eq' THEN
-  Q.ABBREV_TAC `E = {a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}` THEN
-  `?f. IMAGE f univ(:num) SUBSET E /\
-        (BIGUNION {f i | i IN UNIV} = m_space M1 CROSS m_space M2) /\
-        (!i. measure (pair_measure M1 M2) (f i) <> PosInf)` by
-   METIS_TAC [sigma_finite_up_in_pair_measure_generator] THEN
-  Q.EXISTS_TAC `E` THEN Q.EXISTS_TAC `m_space M1 CROSS m_space M2` THEN
-  Q.EXISTS_TAC `f`  THEN ASM_SIMP_TAC std_ss [measure_space_pair_measure'] THEN 
-  CONJ_TAC THENL [METIS_TAC [Int_stable_pair_measure_generator], ALL_TAC] THEN
-  Q_TAC SUFF_TAC `E SUBSET POW (m_space M1 CROSS m_space M2)` THENL
-  [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
-   Q.UNABBREV_TAC `E` THEN RW_TAC std_ss [POW_DEF, CROSS_DEF] THEN
-   SIMP_TAC std_ss [SUBSET_DEF, GSPECIFICATION, EXISTS_PROD] THEN
-   RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
-   `p_1 SUBSET m_space M1` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
-   `p_2 SUBSET m_space M2` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
-   ASM_SET_TAC []] THEN
-  CONJ_TAC THENL
-  [ALL_TAC,
-   UNDISCH_TAC ``measurable_sets (pair_measure M1 M2) = measurable_sets M`` THEN
-   ASM_SIMP_TAC std_ss [pair_measure, measure_of, measurable_sets_def]] THEN
-  
-  RW_TAC std_ss [] THEN SIMP_TAC std_ss [measure_of, pair_measure, measure_def] THEN
-  ASM_SIMP_TAC std_ss [measure_space_pair_measure] THEN
-  `X IN sigma_sets (m_space M1 CROSS m_space M2) E` by METIS_TAC [sigma_sets_basic] THEN
-  UNDISCH_TAC ``measurable_sets (pair_measure M1 M2) = measurable_sets M`` THEN
-  ASM_SIMP_TAC std_ss [pair_measure, measure_of, measurable_sets_def] THEN
-  DISCH_TAC THEN
-  Q_TAC SUFF_TAC `!x y. indicator_fn X (x,y) = indicator_fn (\y. (x,y) IN X) y` THENL
-  [DISC_RW_KILL, SIMP_TAC std_ss [indicator_fn_def, IN_DEF]] THEN
-  ONCE_REWRITE_TAC [METIS [ETA_AX] ``(\x. indicator_fn X x) = indicator_fn X``] THEN
-  Q.UNABBREV_TAC `E` THEN 
-  Q_TAC SUFF_TAC `!x B. B IN sigma_sets (m_space M1 CROSS m_space M2)
-     {a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} ==>
-     (\y. (x,y) IN B) IN measurable_sets M2` THENL
-  [DISCH_TAC,
-   GEN_TAC THEN GEN_TAC THEN
-   Q_TAC SUFF_TAC `sigma_sets (m_space M1 CROSS m_space M2)
-    {a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} B ==>
-    (\z. (\y. (x,y) IN z) IN measurable_sets M2) B` THENL
-   [SIMP_TAC std_ss [SPECIFICATION], ALL_TAC] THEN
-   MATCH_MP_TAC sigma_sets_ind THEN RW_TAC std_ss [] THENL
-   [SIMP_TAC std_ss [NOT_IN_EMPTY, SET_RULE ``(\x. F) = {}``] THEN
-    METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE],
-    POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) THEN
-    RW_TAC std_ss [CROSS_DEF, GSPECIFICATION, EXISTS_PROD] THEN
-    SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
-    ASM_CASES_TAC ``x:'a IN p_1`` THENL
-    [ASM_SIMP_TAC std_ss [] THEN
-     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE, 
-      SET_RULE ``(\x. x IN s) = s``], ALL_TAC] THEN
-    ASM_SIMP_TAC std_ss [SET_RULE ``(\x. F) = {}``] THEN
-    ASM_SIMP_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE],
-    Q_TAC SUFF_TAC `(\y. (x,y) IN m_space M1 CROSS m_space M2 DIFF a) =
-         if x IN m_space M1 then m_space M2 DIFF (\y. (x,y) IN a) else {}` THENL
-    [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
-     ASM_SIMP_TAC std_ss [CROSS_DEF, INTER_DEF, DIFF_DEF] THEN
-     ASM_SIMP_TAC std_ss [EXTENSION, GSPECIFICATION, EXISTS_PROD] THEN
-     ASM_SET_TAC []] THEN
-    `{} IN measurable_sets M2` by METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE] THEN
-    COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-    MATCH_MP_TAC MEASURE_SPACE_DIFF THEN 
-    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
-    ALL_TAC] THEN
-   Q_TAC SUFF_TAC `(\y. (x,y) IN BIGUNION {A i | i IN univ(:num)}) =
-      BIGUNION {(\y. (x,y) IN A i) | i IN UNIV}` THENL
-   [DISC_RW_KILL,
-    SIMP_TAC std_ss [EXTENSION, IN_BIGUNION, IN_INTER, GSPECIFICATION, EXISTS_PROD] THEN
-    GEN_TAC THEN EQ_TAC THEN RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
-    POP_ASSUM (MP_TAC o SIMP_RULE std_ss [IN_DEF]) THEN
-    RW_TAC std_ss [] THEN Q.EXISTS_TAC `(\x'. A i (x, x'))` THEN 
-    CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN SET_TAC []] THEN
-   SIMP_TAC std_ss [GSYM IMAGE_DEF] THEN MATCH_MP_TAC MEASURE_SPACE_BIGUNION THEN
-   ASM_SIMP_TAC std_ss []] THEN
-  `!x. (\y. (x,y) IN X) IN measurable_sets M2` by METIS_TAC [] THEN
-  ASM_SIMP_TAC std_ss [pos_fn_integral_indicator] THEN
-  FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, CROSS_DEF] THEN
-
-  ONCE_REWRITE_TAC [SET_RULE 
-    ``!x. (\y. x IN p_1 /\ y IN p_2) = {y | x IN p_1 /\ y IN p_2}``] THEN
-  Q_TAC SUFF_TAC `!x. measure M2 {y | x IN p_1 /\ y IN p_2} =
-                      measure M2 p_2 * indicator_fn p_1 x` THENL
-  [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
-   GEN_TAC THEN ASM_CASES_TAC ``x IN p_1`` THENL
-   [ASM_SIMP_TAC std_ss [indicator_fn_def, mul_rone] THEN
-    AP_TERM_TAC THEN SET_TAC [], ALL_TAC] THEN
-   ASM_SIMP_TAC std_ss [indicator_fn_def, mul_rzero, GSPEC_F] THEN
-   METIS_TAC [measure_space_def, positive_def]] THEN
-  Q_TAC SUFF_TAC 
-  `pos_fn_integral M1 (\x. max 0 (measure M2 p_2 * indicator_fn p_1 x)) =
-   measure M2 p_2 * pos_fn_integral M1 (\x. max 0 (indicator_fn p_1 x))` THENL
-  [ALL_TAC,
-   MATCH_MP_TAC pos_fn_integral_cmult THEN ASM_SIMP_TAC std_ss [] THEN
-   CONJ_TAC THENL
-   [FULL_SIMP_TAC std_ss [measure_space_def, positive_def] THEN 
-    FIRST_X_ASSUM MATCH_MP_TAC THEN ASM_SET_TAC [], ALL_TAC] THEN
-   RULE_ASSUM_TAC (ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN ASM_SIMP_TAC std_ss [] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
-   Q.EXISTS_TAC `p_1` THEN FULL_SIMP_TAC std_ss [measure_space_def] THEN
-   ASM_SET_TAC [subsets_def]] THEN
-  `0 <= measure M2 p_2` by (FULL_SIMP_TAC std_ss [measure_space_def, positive_def] THEN
-   FIRST_X_ASSUM MATCH_MP_TAC THEN ASM_SET_TAC []) THEN
-  ASM_SIMP_TAC std_ss [extreal_max_def, le_mul, indicator_fn_pos_le] THEN
-  ONCE_REWRITE_TAC [METIS [] ``!s. (\y. indicator_fn s y) = indicator_fn s``] THEN
-  DISCH_TAC THEN ASM_SIMP_TAC std_ss [pos_fn_integral_indicator] THEN
-  ONCE_REWRITE_TAC [mul_comm] THEN METIS_TAC []);
-
 val indep_set_sigma_sets = store_thm ("indep_sets_sigma_sets",
   ``!p A B. prob_space p /\ indep_set p A B /\ Int_stable A /\ Int_stable B ==>
             indep_set p (subsets (sigma (m_space p) A)) (subsets (sigma (m_space p) B))``,
   RW_TAC std_ss [indep_set] THEN
-  Q_TAC SUFF_TAC `(\i:num. if i = 0 then subsets (sigma (m_space p) A) 
+  Q_TAC SUFF_TAC `(\i:num. if i = 0 then subsets (sigma (m_space p) A)
                          else subsets (sigma (m_space p) B)) =
                   (\i:num. subsets (sigma (p_space p) ((\i. if i = 0 then A else B) i)))` THENL
   [DISC_RW_KILL, ABS_TAC THEN METIS_TAC [p_space_def]] THEN
@@ -3351,26 +3237,26 @@ val indep_set_sigma_sets = store_thm ("indep_sets_sigma_sets",
 
 val indep_var_distribution_imp = store_thm ("indep_var_distribution_imp",
   ``!p M1 X M2 Y. prob_space p /\ measure_space M1 /\ measure_space M2 /\
-                  sigma_finite_measure M2 /\ indep_var p M1 X M2 Y ==> 
-      random_variable X p (m_space M1, measurable_sets M1) /\ 
+                  sigma_finite_measure M2 /\ indep_var p M1 X M2 Y ==>
+      random_variable X p (m_space M1, measurable_sets M1) /\
       random_variable Y p (m_space M2, measurable_sets M2) /\
       (measure_of (pair_measure (distr p M1 X) (distr p M2 Y)) =
        measure_of (distr p (pair_measure M1 M2) (\x. (X x, Y x))))``,
   REPEAT GEN_TAC THEN STRIP_TAC THEN
-  `indep_var p M1 X M2 Y ==> 
-      random_variable X p (m_space M1, measurable_sets M1) /\ 
+  `indep_var p M1 X M2 Y ==>
+      random_variable X p (m_space M1, measurable_sets M1) /\
       random_variable Y p (m_space M2, measurable_sets M2)`
    by METIS_TAC [indep_var_rv] THEN
   `indep_var p M1 X M2 Y ==>
-      random_variable (\x. (X x, Y x)) p 
+      random_variable (\x. (X x, Y x)) p
       (m_space (pair_measure M1 M2), measurable_sets (pair_measure M1 M2))` by
    (DISCH_THEN (fn th => POP_ASSUM MP_TAC THEN ASSUME_TAC th) THEN
     ASM_SIMP_TAC std_ss [random_variable_def] THEN STRIP_TAC THEN
     SIMP_TAC std_ss [p_space_def, events_def] THEN MATCH_MP_TAC measurable_Pair THEN
     FULL_SIMP_TAC std_ss [prob_space_def, p_space_def, events_def]) THEN
-  `indep_var p M1 X M2 Y ==> prob_space (distr p M1 X)` by 
+  `indep_var p M1 X M2 Y ==> prob_space (distr p M1 X)` by
    METIS_TAC [prob_space_distr, random_variable_def, p_space_def, events_def] THEN
-  `indep_var p M1 X M2 Y ==> prob_space (distr p M2 Y)` by 
+  `indep_var p M1 X M2 Y ==> prob_space (distr p M2 Y)` by
    METIS_TAC [prob_space_distr, random_variable_def, p_space_def, events_def] THEN
   Q_TAC SUFF_TAC `indep_var p M1 X M2 Y ==>
                   (measure_of (pair_measure (distr p M1 X) (distr p M2 Y)) =
@@ -3381,22 +3267,22 @@ val indep_var_distribution_imp = store_thm ("indep_var_distribution_imp",
    [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
     RW_TAC std_ss [sigma_finite_measure] THEN Q.EXISTS_TAC `{m_space M1}` THEN
     SIMP_TAC std_ss [countable_sing] THEN
-    CONJ_TAC THENL 
+    CONJ_TAC THENL
     [RW_TAC std_ss [SUBSET_DEF, distr, measurable_sets_def, IN_SING] THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE], ALL_TAC] THEN
     CONJ_TAC THENL [SIMP_TAC std_ss [BIGUNION_SING, distr, m_space_def], ALL_TAC] THEN
-    RW_TAC std_ss [IN_SING] THEN FULL_SIMP_TAC std_ss [prob_space_def] THEN 
+    RW_TAC std_ss [IN_SING] THEN FULL_SIMP_TAC std_ss [prob_space_def] THEN
     `m_space M1 = p_space (distr p M1 X)` by METIS_TAC [p_space_def, m_space_def, distr] THEN
     ASM_SIMP_TAC std_ss [num_not_infty]] THEN
    Q_TAC SUFF_TAC `sigma_finite_measure (distr p M2 Y)` THENL
    [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
     RW_TAC std_ss [sigma_finite_measure] THEN Q.EXISTS_TAC `{m_space M2}` THEN
     SIMP_TAC std_ss [countable_sing] THEN
-    CONJ_TAC THENL 
+    CONJ_TAC THENL
     [RW_TAC std_ss [SUBSET_DEF, distr, measurable_sets_def, IN_SING] THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE], ALL_TAC] THEN
     CONJ_TAC THENL [SIMP_TAC std_ss [BIGUNION_SING, distr, m_space_def], ALL_TAC] THEN
-    RW_TAC std_ss [IN_SING] THEN FULL_SIMP_TAC std_ss [prob_space_def] THEN 
+    RW_TAC std_ss [IN_SING] THEN FULL_SIMP_TAC std_ss [prob_space_def] THEN
     `m_space M2 = p_space (distr p M2 Y)` by METIS_TAC [p_space_def, m_space_def, distr] THEN
     ASM_SIMP_TAC std_ss [num_not_infty]] THEN
    CONJ_TAC THENL
@@ -3413,7 +3299,7 @@ val indep_var_distribution_imp = store_thm ("indep_var_distribution_imp",
     FULL_SIMP_TAC std_ss [random_variable_def, p_space_def, events_def],
     ALL_TAC] THEN
    CONJ_TAC THENL
-   [Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+   [Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                      SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3431,78 +3317,17 @@ val indep_var_distribution_imp = store_thm ("indep_var_distribution_imp",
   METIS_TAC []);
 
 val convolution = Define
-   `(convolution M N):(real -> bool) # ((real -> bool) -> bool) # ((real->bool) -> extreal) 
+   `(convolution M N):(real -> bool) # ((real -> bool) -> bool) # ((real->bool) -> extreal)
     = distr (pair_measure M N)
       (space borel, subsets borel, (\x. 0)) (\(x,y). x + y)`;
 
-val measure_of_measure_of = store_thm ("measure_of_measure_of",
-  ``!M. measurable_sets M SUBSET POW (m_space M) ==>
-    (measure_of (measure_of M) = measure_of M)``,
-  RW_TAC std_ss [] THEN
-  `M = (m_space M, measurable_sets M, measure M)` by 
-   METIS_TAC [MEASURE_SPACE_REDUCE] THEN
-  POP_ASSUM (fn th => ONCE_REWRITE_TAC [th]) THEN
-  ASM_SIMP_TAC std_ss [measure_of] THEN
-  Q_TAC SUFF_TAC `sigma_sets (m_space M) (measurable_sets M) SUBSET POW (m_space M)` THENL
-  [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
-   SIMP_TAC std_ss [SUBSET_DEF] THEN GEN_TAC THEN
-   ONCE_REWRITE_TAC [SPECIFICATION] THEN
-   MATCH_MP_TAC sigma_sets_ind THEN RW_TAC std_ss [] THENL
-   [ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN
-    SIMP_TAC std_ss [EMPTY_SUBSET, IN_POW],
-    FULL_SIMP_TAC std_ss [SUBSET_DEF, SPECIFICATION],
-    ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN
-    SIMP_TAC std_ss [SUBSET_DEF, IN_DIFF, IN_POW],
-    ALL_TAC] THEN
-   ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN
-   SIMP_TAC std_ss [SUBSET_DEF, IN_BIGUNION, IN_POW] THEN
-   RW_TAC std_ss [GSPECIFICATION] THEN
-   FIRST_X_ASSUM (MP_TAC o Q.SPEC `i`) THEN
-   DISCH_THEN (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) THEN
-   ASM_SIMP_TAC std_ss [IN_POW, SUBSET_DEF]] THEN
-  `(sigma_sets (m_space M) (sigma_sets (m_space M) (measurable_sets M)) =
-    sigma_sets (m_space M) (measurable_sets M))` by
-    METIS_TAC [sigma_sets_eq, sigma_algebra_sigma_sets] THEN
-  ASM_SIMP_TAC std_ss [] THEN ABS_TAC THEN
-  ASM_CASES_TAC `` a IN sigma_sets (m_space M) (measurable_sets M) /\
-   measure_space (m_space M,sigma_sets (m_space M) (measurable_sets M),measure M)`` THEN
-  FULL_SIMP_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC ` measure_space
-     (m_space M,sigma_sets (m_space M) (measurable_sets M),
-      (\a'. if a' IN sigma_sets (m_space M) (measurable_sets M) then
-           measure M a' else 0))` THENL
-  [METIS_TAC [], ALL_TAC] THEN
-  FULL_SIMP_TAC std_ss [measure_space_def, m_space_def, measurable_sets_def] THEN
-  CONJ_TAC THENL
-  [FULL_SIMP_TAC std_ss [positive_def, measurable_sets_def, measure_def],
-   ALL_TAC] THEN
-  FULL_SIMP_TAC std_ss [countably_additive_def, m_space_def] THEN
-  FULL_SIMP_TAC std_ss [measure_def, measurable_sets_def] THEN
-  RW_TAC std_ss [IN_FUNSET, IN_UNIV, o_DEF]);
-
-val distr' = new_definition ("distr'",
-  ``distr' M N f = (m_space N, measurable_sets N, 
-     (\s. if s IN measurable_sets N then measure M (PREIMAGE f s INTER m_space M)
-          else 0))``);
-
-val measure_space_distr' = store_thm ("measure_space_distr'",
-  ``!M M' t. measure_space (distr M M' t) ==> measure_space (distr' M M' t)``,
-  RW_TAC std_ss [measure_space_def, distr, distr', space_def, subsets_def] THEN
-  FULL_SIMP_TAC std_ss [m_space_def, measurable_sets_def, measure_def] THENL
-  [FULL_SIMP_TAC std_ss [positive_def, measure_def, measurable_sets_def],
-   ALL_TAC] THEN
-  FULL_SIMP_TAC std_ss [countably_additive_def, measure_def, m_space_def] THEN
-  FULL_SIMP_TAC std_ss [measurable_sets_def] THEN RW_TAC std_ss [o_DEF] THEN
-  AP_TERM_TAC THEN ABS_TAC THEN COND_CASES_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-  FULL_SIMP_TAC std_ss [IN_FUNSET, IN_UNIV] THEN ASM_SET_TAC []);
-
 val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
-  ``!p X Y. prob_space p /\ 
-        indep_var p (space borel, subsets borel, (\x. 0)) X 
+  ``!p X Y. prob_space p /\
+        indep_var p (space borel, subsets borel, (\x. 0)) X
                     (space borel, subsets borel, (\x. 0)) Y ==>
         (!a. a  IN measurable_sets (space borel, subsets borel, (\x. 0)) ==>
         (distribution p (\x. X x + (Y:'a->real) x) a =
-         measure (convolution 
+         measure (convolution
                   (distr' p (space borel, subsets borel, (\x. 0)) X)
                   (distr' p (space borel, subsets borel, (\x. 0)) Y)) a))``,
   RW_TAC std_ss [convolution] THEN ASSUME_TAC measure_space_borel THEN
@@ -3511,7 +3336,7 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
    RW_TAC std_ss [sigma_finite_measure] THEN
    SIMP_TAC std_ss [m_space_def, measurable_sets_def, measure_def] THEN
    Q.EXISTS_TAC `{space borel}` THEN SIMP_TAC std_ss [num_not_infty] THEN
-   `algebra borel` by METIS_TAC [measure_space_def, sigma_algebra_def, 
+   `algebra borel` by METIS_TAC [measure_space_def, sigma_algebra_def,
      m_space_def, measurable_sets_def, SPACE] THEN
    ASM_SIMP_TAC std_ss [countable_sing, BIGUNION_SING] THEN
    ASM_SIMP_TAC std_ss [SUBSET_DEF, IN_SING, ALGEBRA_SPACE]] THEN
@@ -3521,7 +3346,7 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
    (measure_of (pair_measure (distr p M X) (distr p M Y)) =
     measure_of (distr p (pair_measure M M) (\x. (X x,Y x))))`
    by METIS_TAC [indep_var_distribution_imp] THEN
-  
+
   Q_TAC SUFF_TAC `measure_space (distr p M X)` THENL
   [DISCH_TAC, MATCH_MP_TAC measure_space_distr THEN
    FULL_SIMP_TAC std_ss [random_variable_def, prob_space_def] THEN
@@ -3531,9 +3356,9 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
    FULL_SIMP_TAC std_ss [random_variable_def, prob_space_def] THEN
    FULL_SIMP_TAC std_ss [prob_def, events_def, p_space_def]] THEN
 
-  Q_TAC SUFF_TAC `measure 
+  Q_TAC SUFF_TAC `measure
    (distr (pair_measure (distr' p M X) (distr' p M Y)) M (\(x,y). x + y)) a =
-                  measure 
+                  measure
    (distr (pair_measure (distr p M X) (distr p M Y)) M (\(x,y). x + y)) a` THENL
   [DISC_RW_KILL,
    SIMP_TAC std_ss [distr, measure_def] THEN SIMP_TAC std_ss [GSYM distr] THEN
@@ -3543,7 +3368,7 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
    Q_TAC SUFF_TAC `m_space (pair_measure (distr p M X) (distr p M Y)) =
                    m_space (distr p M X) CROSS m_space (distr p M Y)` THENL
    [DISC_RW_KILL, METIS_TAC [m_space_def, pair_measure, measure_of]] THEN
-   SIMP_TAC std_ss [distr, distr', m_space_def] THEN 
+   SIMP_TAC std_ss [distr, distr', m_space_def] THEN
    SIMP_TAC std_ss [GSYM distr, GSYM distr'] THEN
    `!X. m_space (distr' p M X) = m_space (distr p M X)` by
     METIS_TAC [distr, m_space_def, distr'] THEN
@@ -3586,7 +3411,7 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
    METIS_TAC [measure_of_measure_of],
    ALL_TAC] THEN
 
-  ASM_SIMP_TAC std_ss [] THEN 
+  ASM_SIMP_TAC std_ss [] THEN
   `sigma_sets (m_space M) (measurable_sets M) = measurable_sets M` by
    METIS_TAC [sigma_sets_eq, measure_space_def] THEN
   `measurable_sets M SUBSET POW (m_space M)` by
@@ -3639,12 +3464,12 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
    SIMP_TAC std_ss [IN_UNIV, GSPEC_T, INTER_UNIV] THEN SET_TAC [],
    ALL_TAC] THEN
   DISCH_TAC THEN
-  Q_TAC SUFF_TAC `(\x:real#real. FST x + SND x) IN 
+  Q_TAC SUFF_TAC `(\x:real#real. FST x + SND x) IN
    measurable (m_space (pair_measure M M),measurable_sets (pair_measure M M))
                                   (m_space M,measurable_sets M)` THENL
   [Q_TAC SUFF_TAC `(\x:real#real. FST x + SND x) = (\(x,y). x + y)` THENL
    [DISC_RW_KILL,
-    RW_TAC std_ss [FUN_EQ_THM] THEN 
+    RW_TAC std_ss [FUN_EQ_THM] THEN
     `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
     ASM_SIMP_TAC std_ss []] THEN
    ASM_SIMP_TAC std_ss [IN_MEASURABLE, space_def, subsets_def],
@@ -3688,7 +3513,7 @@ val sum_indep_random_variable = store_thm ("sum_indep_random_variable",
 val distr_pair_swap = store_thm ("distr_pair_swap",
   ``!M1 M2. measure_space M1 /\ measure_space M2 /\
             sigma_finite_measure M1 /\ sigma_finite_measure M2 ==>
-            (pair_measure M1 M2 = 
+            (pair_measure M1 M2 =
       measure_of (distr (pair_measure M2 M1) (pair_measure M1 M2) (\(x,y). (y,x))))``,
   RW_TAC std_ss [] THEN
   Q.ABBREV_TAC `E = {A CROSS B |
@@ -3746,7 +3571,7 @@ val distr_pair_swap = store_thm ("distr_pair_swap",
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
     SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M2 /\ b IN measurable_sets M1} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M2 /\ b IN measurable_sets M1}
                    SUBSET POW (m_space M2 CROSS m_space M1)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3776,7 +3601,7 @@ val distr_pair_swap = store_thm ("distr_pair_swap",
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
    SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M2 /\ b IN measurable_sets M1} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M2 /\ b IN measurable_sets M1}
                   SUBSET POW (m_space M2 CROSS m_space M1)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3794,7 +3619,7 @@ val distr_pair_swap = store_thm ("distr_pair_swap",
   `measure_space
    (distr (pair_measure M2 M1) (pair_measure M1 M2) (\(x,y). (y,x)))` by
    METIS_TAC [measure_space_distr] THEN
-  Q_TAC SUFF_TAC `measurable_sets (pair_measure M1 M2) = 
+  Q_TAC SUFF_TAC `measurable_sets (pair_measure M1 M2) =
                   sigma_sets (m_space M1 CROSS m_space M2) E` THENL
   [DISCH_TAC,
    SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
@@ -3860,7 +3685,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                   SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3888,7 +3713,7 @@ val convolution_density = store_thm ("convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                  SUBSET POW (m_space M1 CROSS m_space M2)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3909,7 +3734,7 @@ val convolution_density = store_thm ("convolution_density",
   CONJ_TAC THENL
   [MATCH_MP_TAC measure_space_density THEN SIMP_TAC std_ss [measure_space_lborel] THEN
    Q_TAC SUFF_TAC `(\x. pos_fn_integral lborel (\y. f (x - y) * g y)) =
-      (\x. pos_fn_integral lborel (\y. max 0 (if x IN m_space lborel 
+      (\x. pos_fn_integral lborel (\y. max 0 (if x IN m_space lborel
            then (\(x,y). (\y. f (x - y) * g y) y) (x,y) else 0)))` THENL
    [DISC_RW_KILL,
     ABS_TAC THEN MATCH_MP_TAC positive_integral_cong THEN
@@ -3918,7 +3743,7 @@ val convolution_density = store_thm ("convolution_density",
     ASM_SIMP_TAC std_ss [extreal_max_def, le_mul]] THEN
    MATCH_MP_TAC borel_measurable_pos_integral_fst THEN
    ASM_SIMP_TAC std_ss [measure_space_lborel, sigma_finite_measure_lborel] THEN
-   CONJ_TAC THENL 
+   CONJ_TAC THENL
    [GEN_TAC THEN `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
     ASM_SIMP_TAC std_ss [le_mul], ALL_TAC] THEN
    Q_TAC SUFF_TAC `(\(x,y). f (x - y) * g y) = (\z. f (FST z - SND z) * g (SND z))` THENL
@@ -3931,7 +3756,7 @@ val convolution_density = store_thm ("convolution_density",
    ASSUME_TAC sigma_finite_measure_lborel THEN
    ASM_SIMP_TAC std_ss [measure_space_pair_measure', GSYM o_DEF] THEN
    CONJ_TAC THENL
-   [MATCH_MP_TAC MEASURABLE_COMP THEN 
+   [MATCH_MP_TAC MEASURABLE_COMP THEN
     Q.EXISTS_TAC `(m_space lborel,measurable_sets lborel)` THEN
     ASM_SIMP_TAC std_ss [lborel, m_space_def, measurable_sets_def] THEN
     SIMP_TAC std_ss [GSYM lborel, SPACE, GSYM borel_measurable, GSYM space_borel] THEN
@@ -3950,7 +3775,7 @@ val convolution_density = store_thm ("convolution_density",
      [DISCH_TAC,
       RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
       SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel} 
+     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel}
                      SUBSET POW (m_space lborel CROSS m_space lborel)` THENL
      [DISCH_TAC,
       SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3976,7 +3801,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel}
                     SUBSET POW (m_space lborel CROSS m_space lborel)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -3992,7 +3817,7 @@ val convolution_density = store_thm ("convolution_density",
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
     Q.EXISTS_TAC `m_space lborel` THEN Q.EXISTS_TAC `s` THEN
     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
-    ALL_TAC] THEN 
+    ALL_TAC] THEN
    MATCH_MP_TAC MEASURABLE_COMP THEN
    Q.EXISTS_TAC `(m_space lborel,measurable_sets lborel)` THEN
    ASM_SIMP_TAC std_ss [] THEN
@@ -4009,7 +3834,7 @@ val convolution_density = store_thm ("convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel}
                    SUBSET POW (m_space lborel CROSS m_space lborel)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4026,7 +3851,7 @@ val convolution_density = store_thm ("convolution_density",
    Q.EXISTS_TAC `m_space lborel` THEN Q.EXISTS_TAC `s` THEN
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
    ALL_TAC] THEN
-  Q_TAC SUFF_TAC 
+  Q_TAC SUFF_TAC
   `(measurable_sets (convolution (density lborel f) (density lborel g)) =
     measurable_sets (density lborel
       (\x. pos_fn_integral lborel (\y. f (x - y) * g y))))` THENL
@@ -4055,7 +3880,7 @@ val convolution_density = store_thm ("convolution_density",
     ASM_SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
     Q.ABBREV_TAC `M1 = density lborel f` THEN
     Q.ABBREV_TAC `M2 = density lborel g` THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                   SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4064,7 +3889,7 @@ val convolution_density = store_thm ("convolution_density",
      `p_2 SUBSET m_space M2` by METIS_TAC [MEASURABLE_SETS_SUBSET_SPACE] THEN
      ASM_SET_TAC []] THEN
     ASM_SIMP_TAC std_ss [] THEN DISCH_THEN MATCH_MP_TAC THEN
-    METIS_TAC [lborel, measurable_sets_def], 
+    METIS_TAC [lborel, measurable_sets_def],
     ALL_TAC] THEN
 
    SIMP_TAC std_ss [GSYM borel_measurable] THEN
@@ -4089,7 +3914,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                   SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4117,7 +3942,7 @@ val convolution_density = store_thm ("convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                  SUBSET POW (m_space M1 CROSS m_space M2)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4133,13 +3958,13 @@ val convolution_density = store_thm ("convolution_density",
    SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
    Q.EXISTS_TAC `m_space M1` THEN Q.EXISTS_TAC `s` THEN
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE]] THEN
-  Q_TAC SUFF_TAC `PREIMAGE (\(x,y). x + y) A SUBSET 
+  Q_TAC SUFF_TAC `PREIMAGE (\(x,y). x + y) A SUBSET
         m_space (density lborel f) CROSS m_space (density lborel g)` THENL
   [DISCH_TAC,
    SIMP_TAC std_ss [density, m_space_def, lborel, measurable_sets_def] THEN
-   SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, GSPECIFICATION, EXISTS_PROD] THEN 
+   SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, GSPECIFICATION, EXISTS_PROD] THEN
    METIS_TAC [IN_UNIV, pair_CASES]] THEN
-  `PREIMAGE (\(x,y). x + y) A INTER (m_space (density lborel f) CROSS 
+  `PREIMAGE (\(x,y). x + y) A INTER (m_space (density lborel f) CROSS
     m_space (density lborel g)) = PREIMAGE (\(x,y). x + y) A` by ASM_SET_TAC [] THEN
   Q_TAC SUFF_TAC `!x y. indicator_fn (PREIMAGE (\(x,y). x + y) A) (x,y) =
                         indicator_fn A (x + y)` THENL
@@ -4193,7 +4018,7 @@ val convolution_density = store_thm ("convolution_density",
     ASM_SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
     Q.ABBREV_TAC `M2 = density lborel g` THEN
     Q.ABBREV_TAC `M1 = lborel` THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                   SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4226,7 +4051,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                   SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4254,7 +4079,7 @@ val convolution_density = store_thm ("convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                  SUBSET POW (m_space M1 CROSS m_space M2)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4271,9 +4096,9 @@ val convolution_density = store_thm ("convolution_density",
    Q.EXISTS_TAC `m_space M1` THEN Q.EXISTS_TAC `s` THEN
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE]] THEN
   ASM_SIMP_TAC std_ss [extreal_max_def, le_mul] THEN DISC_RW_KILL THEN
-  SIMP_TAC std_ss [GSYM extreal_max_def] THEN 
+  SIMP_TAC std_ss [GSYM extreal_max_def] THEN
 
-  Q_TAC SUFF_TAC 
+  Q_TAC SUFF_TAC
   `!x. f x * pos_fn_integral (density lborel g) (\y. max 0 ((\y. indicator_fn A (x + y)) y)) =
    pos_fn_integral (density lborel g) (\y. max 0 (f x * (\y. indicator_fn A (x + y)) y))` THENL
   [ALL_TAC,
@@ -4299,7 +4124,7 @@ val convolution_density = store_thm ("convolution_density",
   Q_TAC SUFF_TAC `!x. pos_fn_integral (density lborel g)
     (\y. max 0 ((\y. f x * indicator_fn A (x + y)) y)) =
    pos_fn_integral lborel (\y. max 0 ( g y * (\y. f x * indicator_fn A (x + y)) y))` THENL
-  [SIMP_TAC std_ss [] THEN DISC_RW_KILL, 
+  [SIMP_TAC std_ss [] THEN DISC_RW_KILL,
    GEN_TAC THEN MATCH_MP_TAC (REWRITE_RULE [GSYM density] pos_fn_integral_density') THEN
    ASM_SIMP_TAC std_ss [le_mul, indicator_fn_pos_le] THEN
    ASM_SIMP_TAC std_ss [GSPEC_T, AE, ae_filter, GSPECIFICATION] THEN
@@ -4313,7 +4138,7 @@ val convolution_density = store_thm ("convolution_density",
    ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
    [MATCH_MP_TAC IN_MEASURABLE_BOREL_CONST THEN METIS_TAC [measure_space_def],
     ALL_TAC] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN 
+   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
    Q.EXISTS_TAC `PREIMAGE (\y. x + y) A` THEN
    ASM_SIMP_TAC std_ss [subsets_def] THEN
    CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
@@ -4328,7 +4153,7 @@ val convolution_density = store_thm ("convolution_density",
    SIMP_TAC std_ss [sigma_algebra_borel, borel_measurable_const] THEN
    SIMP_TAC std_ss [borel_measurable, METIS [I_THM] ``(\y. y) = I``] THEN
    MATCH_MP_TAC MEASURABLE_I THEN SIMP_TAC std_ss [sigma_algebra_borel]] THEN
- 
+
   Q_TAC SUFF_TAC `pos_fn_integral lborel
    (\x. pos_fn_integral lborel (\y. (\(x,y). max 0 (g y * (f x * indicator_fn A (x + y)))) (x,y))) =
                   pos_fn_integral lborel
@@ -4344,19 +4169,19 @@ val convolution_density = store_thm ("convolution_density",
    [DISC_RW_KILL,
     SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
     `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
-   Q_TAC SUFF_TAC `(\z. max ((\z. 0) z)  
+   Q_TAC SUFF_TAC `(\z. max ((\z. 0) z)
                    ((\z. (g (SND z) * (f (FST z) * indicator_fn A (FST z + SND z)))) z)) IN
     measurable (m_space (pair_measure lborel lborel),
                 measurable_sets (pair_measure lborel lborel)) Borel` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_MAX THEN
-   `measure_space (pair_measure lborel lborel)` by 
+   `measure_space (pair_measure lborel lborel)` by
     METIS_TAC [measure_space_pair_measure', sigma_finite_measure_lborel] THEN
    CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
    CONJ_TAC THENL
    [MATCH_MP_TAC IN_MEASURABLE_BOREL_CONST THEN
     METIS_TAC [measure_space_def], ALL_TAC] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN Q.EXISTS_TAC `(\z. g (SND z))` THEN 
+   MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN Q.EXISTS_TAC `(\z. g (SND z))` THEN
    Q.EXISTS_TAC `(\z. f (FST z) * indicator_fn A (FST z + SND z))` THEN
    ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
    [SIMP_TAC std_ss [GSYM o_DEF] THEN MATCH_MP_TAC MEASURABLE_COMP THEN
@@ -4372,7 +4197,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                   SUBSET POW (m_space M CROSS m_space M)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4405,7 +4230,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                   SUBSET POW (m_space M CROSS m_space M)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4428,16 +4253,16 @@ val convolution_density = store_thm ("convolution_density",
    CONJ_TAC THENL [ALL_TAC, RW_TAC std_ss [indicator_fn_def, IN_PREIMAGE]] THEN
    Q_TAC SUFF_TAC `(\z. FST z + SND z) = (\(x,y). x + y:real)` THENL
    [DISC_RW_KILL,
-    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN 
+    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
     `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
    Q.ABBREV_TAC `M = lborel` THEN
-   Q_TAC SUFF_TAC `(\(x,y). x + y) IN measurable 
-    (m_space (pair_measure M M), measurable_sets (pair_measure M M)) 
+   Q_TAC SUFF_TAC `(\(x,y). x + y) IN measurable
+    (m_space (pair_measure M M), measurable_sets (pair_measure M M))
     (m_space M, measurable_sets M)` THENL
    [RW_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
     POP_ASSUM MP_TAC THEN
     ASM_SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                   SUBSET POW (m_space M CROSS m_space M)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4453,9 +4278,9 @@ val convolution_density = store_thm ("convolution_density",
    SIMP_TAC std_ss [GSYM lborel, GSYM space_borel, SPACE, GSYM borel_measurable] THEN
    Q_TAC SUFF_TAC `(\(x,y). x + y:real) = (\z. FST z + SND z)` THENL
    [DISC_RW_KILL,
-    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN 
+    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
     `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
-   
+
     MATCH_MP_TAC borel_measurable_add THEN Q.EXISTS_TAC `FST` THEN Q.EXISTS_TAC `SND` THEN
     ASM_SIMP_TAC std_ss [] THEN
     CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
@@ -4470,7 +4295,7 @@ val convolution_density = store_thm ("convolution_density",
      [DISCH_TAC,
       RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
       SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                    SUBSET POW (m_space M CROSS m_space M)` THENL
      [DISCH_TAC,
       SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4497,7 +4322,7 @@ val convolution_density = store_thm ("convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                  SUBSET POW (m_space M CROSS m_space M)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4523,7 +4348,7 @@ val convolution_density = store_thm ("convolution_density",
    ASM_SIMP_TAC std_ss [] THEN MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN
    Q.EXISTS_TAC `f` THEN Q.EXISTS_TAC `(\x. indicator_fn A (x + y))` THEN
    ASM_SIMP_TAC std_ss [] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN 
+   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
    Q.EXISTS_TAC `PREIMAGE (\x. x + y) A` THEN
    ASM_SIMP_TAC std_ss [subsets_def] THEN
    CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
@@ -4540,20 +4365,20 @@ val convolution_density = store_thm ("convolution_density",
    MATCH_MP_TAC MEASURABLE_I THEN SIMP_TAC std_ss [sigma_algebra_borel]] THEN
 
   Q_TAC SUFF_TAC `!y. pos_fn_integral lborel (\x. max 0 ((\x. f x * indicator_fn A (x + y)) x)) =
-     Normal (abs 1) * pos_fn_integral lborel 
+     Normal (abs 1) * pos_fn_integral lborel
      (\x. max 0 ((\x. f x * indicator_fn A (x + y)) (-y + 1 * x)))` THENL
   [SIMP_TAC std_ss [] THEN DISC_RW_KILL,
    GEN_TAC THEN MATCH_MP_TAC lebesgue_pos_integral_real_affine THEN
    SIMP_TAC real_ss [] THEN
    ONCE_REWRITE_TAC [METIS [m_space_def, measurable_sets_def, SPACE] ``borel =
-    (m_space (space borel, subsets borel, (\x. 0)), 
+    (m_space (space borel, subsets borel, (\x. 0)),
      measurable_sets (space borel, subsets borel, (\x. 0)))``] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN
    Q.EXISTS_TAC `f` THEN Q.EXISTS_TAC `(\x. indicator_fn A (x + y))` THEN
    ASM_SIMP_TAC std_ss [measure_space_borel] THEN
    CONJ_TAC THENL
    [METIS_TAC [m_space_def, measurable_sets_def, lborel, space_borel], ALL_TAC] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN 
+   MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
    Q.EXISTS_TAC `PREIMAGE (\x. x + y) A` THEN
    ASM_SIMP_TAC std_ss [subsets_def, m_space_def, measurable_sets_def] THEN
    SIMP_TAC std_ss [space_def, sigma_algebra_borel, SPACE] THEN
@@ -4570,7 +4395,7 @@ val convolution_density = store_thm ("convolution_density",
    MATCH_MP_TAC MEASURABLE_I THEN SIMP_TAC std_ss [sigma_algebra_borel]] THEN
   SIMP_TAC real_ss [REAL_ARITH ``-y + x = x - y:real``] THEN
   SIMP_TAC std_ss [GSYM extreal_of_num_def, mul_lone] THEN
-  
+
   Q_TAC SUFF_TAC `!y. g y * pos_fn_integral lborel
    (\x. max 0 ((\x. f (x - y) * indicator_fn A x) x)) =
                             pos_fn_integral lborel
@@ -4602,7 +4427,7 @@ val convolution_density = store_thm ("convolution_density",
    (\x. pos_fn_integral lborel
        (\y. (\(x,y). max 0 (g y * (f (x - y) * indicator_fn A x))) (x,y)))` THENL
   [SIMP_TAC std_ss [] THEN DISC_RW_KILL,
-   MATCH_MP_TAC (GSYM fubini) THEN 
+   MATCH_MP_TAC (GSYM fubini) THEN
    ASM_SIMP_TAC std_ss [sigma_finite_measure_lborel] THEN
    CONJ_TAC THENL
    [GEN_TAC THEN `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
@@ -4612,19 +4437,19 @@ val convolution_density = store_thm ("convolution_density",
    [DISC_RW_KILL,
     SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
     `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
-   Q_TAC SUFF_TAC `(\z. max ((\z. 0) z)  
+   Q_TAC SUFF_TAC `(\z. max ((\z. 0) z)
                    ((\z. (g (SND z) * (f (FST z - SND z) * indicator_fn A (FST z)))) z)) IN
     measurable (m_space (pair_measure lborel lborel),
                 measurable_sets (pair_measure lborel lborel)) Borel` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN
    MATCH_MP_TAC IN_MEASURABLE_BOREL_MAX THEN
-   `measure_space (pair_measure lborel lborel)` by 
+   `measure_space (pair_measure lborel lborel)` by
     METIS_TAC [measure_space_pair_measure', sigma_finite_measure_lborel] THEN
    CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
    CONJ_TAC THENL
    [MATCH_MP_TAC IN_MEASURABLE_BOREL_CONST THEN
     METIS_TAC [measure_space_def], ALL_TAC] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN Q.EXISTS_TAC `(\z. g (SND z))` THEN 
+   MATCH_MP_TAC IN_MEASURABLE_BOREL_TIMES THEN Q.EXISTS_TAC `(\z. g (SND z))` THEN
    Q.EXISTS_TAC `(\z. f (FST z - SND z) * indicator_fn A (FST z))` THEN
    ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
    [SIMP_TAC std_ss [GSYM o_DEF] THEN MATCH_MP_TAC MEASURABLE_COMP THEN
@@ -4640,7 +4465,7 @@ val convolution_density = store_thm ("convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                   SUBSET POW (m_space M CROSS m_space M)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4661,23 +4486,23 @@ val convolution_density = store_thm ("convolution_density",
    Q.EXISTS_TAC `(\z. indicator_fn A (FST z))` THEN
    ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
    [ALL_TAC,
-    MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN 
+    MATCH_MP_TAC IN_MEASURABLE_BOREL_INDICATOR THEN
     Q.EXISTS_TAC `PREIMAGE (\z. FST z) A` THEN
     CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
     CONJ_TAC THENL [ALL_TAC, SIMP_TAC std_ss [indicator_fn_def, IN_PREIMAGE]] THEN
     SIMP_TAC std_ss [subsets_def] THEN
     Q_TAC SUFF_TAC `(\z. FST z) = (\(x,y:real). x:real)` THENL
     [DISC_RW_KILL,
-     SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN 
+     SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
      `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
     Q.ABBREV_TAC `M = lborel` THEN
-    Q_TAC SUFF_TAC `(\(x,y). x) IN measurable 
-     (m_space (pair_measure M M), measurable_sets (pair_measure M M)) 
+    Q_TAC SUFF_TAC `(\(x,y). x) IN measurable
+     (m_space (pair_measure M M), measurable_sets (pair_measure M M))
      (m_space M, measurable_sets M)` THENL
     [RW_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
      POP_ASSUM MP_TAC THEN
      ASM_SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
-     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                    SUBSET POW (m_space M CROSS m_space M)` THENL
      [DISCH_TAC,
       SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4699,7 +4524,7 @@ val convolution_density = store_thm ("convolution_density",
      METIS_TAC [lborel, m_space_def], ALL_TAC] THEN
     Q_TAC SUFF_TAC `(\(x,y:real). x:real) = FST` THENL
     [DISC_RW_KILL,
-     SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN 
+     SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
      `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
      SIMP_TAC std_ss [IN_MEASURABLE, sigma_algebra_borel] THEN
      CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
@@ -4707,12 +4532,12 @@ val convolution_density = store_thm ("convolution_density",
      SIMP_TAC std_ss [IN_FUNSET, space_def, subsets_def] THEN CONJ_TAC THENL
      [METIS_TAC [lborel, m_space_def, IN_UNIV], ALL_TAC] THEN
      SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
-    
+
      Q_TAC SUFF_TAC `!s:real->bool. PREIMAGE FST s = s CROSS univ(:real)` THENL
      [DISCH_TAC,
       RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
       SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                    SUBSET POW (m_space M CROSS m_space M)` THENL
      [DISCH_TAC,
       SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4728,7 +4553,7 @@ val convolution_density = store_thm ("convolution_density",
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      Q.EXISTS_TAC `s` THEN Q.EXISTS_TAC `m_space M` THEN
      ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE]] THEN
-    
+
    SIMP_TAC std_ss [GSYM o_DEF] THEN MATCH_MP_TAC MEASURABLE_COMP THEN
    Q.EXISTS_TAC `(m_space lborel,measurable_sets lborel)` THEN ASM_SIMP_TAC std_ss [] THEN
    SIMP_TAC std_ss [IN_MEASURABLE, sigma_algebra_borel] THEN
@@ -4738,7 +4563,7 @@ val convolution_density = store_thm ("convolution_density",
    [SIMP_TAC std_ss [IN_UNIV, space_def, lborel, m_space_def], ALL_TAC] THEN
    SIMP_TAC std_ss [pair_measure, measure_of, m_space_def, measurable_sets_def] THEN
    Q.ABBREV_TAC `M = lborel` THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                  SUBSET POW (m_space M CROSS m_space M)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4749,10 +4574,10 @@ val convolution_density = store_thm ("convolution_density",
    RW_TAC std_ss [] THEN
    Q_TAC SUFF_TAC `(\z. FST z - SND z) = (\(x,y). x - y:real)` THENL
    [DISC_RW_KILL,
-    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN 
+    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
     `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
-   Q_TAC SUFF_TAC `(\(x,y). x - y) IN measurable 
-    (m_space (pair_measure M M), measurable_sets (pair_measure M M)) 
+   Q_TAC SUFF_TAC `(\(x,y). x - y) IN measurable
+    (m_space (pair_measure M M), measurable_sets (pair_measure M M))
     (m_space M, measurable_sets M)` THENL
    [RW_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
     POP_ASSUM MP_TAC THEN
@@ -4762,9 +4587,9 @@ val convolution_density = store_thm ("convolution_density",
    SIMP_TAC std_ss [GSYM lborel, GSYM space_borel, SPACE, GSYM borel_measurable] THEN
    Q_TAC SUFF_TAC `(\(x,y). x - y:real) = (\z. FST z - SND z)` THENL
    [DISC_RW_KILL,
-    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN 
+    SIMP_TAC std_ss [FUN_EQ_THM] THEN GEN_TAC THEN
     `?a b. z = (a,b)` by METIS_TAC [pair_CASES] THEN ASM_SIMP_TAC std_ss []] THEN
-   
+
     MATCH_MP_TAC borel_measurable_sub THEN Q.EXISTS_TAC `FST` THEN Q.EXISTS_TAC `SND` THEN
     ASM_SIMP_TAC std_ss [] THEN
     CONJ_TAC THENL [METIS_TAC [measure_space_def], ALL_TAC] THEN
@@ -4779,7 +4604,7 @@ val convolution_density = store_thm ("convolution_density",
      [DISCH_TAC,
       RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
       SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                    SUBSET POW (m_space M CROSS m_space M)` THENL
      [DISCH_TAC,
       SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4806,7 +4631,7 @@ val convolution_density = store_thm ("convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M /\ b IN measurable_sets M}
                  SUBSET POW (m_space M CROSS m_space M)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4822,7 +4647,7 @@ val convolution_density = store_thm ("convolution_density",
    SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
    Q.EXISTS_TAC `m_space M` THEN Q.EXISTS_TAC `s'` THEN
    ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE]] THEN
-  
+
   ASM_SIMP_TAC std_ss [extreal_max_def, pos_fn_integral_pos, le_mul, indicator_fn_pos_le] THEN
   MATCH_MP_TAC positive_integral_cong THEN
   ASM_SIMP_TAC std_ss [extreal_max_def, pos_fn_integral_pos, le_mul, indicator_fn_pos_le] THEN
@@ -4838,12 +4663,12 @@ val measure_measure_of = store_thm ("measure_measure_of",
   REPEAT GEN_TAC THEN
   `(M1 = (m_space M1, measurable_sets M1, measure M1)) /\
    (M2 = (m_space M2, measurable_sets M2, measure M2))` by
-   METIS_TAC [MEASURE_SPACE_REDUCE] THEN 
+   METIS_TAC [MEASURE_SPACE_REDUCE] THEN
   POP_ASSUM (fn th => ONCE_REWRITE_TAC [th]) THEN
   POP_ASSUM (fn th => ONCE_REWRITE_TAC [th]) THEN
   SIMP_TAC std_ss [measure_of, measure_def] THEN
   REPEAT STRIP_TAC THEN FULL_SIMP_TAC std_ss [measurable_sets_def, FUN_EQ_THM] THEN
-  FIRST_X_ASSUM (MP_TAC o Q.SPEC `s`) THEN 
+  FIRST_X_ASSUM (MP_TAC o Q.SPEC `s`) THEN
   FULL_SIMP_TAC std_ss [MEASURE_SPACE_REDUCE] THEN
   `sigma_sets (m_space M1) (measurable_sets M1) = measurable_sets M1` by
    METIS_TAC [sigma_sets_eq, measure_space_def] THEN
@@ -4901,7 +4726,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                   SUBSET POW (m_space M1 CROSS m_space M2)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4929,7 +4754,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets M1 /\ b IN measurable_sets M2}
                  SUBSET POW (m_space M1 CROSS m_space M2)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -4949,7 +4774,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
   CONJ_TAC THENL
   [MATCH_MP_TAC measure_space_density THEN SIMP_TAC std_ss [measure_space_lborel] THEN
    Q_TAC SUFF_TAC `(\x. pos_fn_integral lborel (\y. f (x - y) * g y)) =
-      (\x. pos_fn_integral lborel (\y. max 0 (if x IN m_space lborel 
+      (\x. pos_fn_integral lborel (\y. max 0 (if x IN m_space lborel
            then (\(x,y). (\y. f (x - y) * g y) y) (x,y) else 0)))` THENL
    [DISC_RW_KILL,
     ABS_TAC THEN MATCH_MP_TAC positive_integral_cong THEN
@@ -4958,7 +4783,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
     ASM_SIMP_TAC std_ss [extreal_max_def, le_mul]] THEN
    MATCH_MP_TAC borel_measurable_pos_integral_fst THEN
    ASM_SIMP_TAC std_ss [measure_space_lborel, sigma_finite_measure_lborel] THEN
-   CONJ_TAC THENL 
+   CONJ_TAC THENL
    [GEN_TAC THEN `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
     ASM_SIMP_TAC std_ss [le_mul], ALL_TAC] THEN
    Q_TAC SUFF_TAC `(\(x,y). f (x - y) * g y) = (\z. f (FST z - SND z) * g (SND z))` THENL
@@ -4971,7 +4796,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
    ASSUME_TAC sigma_finite_measure_lborel THEN
    ASM_SIMP_TAC std_ss [measure_space_pair_measure', GSYM o_DEF] THEN
    CONJ_TAC THENL
-   [MATCH_MP_TAC MEASURABLE_COMP THEN 
+   [MATCH_MP_TAC MEASURABLE_COMP THEN
     Q.EXISTS_TAC `(m_space lborel,measurable_sets lborel)` THEN
     ASM_SIMP_TAC std_ss [lborel, m_space_def, measurable_sets_def] THEN
     SIMP_TAC std_ss [GSYM lborel, SPACE, GSYM borel_measurable, GSYM space_borel] THEN
@@ -4990,7 +4815,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
      [DISCH_TAC,
       RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
       SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel} 
+     Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel}
                      SUBSET POW (m_space lborel CROSS m_space lborel)` THENL
      [DISCH_TAC,
       SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -5016,7 +4841,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
     [DISCH_TAC,
      RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
      SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel} 
+    Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel}
                     SUBSET POW (m_space lborel CROSS m_space lborel)` THENL
     [DISCH_TAC,
      SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -5032,7 +4857,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
     Q.EXISTS_TAC `m_space lborel` THEN Q.EXISTS_TAC `s` THEN
     ASM_SIMP_TAC std_ss [MEASURE_SPACE_MSPACE_MEASURABLE],
-    ALL_TAC] THEN 
+    ALL_TAC] THEN
    MATCH_MP_TAC MEASURABLE_COMP THEN
    Q.EXISTS_TAC `(m_space lborel,measurable_sets lborel)` THEN
    ASM_SIMP_TAC std_ss [] THEN
@@ -5049,7 +4874,7 @@ val measure_convolution_density = store_thm ("measure_convolution_density",
    [DISCH_TAC,
     RW_TAC std_ss [PREIMAGE_def, EXTENSION, CROSS_DEF] THEN
     SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD, IN_UNIV]] THEN
-   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel} 
+   Q_TAC SUFF_TAC `{a CROSS b | a IN measurable_sets lborel /\ b IN measurable_sets lborel}
                    SUBSET POW (m_space lborel CROSS m_space lborel)` THENL
    [DISCH_TAC,
     SIMP_TAC std_ss [CROSS_DEF, SUBSET_DEF, POW_DEF, GSPECIFICATION, EXISTS_PROD] THEN
@@ -5073,7 +4898,7 @@ val conv_normal_density_zero_mean = store_thm
   ("conv_normal_density_zero_mean",
   ``!sig1 sig2 p X Y x. 0 < sig1 /\ 0 < sig2 /\
       normal_rv X p 0 sig1 ==>
-       (pos_fn_integral lborel 
+       (pos_fn_integral lborel
          (\y. Normal (normal_density 0 sig1 (x - y)) * Normal (normal_density 0 sig2 y)) =
         Normal (normal_density 0 (sqrt (sig1 pow 2 + sig2 pow 2)) x))``,
   RW_TAC std_ss [] THEN
@@ -5082,7 +4907,7 @@ val conv_normal_density_zero_mean = store_thm
    (\y. Normal (normal_density 0 sig1 (x - y)) *
         Normal (normal_density 0 sig2 y)) =
    pos_fn_integral lborel (\y. Normal (normal_density 0 (sqrt (sig1 pow 2 + sig2 pow 2)) x) *
-        Normal (normal_density (sig2 pow 2 * x / (sig1 pow 2 + sig2 pow 2)) 
+        Normal (normal_density (sig2 pow 2 * x / (sig1 pow 2 + sig2 pow 2))
                 (sqrt (sig1 pow 2 * sig2 pow 2 / (sig1 pow 2 + sig2 pow 2))) y))` THENL
   [DISC_RW_KILL,
    Q.ABBREV_TAC `sig1' = sig1 pow 2` THEN Q.ABBREV_TAC `sig2' = sig2 pow 2` THEN
@@ -5094,7 +4919,7 @@ val conv_normal_density_zero_mean = store_thm
    RW_TAC real_ss [extreal_mul_def, extreal_11, normal_density] THEN
    `0 <= sig1' + sig2'` by ASM_SIMP_TAC real_ss [REAL_LE_ADD, REAL_LT_IMP_LE] THEN
    POP_ASSUM (ASSUME_TAC o MATCH_MP SQRT_POW_2) THEN ASM_SIMP_TAC std_ss [] THEN
-   `0 < sig1' * sig2' / (sig1' + sig2')` by 
+   `0 < sig1' * sig2' / (sig1' + sig2')` by
      ASM_SIMP_TAC std_ss [REAL_LT_MUL, REAL_LT_DIV, REAL_LT_ADD] THEN
    `0 <= sig` by METIS_TAC [REAL_LT_IMP_LE] THEN
    POP_ASSUM (ASSUME_TAC o MATCH_MP SQRT_POW_2) THEN ASM_SIMP_TAC std_ss [] THEN
@@ -5117,7 +4942,7 @@ val conv_normal_density_zero_mean = store_thm
      MATCH_MP_TAC REAL_LT_IMP_NE THEN ASM_SIMP_TAC std_ss [SQRT_POS_LT]) THEN
     ASM_SIMP_TAC std_ss [GSYM REAL_INV_MUL, REAL_INV_INJ] THEN
     ASM_SIMP_TAC real_ss [GSYM SQRT_MUL, REAL_LT_IMP_LE] THEN
-    AP_TERM_TAC THEN ONCE_REWRITE_TAC [REAL_ARITH 
+    AP_TERM_TAC THEN ONCE_REWRITE_TAC [REAL_ARITH
      ``a * b * c * (a * b * d) = (a * b * a * b) * (c * d:real)``] THEN
     AP_TERM_TAC THEN Q.UNABBREV_TAC `sig` THEN ONCE_REWRITE_TAC [REAL_MUL_COMM] THEN
     `(sig1' + sig2') <> 0` by ASM_SIMP_TAC real_ss [REAL_LT_ADD, REAL_LT_IMP_NE] THEN
@@ -5127,7 +4952,7 @@ val conv_normal_density_zero_mean = store_thm
    SIMP_TAC real_ss [real_div] THEN
    REWRITE_TAC [REAL_ARITH ``(-a + -b = -c + -d) = (a + b = c + d:real)``] THEN
    Q.UNABBREV_TAC `sig` THEN SIMP_TAC std_ss [real_div, POW_2] THEN
-   ONCE_REWRITE_TAC [REAL_ARITH 
+   ONCE_REWRITE_TAC [REAL_ARITH
     ``!a b. (a - b) * (a - b) = (a * a) - (2 * a * b:real) + (b * b)``] THEN
    SIMP_TAC std_ss [REAL_MUL_ASSOC] THEN Q.ABBREV_TAC `sig = sig1' + sig2'` THEN
    REWRITE_TAC [REAL_ARITH ``!a b. (a + b) * c = a * c + b * c:real``] THEN
@@ -5142,7 +4967,7 @@ val conv_normal_density_zero_mean = store_thm
     `inv sig <> 0` by METIS_TAC [REAL_LT_IMP_NE, EQ_SYM_EQ] THEN
     ASM_SIMP_TAC std_ss [REAL_MUL_NZ, REAL_INV_MUL, REAL_INV_INV] THEN
     SIMP_TAC std_ss [REAL_MUL_ASSOC] THEN `sig <> 0` by METIS_TAC [REAL_LT_IMP_NE] THEN
-    ONCE_REWRITE_TAC [REAL_ARITH 
+    ONCE_REWRITE_TAC [REAL_ARITH
      ``2 * y * sig2' * x * inv sig * inv 2 * inv sig1' * inv sig2' * sig:real =
        2 * x * y * inv 2 * inv sig1' * (inv sig2' * sig2') * (inv sig * sig)``] THEN
     ASM_SIMP_TAC real_ss [REAL_MUL_LINV]] THEN
@@ -5153,7 +4978,7 @@ val conv_normal_density_zero_mean = store_thm
    `0 < inv sig` by METIS_TAC [REAL_INV_POS] THEN
    `inv sig <> 0` by METIS_TAC [REAL_LT_IMP_NE, EQ_SYM_EQ] THEN
    ASM_SIMP_TAC std_ss [REAL_MUL_NZ, REAL_INV_MUL, REAL_INV_INV, REAL_MUL_ASSOC] THEN
-   Q_TAC SUFF_TAC `y * y * inv 2 * inv sig1' * inv sig2' * sig = 
+   Q_TAC SUFF_TAC `y * y * inv 2 * inv sig1' * inv sig2' * sig =
                    y * y * inv 2 * inv sig1' + y * y * inv 2 * inv sig2'` THENL
    [DISC_RW_KILL,
     Q.UNABBREV_TAC `sig` THEN
@@ -5170,9 +4995,9 @@ val conv_normal_density_zero_mean = store_thm
    ONCE_REWRITE_TAC [REAL_ARITH ``a + b - c = -c + b + a:real``] THEN
    SIMP_TAC std_ss [REAL_ADD_ASSOC, real_sub] THEN AP_THM_TAC THEN AP_TERM_TAC THEN
    AP_THM_TAC THEN AP_TERM_TAC THEN AP_THM_TAC THEN AP_TERM_TAC THEN
-   `sig <> 0` by METIS_TAC [REAL_LT_IMP_NE] THEN 
+   `sig <> 0` by METIS_TAC [REAL_LT_IMP_NE] THEN
    ASM_SIMP_TAC std_ss [REAL_INV_MUL, REAL_MUL_ASSOC] THEN
-   ONCE_REWRITE_TAC [REAL_ARITH 
+   ONCE_REWRITE_TAC [REAL_ARITH
    ``sig2' * x * inv sig * sig2' * x * inv sig * inv 2 * inv sig1' * inv sig2' * sig:real =
      x * x * inv 2 * (inv sig1' * (sig * inv sig) * (sig2' * inv sig2') * (sig2' * inv sig))``] THEN
    ASM_SIMP_TAC real_ss [REAL_MUL_RINV] THEN
@@ -5228,7 +5053,7 @@ val conv_normal_density_zero_mean = store_thm
   `!x. 0 <= PDF p XX x` by METIS_TAC [normal_pdf_nonneg] THEN
   ASSUME_TAC measure_space_lborel THEN
   `pos_fn_integral lborel (\x. PDF p XX x) = 1` by METIS_TAC [integral_pos_fn] THEN
-  `UNIV IN measurable_sets lborel` by 
+  `UNIV IN measurable_sets lborel` by
    METIS_TAC [lborel, m_space_def, MEASURE_SPACE_MSPACE_MEASURABLE] THEN
   `pos_fn_integral lborel (\z. PDF p XX z * indicator_fn UNIV z) =
       pos_fn_integral lborel
@@ -5240,16 +5065,16 @@ val conv_normal_density_zero_mean = store_thm
 val sum_indep_normal = store_thm ("sum_indep_normal",
   ``!p X Y mu1 mu2 sig1 sig2.
      prob_space p /\ 0 < sig1 /\ 0 < sig2 /\
-     indep_var p (space borel, subsets borel, (\x. 0)) X 
-                 (space borel, subsets borel, (\x. 0)) Y /\ 
+     indep_var p (space borel, subsets borel, (\x. 0)) X
+                 (space borel, subsets borel, (\x. 0)) Y /\
      normal_rv X p mu1 sig1 /\ normal_rv Y p mu2 sig2 ==>
      normal_rv (\x. X x + Y x) p (mu1 + mu2) (sqrt (sig1 pow 2 + sig2 pow 2))``,
   REPEAT GEN_TAC THEN STRIP_TAC THEN
   Q_TAC SUFF_TAC `indep_var p
-   (space borel, subsets borel, (\x. 0)) ((\x. -mu1 + x) o X) 
+   (space borel, subsets borel, (\x. 0)) ((\x. -mu1 + x) o X)
    (space borel, subsets borel, (\x. 0)) ((\x. -mu2 + x) o Y)` THENL
   [SIMP_TAC std_ss [] THEN DISCH_TAC,
-   MATCH_MP_TAC indep_var_compose THEN 
+   MATCH_MP_TAC indep_var_compose THEN
    Q.EXISTS_TAC `(space borel, subsets borel, (\x. 0))` THEN
    Q.EXISTS_TAC `(space borel, subsets borel, (\x. 0))` THEN
    ASM_SIMP_TAC std_ss [measure_space_borel] THEN
@@ -5257,14 +5082,14 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
    SIMP_TAC std_ss [GSYM borel_measurable] THEN
    CONJ_TAC THEN (MATCH_MP_TAC borel_measurable_add) THENL
    [Q.EXISTS_TAC `(\x. -mu1)` THEN Q.EXISTS_TAC `(\x. x)` THEN
-    ASSUME_TAC sigma_algebra_borel THEN 
+    ASSUME_TAC sigma_algebra_borel THEN
     ASM_SIMP_TAC std_ss [borel_measurable_const] THEN
     Q_TAC SUFF_TAC `(\x:real. x) = I` THENL
     [DISC_RW_KILL, SIMP_TAC std_ss [FUN_EQ_THM]] THEN
     METIS_TAC [borel_measurable, MEASURABLE_I],
     ALL_TAC] THEN
    Q.EXISTS_TAC `(\x. -mu2)` THEN Q.EXISTS_TAC `(\x. x)` THEN
-   ASSUME_TAC sigma_algebra_borel THEN 
+   ASSUME_TAC sigma_algebra_borel THEN
    ASM_SIMP_TAC std_ss [borel_measurable_const] THEN
    Q_TAC SUFF_TAC `(\x:real. x) = I` THENL
    [DISC_RW_KILL, SIMP_TAC std_ss [FUN_EQ_THM]] THEN
@@ -5277,7 +5102,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
   [DISCH_TAC,
    MATCH_MP_TAC normal_rv_affine' THEN SIMP_TAC real_ss [] THEN
    METIS_TAC []] THEN
-  Q_TAC SUFF_TAC 
+  Q_TAC SUFF_TAC
   `normal_rv (\x. -mu1 + X x + (-mu2 + Y x)) p 0 (sqrt (sig1 pow 2 + sig2 pow 2))` THENL
   [DISCH_TAC,
    SIMP_TAC std_ss [normal_rv] THEN CONJ_TAC THENL
@@ -5287,7 +5112,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
     FULL_SIMP_TAC real_ss [normal_rv, random_variable_def, borel_measurable] THEN
     METIS_TAC [prob_space_def, measure_space_def, p_space_def, events_def],
     ALL_TAC] THEN
-   SIMP_TAC std_ss [normal_pmeasure, measurable_distr] THEN ABS_TAC THEN 
+   SIMP_TAC std_ss [normal_pmeasure, measurable_distr] THEN ABS_TAC THEN
    `s IN subsets borel = s IN measurable_sets lborel` by
     METIS_TAC [lborel, measurable_sets_def] THEN
    POP_ASSUM MP_TAC THEN RW_TAC std_ss [] THEN
@@ -5295,7 +5120,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
    Q.ABBREV_TAC `YY = ((\x. -mu2 + x) o Y)` THEN
    Q_TAC SUFF_TAC `!a. a IN measurable_sets (space borel,subsets borel,(\x. 0)) ==>
         (distribution p (\x. XX x + YY x) a =
-         measure (convolution 
+         measure (convolution
               (distr' p (space borel,subsets borel,(\x. 0)) XX)
               (distr' p (space borel,subsets borel,(\x. 0)) YY)) a)` THENL
    [DISCH_TAC, MATCH_MP_TAC sum_indep_random_variable THEN ASM_SIMP_TAC std_ss []] THEN
@@ -5306,7 +5131,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
    `distr' p (space borel,subsets borel,(\x. 0)) YY = distr' p lborel YY` by
     METIS_TAC [m_space_def, measurable_sets_def, lborel, space_borel, distr'] THEN
    FULL_SIMP_TAC real_ss [REAL_ARITH ``-x + x = 0:real``, ETA_AX] THEN
-   Q_TAC SUFF_TAC `distr' p lborel XX = 
+   Q_TAC SUFF_TAC `distr' p lborel XX =
     density lborel (\x. Normal (normal_density 0 sig1 x))` THENL
    [DISC_RW_KILL,
     `!x. 0 <= Normal (normal_density 0 sig1 x)` by
@@ -5317,7 +5142,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
     ASM_SIMP_TAC std_ss [extreal_max_def, le_mul, indicator_fn_pos_le] THEN
     FULL_SIMP_TAC std_ss [normal_rv, measurable_distr, distribution_def, FUN_EQ_THM] THEN
     FULL_SIMP_TAC std_ss [normal_pmeasure, p_space_def]] THEN
-   Q_TAC SUFF_TAC `distr' p lborel YY = 
+   Q_TAC SUFF_TAC `distr' p lborel YY =
     density lborel (\x. Normal (normal_density 0 sig2 x))` THENL
    [DISC_RW_KILL,
     `!x. 0 <= Normal (normal_density 0 sig2 x)` by
@@ -5352,7 +5177,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
       METIS_TAC [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
      ASM_SIMP_TAC std_ss [extreal_max_def] THEN
      `!x. 0 <= PDF p XX x` by METIS_TAC [normal_pdf_nonneg] THEN
-     `pos_fn_integral lborel (PDF p XX) = 1` by 
+     `pos_fn_integral lborel (PDF p XX) = 1` by
       METIS_TAC [normal_pdf_integral_eq_1, integral_pos_fn, measure_space_lborel] THEN
      `m_space lborel IN measurable_sets lborel` by
       METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE, measure_space_lborel] THEN
@@ -5378,7 +5203,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
       METIS_TAC [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
      ASM_SIMP_TAC std_ss [extreal_max_def] THEN
      `!x. 0 <= PDF p YY x` by METIS_TAC [normal_pdf_nonneg] THEN
-     `pos_fn_integral lborel (PDF p YY) = 1` by 
+     `pos_fn_integral lborel (PDF p YY) = 1` by
       METIS_TAC [normal_pdf_integral_eq_1, integral_pos_fn, measure_space_lborel] THEN
      `m_space lborel IN measurable_sets lborel` by
       METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE, measure_space_lborel] THEN
@@ -5398,7 +5223,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
      METIS_TAC [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
     ASM_SIMP_TAC std_ss [extreal_max_def] THEN
     `!x. 0 <= PDF p XX x` by METIS_TAC [normal_pdf_nonneg] THEN
-    `pos_fn_integral lborel (PDF p XX) = 1` by 
+    `pos_fn_integral lborel (PDF p XX) = 1` by
      METIS_TAC [normal_pdf_integral_eq_1, integral_pos_fn, measure_space_lborel] THEN
     `m_space lborel IN measurable_sets lborel` by
      METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE, measure_space_lborel] THEN
@@ -5411,7 +5236,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
     `(\x. PDF p XX x) = PDF p XX` by METIS_TAC [ETA_AX] THEN
     ASM_SIMP_TAC std_ss [num_not_infty] THEN
     `!x. 0 <= PDF p YY x` by METIS_TAC [normal_pdf_nonneg] THEN
-    `pos_fn_integral lborel (PDF p YY) = 1` by 
+    `pos_fn_integral lborel (PDF p YY) = 1` by
      METIS_TAC [normal_pdf_integral_eq_1, integral_pos_fn, measure_space_lborel] THEN
     `m_space lborel IN measurable_sets lborel` by
      METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE, measure_space_lborel] THEN
@@ -5422,10 +5247,10 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
     FULL_SIMP_TAC std_ss [indicator_fn_def, IN_UNIV, mul_rone] THEN
     POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN
     `(\x. PDF p YY x) = PDF p YY` by METIS_TAC [ETA_AX] THEN
-    ASM_SIMP_TAC std_ss [num_not_infty]] THEN 
+    ASM_SIMP_TAC std_ss [num_not_infty]] THEN
    ASM_SIMP_TAC std_ss [density, measure_def, normal_pmeasure] THEN
    Q.UNABBREV_TAC `f` THEN Q.UNABBREV_TAC `g` THEN SIMP_TAC std_ss [] THEN
-   Q_TAC SUFF_TAC 
+   Q_TAC SUFF_TAC
    `!x. pos_fn_integral lborel
         (\y. Normal (normal_density 0 sig1 (x - y)) *
              Normal (normal_density 0 sig2 y)) =
@@ -5434,7 +5259,7 @@ val sum_indep_normal = store_thm ("sum_indep_normal",
    `!mu sig x. 0 <= Normal (normal_density mu sig x)` by
      METIS_TAC [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
    ASM_SIMP_TAC std_ss [extreal_max_def, le_mul, indicator_fn_pos_le]] THEN
-  Q_TAC SUFF_TAC `normal_rv (\x. X x + Y x) p ((mu1 + mu2) + 1 * 0) 
+  Q_TAC SUFF_TAC `normal_rv (\x. X x + Y x) p ((mu1 + mu2) + 1 * 0)
                             (abs 1 * (sqrt (sig1 pow 2 + sig2 pow 2)))` THENL
   [ALL_TAC,
    MATCH_MP_TAC normal_rv_affine' THEN
@@ -5459,7 +5284,7 @@ val Pi_mem = store_thm ("Pi_mem",
 
 val undefined = Define `undefined = @x. x IN {}`;
 
-val extensional = Define 
+val extensional = Define
    `extensional A = {f | !x. x NOTIN A ==> (f x = undefined)}`;
 
 val extensional_empty = store_thm ("extensional_empty",
@@ -5482,11 +5307,11 @@ val PiE_iff = store_thm ("PiE_iff",
 (*                                                                           *)
 (* ------------------------------------------------------------------------- *)
 
-val prod_emb = Define 
+val prod_emb = Define
    `prod_emb ii M k X = (PREIMAGE (\x. restrict x k) X) INTER (PiE ii (\i. m_space (M i)))`;
 
 val prod_emb_iff = store_thm ("prod_emb_iff",
-  ``!f ii M k X. f IN prod_emb ii M k X = 
+  ``!f ii M k X. f IN prod_emb ii M k X =
      f IN extensional ii /\ restrict f k IN X /\ (!i. i IN ii ==> f i IN m_space (M i))``,
   RW_TAC std_ss [prod_emb, PiE, Pi_iff, IN_PREIMAGE, IN_INTER] THEN
   SET_TAC []);
@@ -5504,7 +5329,7 @@ val prod_emb_Int = store_thm ("prod_emb_Int",
   RW_TAC std_ss [prod_emb, PREIMAGE_def] THEN SET_TAC []);
 
 val prod_emb_UN = store_thm ("prod_emb_UN",
-  ``!ii M k f. prod_emb ii M k (BIGUNION {f i | i IN UNIV}) = 
+  ``!ii M k f. prod_emb ii M k (BIGUNION {f i | i IN UNIV}) =
                BIGUNION {prod_emb ii M k (f i) | i IN UNIV}``,
   RW_TAC std_ss [prod_emb, PREIMAGE_def] THEN
   SIMP_TAC std_ss [GSPECIFICATION, EXTENSION, IN_INTER, IN_BIGUNION] THEN
@@ -5514,7 +5339,7 @@ val prod_emb_UN = store_thm ("prod_emb_UN",
   ASM_SET_TAC []);
 
 val prod_emb_INT = store_thm ("prod_emb_INT",
-  ``!ii M k f. prod_emb ii M k (BIGINTER {f i | i IN UNIV}) = 
+  ``!ii M k f. prod_emb ii M k (BIGINTER {f i | i IN UNIV}) =
                BIGINTER {prod_emb ii M k (f i) | i IN UNIV}``,
   RW_TAC std_ss [prod_emb, PREIMAGE_def] THEN
   SIMP_TAC std_ss [GSPECIFICATION, EXTENSION, IN_INTER, IN_BIGINTER] THEN
@@ -5537,11 +5362,11 @@ val prod_emb_Diff = store_thm ("prod_emb_Diff",
 
 val prod_emb_PiE = store_thm ("prod_emb_PiE",
   ``!J ii E M. J SUBSET ii ==> (!i. i IN J ==> E i SUBSET m_space (M i)) ==>
-     (prod_emb ii M J (PiE J (\i. E i)) = 
+     (prod_emb ii M J (PiE J (\i. E i)) =
       PiE ii (\i. if i IN J then E i else m_space (M i)))``,
   RW_TAC std_ss [prod_emb, PiE_iff, EXTENSION, IN_INTER, IN_PREIMAGE] THEN
   SIMP_TAC std_ss [restrict_extensional] THEN EQ_TAC THEN
-  RW_TAC std_ss [] THENL 
+  RW_TAC std_ss [] THENL
   [RW_TAC std_ss [] THEN FULL_SIMP_TAC std_ss [restrict],
    RW_TAC std_ss [restrict] THEN ASM_SET_TAC [],
    ALL_TAC] THEN
@@ -5559,7 +5384,7 @@ val prod_emb_PiE_same_index = store_thm ("prod_emb_PiE_same_index",
   ASM_SET_TAC []);
 
 val extend_measure = Define
-   `extend_measure sp ii G u =  
+   `extend_measure sp ii G u =
     if ?u'. (!i. i IN ii ==> (u' (G i) = u i)) /\ (?i. i IN ii /\ (u i <> 0))
     then measure_of (sp, (IMAGE G ii), (@u'. (!i. i IN ii ==> (u' (G i) = u i))))
     else measure_of (sp, (IMAGE G ii), (\x. 0))`;
@@ -5574,13 +5399,13 @@ val sets_extend_measure = store_thm ("sets_extend_measure",
   RW_TAC std_ss [extend_measure, measurable_sets_def, measure_of]);
 
 val measure_space_extend_measure = store_thm ("measure_space_extend_measure",
-  ``!sp ii G u v i. (M = extend_measure sp ii G u) /\ 
+  ``!sp ii G u v i. (M = extend_measure sp ii G u) /\
                 (!i. i IN ii ==> (v (G i) = u i)) /\ IMAGE G ii SUBSET POW sp /\
                 positive (m_space M, measurable_sets M, v) /\
                 countably_additive (m_space M, measurable_sets M, v) /\
                 i IN ii ==> measure_space M``,
   RW_TAC std_ss [] THEN SIMP_TAC std_ss [extend_measure] THEN
-  Q_TAC SUFF_TAC `measurable_sets (extend_measure sp ii G u) = 
+  Q_TAC SUFF_TAC `measurable_sets (extend_measure sp ii G u) =
                   sigma_sets sp (IMAGE G ii)` THENL
   [DISCH_TAC,
    MATCH_MP_TAC sets_extend_measure THEN ASM_SIMP_TAC std_ss []] THEN
@@ -5589,14 +5414,14 @@ val measure_space_extend_measure = store_thm ("measure_space_extend_measure",
   [ALL_TAC,
    SIMP_TAC std_ss [measure_space_def, measure_of] THEN
    SIMP_TAC std_ss [m_space_def, measurable_sets_def, measure_def] THEN
-   ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL 
+   ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
    [MATCH_MP_TAC sigma_algebra_sigma_sets THEN ASM_SIMP_TAC std_ss [], ALL_TAC] THEN
    CONJ_TAC THENL [SIMP_TAC std_ss [positive_def, measure_def, le_refl], ALL_TAC] THEN
    SIMP_TAC std_ss [countably_additive_def] THEN
    RW_TAC std_ss [IN_FUNSET, measure_def, suminf_0, o_DEF]] THEN
   SIMP_TAC std_ss [measure_space_def, measure_of] THEN
   SIMP_TAC std_ss [m_space_def, measurable_sets_def, measure_def] THEN
-  ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL 
+  ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
   [MATCH_MP_TAC sigma_algebra_sigma_sets THEN ASM_SIMP_TAC std_ss [], ALL_TAC] THEN
   CONJ_TAC THENL
   [SIMP_TAC std_ss [positive_def, measure_def, measurable_sets_def] THEN
@@ -5606,10 +5431,10 @@ val measure_space_extend_measure = store_thm ("measure_space_extend_measure",
   FULL_SIMP_TAC std_ss [IN_FUNSET, IN_UNIV]);
 
 val measure_space_extend_measure_Pair = store_thm ("measure_space_extend_measure_Pair",
-  ``!sp ii G u v i j. 
+  ``!sp ii G u v i j.
       (M = extend_measure sp {(i,j) | (i,j) IN ii} (\(i,j). G (i,j)) (\(i,j). u (i,j))) /\
       (!(i,j). (i,j) IN ii ==> (v (G (i,j)) = u (i,j))) /\
-      (!(i,j). (i,j) IN ii ==> G (i,j) IN POW sp) /\ 
+      (!(i,j). (i,j) IN ii ==> G (i,j) IN POW sp) /\
       positive (m_space M, measurable_sets M, v) /\
       countably_additive (m_space M, measurable_sets M, v) /\
       (i,j) IN ii ==> (measure_space M)``,
@@ -5618,7 +5443,7 @@ val measure_space_extend_measure_Pair = store_thm ("measure_space_extend_measure
   Q_TAC SUFF_TAC `
       (M = extend_measure sp ii G u) /\
       (!i. i IN ii ==> (v (G i) = u i)) /\
-      (IMAGE G ii SUBSET POW sp) /\ 
+      (IMAGE G ii SUBSET POW sp) /\
       positive (m_space M, measurable_sets M, v) /\
       countably_additive (m_space M, measurable_sets M, v) /\
       k IN ii` THENL
@@ -5630,12 +5455,12 @@ val measure_space_extend_measure_Pair = store_thm ("measure_space_extend_measure
     METIS_TAC [pair_CASES]] THEN
    Q_TAC SUFF_TAC `!i j. (\(i,j). G (i,j)) = G` THENL
    [DISC_RW_KILL,
-    RW_TAC std_ss [FUN_EQ_THM] THEN 
+    RW_TAC std_ss [FUN_EQ_THM] THEN
     `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
     ASM_SIMP_TAC std_ss []] THEN
    Q_TAC SUFF_TAC `!i j. (\(i,j). u (i,j)) = u` THENL
    [ALL_TAC,
-    RW_TAC std_ss [FUN_EQ_THM] THEN 
+    RW_TAC std_ss [FUN_EQ_THM] THEN
     `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
     ASM_SIMP_TAC std_ss []] THEN
    SIMP_TAC std_ss [], ALL_TAC] THEN
@@ -5647,19 +5472,19 @@ val measure_space_extend_measure_Pair = store_thm ("measure_space_extend_measure
    METIS_TAC [pair_CASES]] THEN
   Q_TAC SUFF_TAC `!i j. G = (\(i,j). G (i,j))` THENL
   [DISC_RW_KILL,
-   RW_TAC std_ss [FUN_EQ_THM] THEN 
+   RW_TAC std_ss [FUN_EQ_THM] THEN
    `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
    ASM_SIMP_TAC std_ss []] THEN
   Q_TAC SUFF_TAC `!i j. u = (\(i,j). u (i,j))` THENL
   [DISC_RW_KILL,
-   RW_TAC std_ss [FUN_EQ_THM] THEN 
+   RW_TAC std_ss [FUN_EQ_THM] THEN
    `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
    ASM_SIMP_TAC std_ss []] THEN
   ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [] THENL
   [FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
    POP_ASSUM MP_TAC THEN Q.SPEC_TAC (`p_2`, `p_2`) THEN
    Q.SPEC_TAC (`p_1`, `p_1`) THEN
-   Q_TAC SUFF_TAC `!p_1 p_2. (\p_1 p_2. (p_1,p_2) IN ii ==> 
+   Q_TAC SUFF_TAC `!p_1 p_2. (\p_1 p_2. (p_1,p_2) IN ii ==>
                              (v (G (p_1,p_2)) = u (p_1,p_2))) p_1 p_2` THENL
    [SIMP_TAC std_ss [], ALL_TAC] THEN
    REWRITE_TAC [PFORALL_THM] THEN ASM_SIMP_TAC std_ss [],
@@ -5672,17 +5497,17 @@ val measure_space_extend_measure_Pair = store_thm ("measure_space_extend_measure
   REWRITE_TAC [PFORALL_THM] THEN ASM_SIMP_TAC std_ss []);
 
 val PiM = Define `PiM ii M =
-      extend_measure (PiE ii (\i. m_space (M i))) 
-      {(J,X) | (J <> {} \/ (ii = {})) /\ FINITE J /\ J SUBSET ii /\ 
+      extend_measure (PiE ii (\i. m_space (M i)))
+      {(J,X) | (J <> {} \/ (ii = {})) /\ FINITE J /\ J SUBSET ii /\
                X IN Pi J (\i. measurable_sets (M i))}
       (\(J,X). prod_emb ii M J (PiE J (\i. X i)))
-      (\(J,X). Normal (product (J UNION {i | i IN ii /\ measure (M i) (m_space (M i)) <> 1}) 
-                  (\j. if j IN J then real (measure (M j)(X j)) 
+      (\(J,X). Normal (product (J UNION {i | i IN ii /\ measure (M i) (m_space (M i)) <> 1})
+                  (\j. if j IN J then real (measure (M j)(X j))
                                  else real (measure (M j)(m_space (M j))))))`;
 
 val prod_algebra = Define
-   `prod_algebra ii M = IMAGE (\(J,X). prod_emb ii M J (PiE J (\i. X i))) 
-     {(J,X) | (J <> {} \/ (ii = {})) /\ FINITE J /\ J SUBSET ii /\ 
+   `prod_algebra ii M = IMAGE (\(J,X). prod_emb ii M J (PiE J (\i. X i)))
+     {(J,X) | (J <> {} \/ (ii = {})) /\ FINITE J /\ J SUBSET ii /\
                X IN Pi J (\i. measurable_sets (M i))}`;
 
 val prod_algebraI = store_thm ("prod_algebraI",
@@ -5717,10 +5542,10 @@ val space_PiM = store_thm ("space_PiM",
   RW_TAC std_ss [PiM, prod_algebra, m_space_def, space_extend_measure]);
 
 val sets_PiM = store_thm ("sets_PiM",
-  ``!ii M. measurable_sets (PiM ii (\i. M i)) = 
+  ``!ii M. measurable_sets (PiM ii (\i. M i)) =
            sigma_sets (PiE ii (\i. m_space (M i))) (prod_algebra ii M)``,
   RW_TAC std_ss [prod_algebra, PiM, ETA_AX] THEN
-  MATCH_MP_TAC sets_extend_measure THEN 
+  MATCH_MP_TAC sets_extend_measure THEN
   SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] (GSYM prod_algebra)] THEN
   SIMP_TAC std_ss [prod_algebra_sets_into_space]);
 
@@ -5733,7 +5558,7 @@ val sigma_sets_eqI = store_thm ("sigma_sets_eqI",
    FULL_SIMP_TAC std_ss [sigma_sets_rules, IN_DEF]));
 
 val finite_INT = store_thm ("finite_INT",
-  ``!ii A M. Int_stable M /\ FINITE ii /\ ii <> {} /\ 
+  ``!ii A M. Int_stable M /\ FINITE ii /\ ii <> {} /\
                 (!i. i IN ii ==> A i IN M) ==>
              BIGINTER {A i | i IN ii} IN M``,
   REPEAT GEN_TAC THEN SIMP_TAC std_ss [GSYM AND_IMP_INTRO] THEN
@@ -5749,7 +5574,7 @@ val finite_INT = store_thm ("finite_INT",
 
 val sets_PiM_single = store_thm ("sets_PiM_single",
   ``!ii M. measurable_sets (PiM ii M) =
-           sigma_sets (PiE ii (\i. m_space (M i))) 
+           sigma_sets (PiE ii (\i. m_space (M i)))
            {{f | f IN PiE n (\i. m_space (m i)) /\ f i IN A} | (m = M) /\ (n = ii) /\
                i IN ii /\ A IN measurable_sets (M i)}``,
   REPEAT GEN_TAC THEN SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] sets_PiM] THEN
@@ -5770,7 +5595,7 @@ val sets_PiM_single = store_thm ("sets_PiM_single",
     SIMP_TAC std_ss [PiE, EXTENSION, IN_INTER, Pi_iff, NOT_IN_EMPTY] THEN
     SIMP_TAC std_ss [extensional_empty, IN_SING],
     ALL_TAC] THEN
-   Q_TAC SUFF_TAC `prod_emb ii M J (PiE J (\j. E j)) = 
+   Q_TAC SUFF_TAC `prod_emb ii M J (PiE J (\j. E j)) =
     BIGINTER {{f | f IN PiE ii (\i. m_space (M i)) /\ f j IN E j} | j IN J}` THENL
    [DISCH_TAC THEN ASM_SIMP_TAC std_ss [],
     SIMP_TAC std_ss [prod_emb, INTER_DEF, IN_INTER, PiE, Pi_iff] THEN
@@ -5835,18 +5660,18 @@ val sets_PiM_single = store_thm ("sets_PiM_single",
     SIMP_TAC std_ss [restrict_extensional],
     ALL_TAC] THEN
    FULL_SIMP_TAC std_ss [IN_SING, restrict]] THEN
-  MATCH_MP_TAC sigma_sets_basic THEN 
+  MATCH_MP_TAC sigma_sets_basic THEN
   Q_TAC SUFF_TAC `prod_emb ii M {i} (PiE {i} (\i. (\i. B) i)) IN prod_algebra ii M` THENL
   [SIMP_TAC std_ss [], ALL_TAC] THEN
   MATCH_MP_TAC prod_algebraI THEN Q.EXISTS_TAC `(\i. B)` THEN
-  ASM_SIMP_TAC std_ss [FINITE_SING] THEN 
+  ASM_SIMP_TAC std_ss [FINITE_SING] THEN
   CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN
   CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN
   CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN
   SIMP_TAC std_ss [Pi_iff] THEN ASM_SET_TAC []);
 
 val sets_PiM_I = store_thm ("sets_PiM_I",
-  ``!J ii E M. FINITE J /\ J SUBSET ii /\ 
+  ``!J ii E M. FINITE J /\ J SUBSET ii /\
       (!i. i IN J ==> E i IN measurable_sets (M i)) ==>
       prod_emb ii M J (PiE J (\i. E i)) IN measurable_sets (PiM ii (\i. M i))``,
   RW_TAC std_ss [] THEN ASM_CASES_TAC ``J = {}:'a->bool`` THENL
@@ -5893,7 +5718,7 @@ val sigma_sets_empty_eq = store_thm ("sigma_sets_empty_eq",
   ASM_CASES_TAC ``(BIGUNION {(A':num->'a->bool) i | i IN univ(:num)} = A)`` THEN
   ASM_SIMP_TAC std_ss [] THEN POP_ASSUM MP_TAC THEN
   ASM_SIMP_TAC std_ss [EXTENSION, NOT_IN_EMPTY, IN_BIGUNION, GSPECIFICATION] THEN
-  RW_TAC std_ss [IN_UNIV] THEN 
+  RW_TAC std_ss [IN_UNIV] THEN
   ASM_CASES_TAC ``x':'a NOTIN s`` THEN ASM_SIMP_TAC std_ss [] THEN GEN_TAC THEN
   FULL_SIMP_TAC std_ss [] THEN
   POP_ASSUM (fn th => POP_ASSUM MP_TAC THEN ASSUME_TAC th) THEN
@@ -5904,18 +5729,18 @@ val sigma_sets_empty_eq = store_thm ("sigma_sets_empty_eq",
 val sets_PiM_empty = store_thm ("sets_PiM_empty",
   ``!M. measurable_sets (PiM {} M) = {{};{(\x. undefined)}}``,
   RW_TAC std_ss [sets_PiM_single, NOT_IN_EMPTY, GSPEC_F] THEN
-  ONCE_REWRITE_TAC [SET_RULE 
+  ONCE_REWRITE_TAC [SET_RULE
   ``{{f | f IN PiE n (\i. m_space (m i)) /\ f i IN A} | F} = {}``] THEN
   SIMP_TAC std_ss [sigma_sets_empty_eq] THEN
   RW_TAC std_ss [PiE, Pi, NOT_IN_EMPTY, extensional_empty, INTER_UNIV, GSPEC_T]);
 
 val space_PiM_empty = store_thm ("space_PiM_empty",
   ``!M. m_space (PiM {} M) = {(\x. undefined)}``,
-  SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] space_PiM] THEN 
+  SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] space_PiM] THEN
   RW_TAC std_ss [PiE, Pi, NOT_IN_EMPTY, extensional_empty, INTER_UNIV, GSPEC_T]);
 
 val countably_additiveI = store_thm ("countably_additiveI",
-  ``!sp M f. (!A. IMAGE A UNIV SUBSET M ==> disjoint_family A ==> 
+  ``!sp M f. (!A. IMAGE A UNIV SUBSET M ==> disjoint_family A ==>
         BIGUNION {A i | i IN UNIV} IN M ==>
         (suminf (\i. f (A i)) = f (BIGUNION {A i | i IN UNIV}))) ==>
         countably_additive (sp,M,f)``,
@@ -5952,12 +5777,12 @@ val suminf_finite = store_thm ("suminf_finite",
   ASM_SIMP_TAC arith_ss []);
 
 val additive_sum = store_thm ("additive_sum",
-  ``!sp M f A t. ring t M /\ positive (t,M,f) /\ 
+  ``!sp M f A t. ring t M /\ positive (t,M,f) /\
                additive (t,M,f) /\ FINITE sp /\
                IMAGE A sp SUBSET M /\ disjoint_family_on A sp ==>
                (SIGMA (f o A) sp = f (BIGUNION (IMAGE A sp)))``,
-  RW_TAC std_ss [] THEN 
-  Q_TAC SUFF_TAC `FINITE sp /\ IMAGE A sp SUBSET M /\ disjoint_family_on A sp` THENL 
+  RW_TAC std_ss [] THEN
+  Q_TAC SUFF_TAC `FINITE sp /\ IMAGE A sp SUBSET M /\ disjoint_family_on A sp` THENL
   [ALL_TAC, ASM_SIMP_TAC std_ss []] THEN
   SIMP_TAC std_ss [GSYM AND_IMP_INTRO] THEN Q.SPEC_TAC (`sp`,`sp`) THEN SET_INDUCT_TAC THENL
   [SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_EMPTY, IMAGE_EMPTY, BIGUNION_EMPTY] THEN
@@ -6017,7 +5842,7 @@ val countably_additiveI_finite = store_thm ("countably_additiveI_finite",
     Q_TAC SUFF_TAC `IMAGE f {i | A i <> {}} SUBSET BIGUNION {A i | i IN univ(:num)}` THENL
     [DISCH_TAC, ASM_SET_TAC []] THEN
     METIS_TAC [SUBSET_FINITE]] THEN
-   MATCH_MP_TAC EQ_IMPLIES THEN MATCH_MP_TAC FINITE_IMAGE_INJ_EQ THEN 
+   MATCH_MP_TAC EQ_IMPLIES THEN MATCH_MP_TAC FINITE_IMAGE_INJ_EQ THEN
    RW_TAC std_ss [GSPECIFICATION] THEN
    FULL_SIMP_TAC std_ss [disjoint_family, disjoint_family_on, IN_UNIV] THEN
    ASM_SET_TAC []] THEN
@@ -6038,7 +5863,7 @@ val countably_additiveI_finite = store_thm ("countably_additiveI_finite",
    CONJ_TAC THENL
    [DISJ1_TAC THEN RW_TAC std_ss [GSPECIFICATION] THEN
     FULL_SIMP_TAC std_ss [measure_def, measurable_sets_def] THEN
-    SIMP_TAC std_ss [lt_infty] THEN MATCH_MP_TAC lte_trans THEN 
+    SIMP_TAC std_ss [lt_infty] THEN MATCH_MP_TAC lte_trans THEN
     Q.EXISTS_TAC `0` THEN SIMP_TAC std_ss [GSYM lt_infty, num_not_infty] THEN
     ASM_SET_TAC [], ALL_TAC] THEN
    RW_TAC std_ss [GSPECIFICATION]] THEN
@@ -6057,25 +5882,25 @@ val measure_space_PiM_empty = store_thm ("measure_space_PiM_empty",
   GEN_TAC THEN ONCE_REWRITE_TAC [PiM] THEN MATCH_MP_TAC lemma THEN
   SIMP_TAC std_ss [GSYM PiM, sets_PiM_empty, space_PiM_empty] THEN
   SIMP_TAC std_ss [PiM] THEN Q.EXISTS_TAC `(PiE {} (\i. m_space (M i)))` THEN
-  Q_TAC SUFF_TAC `!i j (ii:('a -> bool) # ('a -> 'b -> bool) -> bool). 
+  Q_TAC SUFF_TAC `!i j (ii:('a -> bool) # ('a -> 'b -> bool) -> bool).
                        {(i,j) | (i,j) IN ii} = ii` THENL
   [DISC_RW_KILL,
    RW_TAC std_ss [EXTENSION, GSPECIFICATION, EXISTS_PROD] THEN
    METIS_TAC [pair_CASES]] THEN
-  Q_TAC SUFF_TAC `!i j (G:('a -> bool) # ('a -> 'b -> bool) -> ('a->'b) -> bool). 
+  Q_TAC SUFF_TAC `!i j (G:('a -> bool) # ('a -> 'b -> bool) -> ('a->'b) -> bool).
                        (\(i,j). G (i,j)) = G` THENL
   [DISC_RW_KILL,
-   RW_TAC std_ss [FUN_EQ_THM] THEN 
+   RW_TAC std_ss [FUN_EQ_THM] THEN
    `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
    ASM_SIMP_TAC std_ss []] THEN
-  Q_TAC SUFF_TAC `!i j (u:('a -> bool) # ('a -> 'b -> bool) -> extreal). 
+  Q_TAC SUFF_TAC `!i j (u:('a -> bool) # ('a -> 'b -> bool) -> extreal).
                        (\(i,j). u (i,j)) = u` THENL
   [DISC_RW_KILL,
-   RW_TAC std_ss [FUN_EQ_THM] THEN 
+   RW_TAC std_ss [FUN_EQ_THM] THEN
    `?a b. x = (a,b)` by METIS_TAC [pair_CASES] THEN
    ASM_SIMP_TAC std_ss []] THEN
   Q.EXISTS_TAC `{(J,X) | FINITE J /\ J SUBSET {} /\
-      X IN Pi J (\i. measurable_sets (M i))}` THEN 
+      X IN Pi J (\i. measurable_sets (M i))}` THEN
   Q.EXISTS_TAC `(\(J,X). prod_emb {} M J (PiE J (\i. X i)))` THEN
   Q.EXISTS_TAC `(\(J,X). Normal (product
        (J UNION {i | i IN {} /\ measure (M i) (m_space (M i)) <> 1})
@@ -6103,7 +5928,7 @@ val measure_space_PiM_empty = store_thm ("measure_space_PiM_empty",
    Q_TAC SUFF_TAC `!(i,j).
     (\i j. FINITE i /\ i SUBSET {} /\ j IN Pi i (\i. measurable_sets (M i)) ==>
        prod_emb {} M i (PiE i (\i. j i)) IN POW (PiE {} (\i. m_space (M i)))) i j` THENL
-   [SIMP_TAC std_ss [], REWRITE_TAC [GSYM PFORALL_THM]] THEN 
+   [SIMP_TAC std_ss [], REWRITE_TAC [GSYM PFORALL_THM]] THEN
    RW_TAC std_ss [SUBSET_EMPTY] THEN
    Q_TAC SUFF_TAC `prod_emb {} M {} (PiE {} (\i. y i)) IN prod_algebra {} M` THENL
    [METIS_TAC [prod_algebra_sets_into_space, SUBSET_DEF, IN_POW], ALL_TAC] THEN
@@ -6111,7 +5936,7 @@ val measure_space_PiM_empty = store_thm ("measure_space_PiM_empty",
    SET_TAC [],
    SIMP_TAC std_ss [positive_def, measure_def] THEN
    RW_TAC real_ss [extreal_of_num_def, extreal_le_def],
-   ALL_TAC, 
+   ALL_TAC,
    SIMP_TAC std_ss [Pi_iff, NOT_IN_EMPTY]] THEN
   MATCH_MP_TAC countably_additiveI_finite THEN
   SIMP_TAC std_ss [FINITE_SING] THEN RW_TAC std_ss [] THENL
@@ -6120,7 +5945,7 @@ val measure_space_PiM_empty = store_thm ("measure_space_PiM_empty",
    RW_TAC real_ss [le_refl, extreal_of_num_def, extreal_le_def],
    RW_TAC std_ss [additive_def, measure_def, measurable_sets_def] THEN
    TRY (ASM_SET_TAC []) THEN REPEAT (POP_ASSUM MP_TAC) THEN
-   ONCE_REWRITE_TAC [SET_RULE ``s IN {a;b} = (s = a) \/ (s = b)``] THEN   
+   ONCE_REWRITE_TAC [SET_RULE ``s IN {a;b} = (s = a) \/ (s = b)``] THEN
    RW_TAC std_ss [] THEN TRY (ASM_SET_TAC []) THEN
    SIMP_TAC std_ss [add_rzero, add_lzero]] THEN
   `sigma_algebra ({(\x. undefined)}, {{}; {(\x. undefined)}})`
@@ -6128,10 +5953,10 @@ val measure_space_PiM_empty = store_thm ("measure_space_PiM_empty",
   FULL_SIMP_TAC std_ss [sigma_algebra_alt_eq, algebra_alt_eq]);
 
 val measurable_PiM_single = store_thm ("measurable_PiM_single",
-  ``!f N M ii. measure_space N /\ measure_space (PiM ii M) /\ 
+  ``!f N M ii. measure_space N /\ measure_space (PiM ii M) /\
      (!i. i IN ii ==> measure_space (M i)) /\
      f IN (m_space N -> PiE ii (\i. m_space (M i))) /\
-     (!A i. i IN ii ==> A IN measurable_sets (M i) ==> 
+     (!A i. i IN ii ==> A IN measurable_sets (M i) ==>
          {w | w IN m_space N /\ f w i IN A} IN measurable_sets N) ==>
      f IN measurable (m_space N, measurable_sets N)
          (m_space (PiM ii M), measurable_sets (PiM ii M))``,
@@ -6151,12 +5976,12 @@ val measurable_PiM_single = store_thm ("measurable_PiM_single",
 
 val measurable_restrict = store_thm ("measurable_restrict",
   ``!ii X M N. (!i. i IN ii ==> measure_space (M i)) /\
-       (!i. i IN ii ==> 
-              X i IN measurable (m_space N, measurable_sets N) 
+       (!i. i IN ii ==>
+              X i IN measurable (m_space N, measurable_sets N)
                                 (m_space (M i), measurable_sets (M i))) /\
        measure_space N /\ measure_space (PiM ii M) ==>
-       (\x i. if i IN ii then X i x else undefined) IN 
-       measurable (m_space N, measurable_sets N) 
+       (\x i. if i IN ii then X i x else undefined) IN
+       measurable (m_space N, measurable_sets N)
                   (m_space (PiM ii M), measurable_sets (PiM ii M))``,
   RW_TAC std_ss [] THEN MATCH_MP_TAC measurable_PiM_single THEN
   FULL_SIMP_TAC std_ss [IN_MEASURABLE, space_def, subsets_def] THEN
@@ -6165,7 +5990,7 @@ val measurable_restrict = store_thm ("measurable_restrict",
   [DISC_RW_KILL THEN SIMP_TAC std_ss [restrict_extensional], SIMP_TAC std_ss [restrict]] THEN
   RW_TAC std_ss [] THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `i`) THEN
   ASM_SIMP_TAC std_ss [] THEN RW_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `{w | w IN m_space N /\ X i w IN A} = 
+  Q_TAC SUFF_TAC `{w | w IN m_space N /\ X i w IN A} =
       PREIMAGE (X i) A INTER m_space N` THENL
   [DISC_RW_KILL, ASM_SET_TAC [PREIMAGE_def]] THEN
   FIRST_X_ASSUM MATCH_MP_TAC THEN ASM_SIMP_TAC std_ss []);
@@ -6205,7 +6030,7 @@ val sigma_sets_vimage_commute = store_thm ("sigma_sets_vimage_commute",
    (\x. ?A. (x = PREIMAGE X A INTER sp) /\ A IN sigma_sets sp' st') x` THENL
   [SIMP_TAC std_ss [], MATCH_MP_TAC sigma_sets_ind] THEN
   RW_TAC std_ss [] THENL
-  [Q.EXISTS_TAC `{}` THEN 
+  [Q.EXISTS_TAC `{}` THEN
    SIMP_TAC std_ss [PREIMAGE_EMPTY, sigma_sets_empty, INTER_EMPTY],
    POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) THEN
    FULL_SIMP_TAC std_ss [GSPECIFICATION] THEN
@@ -6213,7 +6038,7 @@ val sigma_sets_vimage_commute = store_thm ("sigma_sets_vimage_commute",
    Q.EXISTS_TAC `(sp' DIFF A)` THEN
    CONJ_TAC THENL [ASM_SET_TAC [PREIMAGE_def], ALL_TAC] THEN
    METIS_TAC [sigma_sets_compl], ALL_TAC] THEN
-  Q_TAC SUFF_TAC `!i. ?A'. (\i A'. (A i = PREIMAGE X A' INTER sp) /\ 
+  Q_TAC SUFF_TAC `!i. ?A'. (\i A'. (A i = PREIMAGE X A' INTER sp) /\
                                A' IN sigma_sets sp' st') i A'` THENL
   [REWRITE_TAC [SKOLEM_THM], ASM_SIMP_TAC std_ss []] THEN
   RW_TAC std_ss [] THEN Q.EXISTS_TAC `BIGUNION {f i | i IN UNIV}` THEN
@@ -6247,7 +6072,7 @@ val sigma_sets_mono = store_thm ("sigma_sets_mono",
 val PRODUCT_BIGUNION = store_thm ("PRODUCT_BIGUNION",
   ``!f ii A.  FINITE ii /\ (!i. i IN ii ==> FINITE (A i)) /\
     (!i j. i IN ii /\ j IN ii /\ i <> j ==> (A i INTER A j = {})) ==>
-    (product (BIGUNION {A i | i IN ii}) f = 
+    (product (BIGUNION {A i | i IN ii}) f =
      product ii (\i. product (A i) f))``,
   REPEAT GEN_TAC THEN SIMP_TAC std_ss [GSYM AND_IMP_INTRO] THEN
   Q.SPEC_TAC (`ii`,`ii`) THEN SET_INDUCT_TAC THENL
@@ -6256,7 +6081,7 @@ val PRODUCT_BIGUNION = store_thm ("PRODUCT_BIGUNION",
    SIMP_TAC std_ss [BIGUNION_EMPTY, PRODUCT_CLAUSES],
    ALL_TAC] THEN
   RW_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `BIGUNION {A i | i IN e INSERT s} = 
+  Q_TAC SUFF_TAC `BIGUNION {A i | i IN e INSERT s} =
                   BIGUNION {A i | i IN s} UNION (A e)` THENL
   [DISC_RW_KILL, ASM_SET_TAC []] THEN
   ASM_SIMP_TAC std_ss [PRODUCT_CLAUSES] THEN
@@ -6276,7 +6101,7 @@ val indep_sets_collect_sigma = store_thm ("indep_sets_collect_sigma",
               disjoint_family_on ii J ==>
           indep_sets p (\j. sigma_sets (m_space p) (BIGUNION {E i | i IN ii j})) J``,
   RW_TAC std_ss [] THEN
-  Q.ABBREV_TAC `ee = (\j. {BIGINTER {E' k | k IN kk} | 
+  Q.ABBREV_TAC `ee = (\j. {BIGINTER {E' k | k IN kk} |
     FINITE kk /\ kk <> {} /\ kk SUBSET ii j /\ (!k. k IN kk ==> E' k IN E k)})` THEN
   Q_TAC SUFF_TAC `!j i. j IN J ==> i IN ii j ==> E i SUBSET events p` THENL
   [DISCH_TAC,
@@ -6296,7 +6121,7 @@ val indep_sets_collect_sigma = store_thm ("indep_sets_collect_sigma",
   Q_TAC SUFF_TAC `!j. j IN J ==> (sigma_sets (m_space p) (ss j) =
                                   sigma_sets (m_space p) (ee j))` THENL
   [DISCH_TAC,
-   Q.UNABBREV_TAC `ss` THEN RW_TAC std_ss [] THEN 
+   Q.UNABBREV_TAC `ss` THEN RW_TAC std_ss [] THEN
    FULL_SIMP_TAC std_ss [sigma_sets_eq] THEN MATCH_MP_TAC sigma_sets_eqI THEN
    CONJ_TAC THENL
    [RW_TAC std_ss [IN_BIGUNION, GSPECIFICATION] THEN
@@ -6322,23 +6147,23 @@ val indep_sets_collect_sigma = store_thm ("indep_sets_collect_sigma",
    ASM_SIMP_TAC std_ss [] THEN CONJ_TAC THENL
    [MATCH_MP_TAC indep_setsI THEN ASM_SIMP_TAC std_ss [] THEN
     CONJ_TAC THENL
-    [Q.UNABBREV_TAC `ee` THEN 
+    [Q.UNABBREV_TAC `ee` THEN
      RW_TAC std_ss [SUBSET_DEF, GSPECIFICATION, EXISTS_PROD] THEN
      MATCH_MP_TAC finite_INT THEN ASM_SIMP_TAC std_ss [] THEN
      CONJ_TAC THENL [ALL_TAC, ASM_SET_TAC []] THEN
      FULL_SIMP_TAC std_ss [prob_space_def, measure_space_def, sigma_algebra_def] THEN
      FULL_SIMP_TAC std_ss [events_def, p_space_def, Int_stable] THEN
-     ONCE_REWRITE_TAC [METIS [subsets_def] 
+     ONCE_REWRITE_TAC [METIS [subsets_def]
       ``measurable_sets p = subsets (m_space p, measurable_sets p)``] THEN
      METIS_TAC [ALGEBRA_INTER],
      ALL_TAC] THEN
     RW_TAC std_ss [] THEN
-    Q_TAC SUFF_TAC `!j. j IN J' ==> ?E' L. (A j = BIGINTER {E' l | l IN L}) /\ 
+    Q_TAC SUFF_TAC `!j. j IN J' ==> ?E' L. (A j = BIGINTER {E' l | l IN L}) /\
      FINITE L /\ L <> {} /\ L SUBSET ii j /\ (!l. l IN L ==> E' l IN E l)` THENL
     [DISCH_TAC,
-     POP_ASSUM MP_TAC THEN Q.UNABBREV_TAC `ee` THEN 
+     POP_ASSUM MP_TAC THEN Q.UNABBREV_TAC `ee` THEN
      RW_TAC std_ss [GSPECIFICATION, EXISTS_PROD]] THEN
-    Q_TAC SUFF_TAC `!j. ?E'. (\j E'. j IN J' ==> ?L. (A j = BIGINTER {E' l | l IN L}) /\ 
+    Q_TAC SUFF_TAC `!j. ?E'. (\j E'. j IN J' ==> ?L. (A j = BIGINTER {E' l | l IN L}) /\
       FINITE L /\ L <> {} /\ L SUBSET ii j /\ (!l. l IN L ==> E' l IN E l)) j E'` THENL
     [ALL_TAC, METIS_TAC []] THEN
     REWRITE_TAC [SKOLEM_THM] THEN RW_TAC std_ss [] THEN
@@ -6471,7 +6296,7 @@ val indep_vars_def' = store_thm ("indep_vars_def'",
         (!i. i IN ii ==>
          random_variable (X i) p
           (m_space (M' i),measurable_sets (M' i))) /\
-        indep_sets p (\i. sigma_sets (m_space p) 
+        indep_sets p (\i. sigma_sets (m_space p)
         {PREIMAGE f A INTER m_space p | (f = X i) /\ A IN measurable_sets (M' i)}) ii)``,
   RW_TAC std_ss [indep_vars, p_space_def] THEN AP_TERM_TAC THEN
   Q_TAC SUFF_TAC `indep_sets p
@@ -6498,7 +6323,7 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
         (!i. i IN ii ==> measure_space (M' i)) /\ disjoint_family_on kk L ==>
         indep_vars p (\j:num. PiM (kk j) M') (\j w. restrict (\i. X i w) (kk j)) L``,
   RW_TAC std_ss [indep_vars_def'] THENL
-  [ASM_SIMP_TAC std_ss [random_variable_def, restrict, p_space_def, events_def] THEN 
+  [ASM_SIMP_TAC std_ss [random_variable_def, restrict, p_space_def, events_def] THEN
    MATCH_MP_TAC measurable_restrict THEN FULL_SIMP_TAC std_ss [prob_space_def] THEN
    CONJ_TAC THENL [ASM_SET_TAC [], ALL_TAC] THEN
    FULL_SIMP_TAC std_ss [indep_vars, random_variable_def, p_space_def, events_def] THEN
@@ -6507,12 +6332,12 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
   Q_TAC SUFF_TAC `!i. i IN ii ==> X i IN measurable (m_space p, measurable_sets p)
                                 (m_space (M' i), measurable_sets (M' i))` THENL
   [DISCH_TAC, FULL_SIMP_TAC std_ss [random_variable_def, p_space_def, events_def]] THEN
-  Q.ABBREV_TAC `proj = (\j s. {PREIMAGE (\w i. if i IN kk j then X i w else undefined) A INTER 
+  Q.ABBREV_TAC `proj = (\j s. {PREIMAGE (\w i. if i IN kk j then X i w else undefined) A INTER
                        m_space p | A IN s})` THEN
   Q.ABBREV_TAC `UN = (\j. sigma_sets (m_space p)
-    (BIGUNION {{PREIMAGE (f) A INTER m_space p | (f = X i) /\ A IN measurable_sets (M' i)}| 
+    (BIGUNION {{PREIMAGE (f) A INTER m_space p | (f = X i) /\ A IN measurable_sets (M' i)}|
                  (i:num) IN (kk j)}))` THEN
-  Q_TAC SUFF_TAC `indep_sets p (\i. sigma_sets (m_space p) 
+  Q_TAC SUFF_TAC `indep_sets p (\i. sigma_sets (m_space p)
                    (proj i (measurable_sets (PiM (kk i) M')))) L` THENL
   [DISCH_TAC,
    MATCH_MP_TAC indep_sets_mono_sets THEN Q.EXISTS_TAC `UN` THEN CONJ_TAC THENL
@@ -6521,7 +6346,7 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
     Q_TAC SUFF_TAC `sigma_sets (m_space p) (proj j (measurable_sets (PiM (kk j) M'))) =
        sigma_sets (m_space p) (sigma_sets (m_space p) (proj j (prod_algebra (kk j) M')))` THENL
     [DISC_RW_KILL,
-     SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] sets_PiM] THEN 
+     SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] sets_PiM] THEN
      Q.UNABBREV_TAC `proj` THEN SIMP_TAC std_ss [] THEN
      Q.ABBREV_TAC `Y = (\w i. if i IN kk j then X i w else undefined)` THEN
      Q_TAC SUFF_TAC `{PREIMAGE Y A INTER m_space p |
@@ -6532,12 +6357,12 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
      ASM_SIMP_TAC std_ss [IN_FUNSET, PiE_iff] THEN RW_TAC std_ss [] THENL
      [FULL_SIMP_TAC std_ss [IN_MEASURABLE, space_def, subsets_def, IN_FUNSET] THEN
       ASM_SET_TAC [], ALL_TAC] THEN
-     Q_TAC SUFF_TAC `(\i. if i IN kk j then X i w else undefined) = 
+     Q_TAC SUFF_TAC `(\i. if i IN kk j then X i w else undefined) =
                      restrict (\i. X i w) (kk j)` THENL
      [DISC_RW_KILL THEN SIMP_TAC std_ss [restrict_extensional], ALL_TAC] THEN
      SIMP_TAC std_ss [restrict]] THEN
     Q_TAC SUFF_TAC `sigma_sets (m_space p)
-     (sigma_sets (m_space p) (proj j (prod_algebra (kk j) M'))) = 
+     (sigma_sets (m_space p) (proj j (prod_algebra (kk j) M'))) =
      (sigma_sets (m_space p) (proj j (prod_algebra (kk j) M')))` THENL
     [DISC_RW_KILL,
      MATCH_MP_TAC sigma_sets_sigma_sets_eq THEN
@@ -6545,7 +6370,7 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
      Q.ABBREV_TAC `Y = (\w i. if i IN kk j then X i w else undefined)` THEN
      RW_TAC std_ss [SUBSET_DEF, IN_POW, GSPECIFICATION] THEN
      FULL_SIMP_TAC std_ss [IN_INTER]] THEN
-    Q.UNABBREV_TAC `UN` THEN SIMP_TAC std_ss [] THEN 
+    Q.UNABBREV_TAC `UN` THEN SIMP_TAC std_ss [] THEN
     MATCH_MP_TAC sigma_sets_mono THEN Q.UNABBREV_TAC `proj` THEN
     RW_TAC std_ss [SUBSET_DEF, GSPECIFICATION] THEN
     FIRST_ASSUM (ASSUME_TAC o MATCH_MP prod_algebraE) THEN
@@ -6563,12 +6388,12 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
      SET_TAC []] THEN
     `kk j <> {}` by ASM_SET_TAC [] THEN
     Q.ABBREV_TAC `UN = (\j. sigma_sets (m_space p)
-    (BIGUNION {{PREIMAGE (f) A INTER m_space p | (f = X i) /\ A IN measurable_sets (M' i)}| 
+    (BIGUNION {{PREIMAGE (f) A INTER m_space p | (f = X i) /\ A IN measurable_sets (M' i)}|
                  (i:num) IN (kk j)}))` THEN
     Q_TAC SUFF_TAC `sigma_algebra (m_space p, UN j)` THENL
     [DISCH_TAC,
      Q.UNABBREV_TAC `UN` THEN SIMP_TAC std_ss [] THEN
-     MATCH_MP_TAC sigma_algebra_sigma_sets THEN 
+     MATCH_MP_TAC sigma_algebra_sigma_sets THEN
      RW_TAC std_ss [SUBSET_DEF, IN_POW, IN_BIGUNION, GSPECIFICATION] THEN
      FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      POP_ASSUM MP_TAC THEN ASM_SIMP_TAC std_ss [IN_INTER, IN_PREIMAGE]] THEN
@@ -6597,7 +6422,7 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
       RW_TAC std_ss [] THENL
       [FIRST_X_ASSUM (MP_TAC o Q.SPEC `(\x. X (i:num) x IN E i /\ x IN m_space p)`) THEN
        SIMP_TAC std_ss [IN_DEF] THEN
-       Q_TAC SUFF_TAC `(?i'. (!x. E i (X i x) /\ m_space p x <=> 
+       Q_TAC SUFF_TAC `(?i'. (!x. E i (X i x) /\ m_space p x <=>
           E i' (X i' x) /\ m_space p x) /\ J i')` THENL
        [METIS_TAC [], ALL_TAC] THEN
        METIS_TAC [SPECIFICATION],
@@ -6607,17 +6432,17 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
       `i IN ii` by (POP_ASSUM MP_TAC THEN POP_ASSUM MP_TAC THEN SET_TAC []) THEN
       `(!x'. x' IN m_space p ==> X i x' IN m_space (M' i))` by METIS_TAC [] THEN
       FIRST_X_ASSUM MATCH_MP_TAC THEN
-      FULL_SIMP_TAC std_ss [GSYM MEMBER_NOT_EMPTY] THEN 
+      FULL_SIMP_TAC std_ss [GSYM MEMBER_NOT_EMPTY] THEN
       FIRST_X_ASSUM (MP_TAC o Q.SPEC `(\x. X (x':num) x IN E x' /\ x IN m_space p)`) THEN
       SIMP_TAC std_ss [IN_DEF] THEN
-      Q_TAC SUFF_TAC `(?i. (!x. E x' (X x' x) /\ m_space p x <=> 
+      Q_TAC SUFF_TAC `(?i. (!x. E x' (X x' x) /\ m_space p x <=>
         E i (X i x) /\ m_space p x) /\ J i)` THENL
       [DISC_RW_KILL THEN SIMP_TAC std_ss [], ALL_TAC] THEN
       METIS_TAC [SPECIFICATION]] THEN
-     FULL_SIMP_TAC std_ss [GSYM MEMBER_NOT_EMPTY] THEN 
+     FULL_SIMP_TAC std_ss [GSYM MEMBER_NOT_EMPTY] THEN
      FIRST_X_ASSUM (MP_TAC o Q.SPEC `(\x. X (x':num) x IN E x' /\ x IN m_space p)`) THEN
      SIMP_TAC std_ss [IN_DEF] THEN
-     Q_TAC SUFF_TAC `(?i. (!x. E x' (X x' x) /\ m_space p x <=> 
+     Q_TAC SUFF_TAC `(?i. (!x. E x' (X x' x) /\ m_space p x <=>
        E i (X i x) /\ m_space p x) /\ J i)` THENL
      [DISC_RW_KILL THEN SIMP_TAC std_ss [], ALL_TAC] THEN
      METIS_TAC [SPECIFICATION]] THEN
@@ -6629,7 +6454,7 @@ val indep_vars_restrict = store_thm ("indep_vars_restrict",
      FULL_SIMP_TAC std_ss [GSPECIFICATION, EXISTS_PROD] THEN
      POP_ASSUM MP_TAC THEN ASM_SIMP_TAC std_ss [IN_INTER, IN_PREIMAGE],
      ALL_TAC] THEN
-    Q.UNABBREV_TAC `UN` THEN RW_TAC std_ss [] THEN 
+    Q.UNABBREV_TAC `UN` THEN RW_TAC std_ss [] THEN
     MATCH_MP_TAC sigma_sets_basic THEN
     SIMP_TAC std_ss [IN_BIGUNION, GSPECIFICATION] THEN
     Q.EXISTS_TAC `{PREIMAGE f A INTER m_space p |
@@ -6665,9 +6490,9 @@ val indep_var_restrict = store_thm ("indep_var_restrict",
       (!i. measure_space (M' i)) ==>
       indep_var p (PiM A M') (\w. restrict (\i. X i w) A)
                   (PiM B M') (\w. restrict (\i. X i w) B)``,
-  RW_TAC std_ss [indep_var] THEN 
+  RW_TAC std_ss [indep_var] THEN
   Q_TAC SUFF_TAC `indep_vars p (\i. PiM ((\i. if i = 0 then A else B) i) M')
-                  (\i w. restrict (\i. X i w) ((\i. if i = 0 then A else B) i)) 
+                  (\i w. restrict (\i. X i w) ((\i. if i = 0 then A else B) i))
                   {x | (x = 0) \/ (x = 1)}` THENL
   [SIMP_TAC std_ss [indep_vars] THEN RW_TAC std_ss [] THENL
    [FIRST_X_ASSUM (MP_TAC o Q.SPEC `i`) THEN RW_TAC std_ss [],
@@ -6691,7 +6516,7 @@ val indep_var_restrict = store_thm ("indep_var_restrict",
 
 val measurable_component_singleton = store_thm ("measurable_component_singleton",
   ``!ii M i. (!i. measure_space (M i)) /\
-     (measure_space (PiM ii M)) /\ i IN ii ==> (\f. f i) IN measurable 
+     (measure_space (PiM ii M)) /\ i IN ii ==> (\f. f i) IN measurable
      (m_space (PiM ii M), measurable_sets (PiM ii M))
      (m_space (M i), measurable_sets (M i))``,
   RW_TAC std_ss [IN_MEASURABLE] THENL
@@ -6718,7 +6543,7 @@ val measurable_component_singleton = store_thm ("measurable_component_singleton"
   ASM_SET_TAC []);
 
 val borel_measurable_sum = store_thm ("borel_measurable_sum",
-  ``!f s M. FINITE s /\ sigma_algebra M /\ 
+  ``!f s M. FINITE s /\ sigma_algebra M /\
      (!i. i IN s ==> f i IN borel_measurable M) ==>
      (\x. sum s (\i. f i x)) IN borel_measurable M``,
   REPEAT GEN_TAC THEN Q.SPEC_TAC (`s`,`s`) THEN
@@ -6733,11 +6558,11 @@ val borel_measurable_sum = store_thm ("borel_measurable_sum",
 val measure_space_PiM = store_thm ("measure_space_PiM",
   ``!s M. measure_space (PiM s M)``,
   RW_TAC std_ss [measure_space_def] THENL
-  [SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] sets_PiM] THEN 
+  [SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] sets_PiM] THEN
    SIMP_TAC std_ss [SIMP_RULE std_ss [ETA_AX] space_PiM] THEN
    MATCH_MP_TAC sigma_algebra_sigma_sets THEN
    METIS_TAC [prod_algebra_sets_into_space],
-   RW_TAC std_ss [positive_def, PiM, extend_measure, measure_of, measure_def, 
+   RW_TAC std_ss [positive_def, PiM, extend_measure, measure_of, measure_def,
     le_refl, measure_space_def, measurable_sets_def, m_space_def] THEN
    RW_TAC std_ss [le_refl],
    ALL_TAC] THEN
@@ -6759,19 +6584,19 @@ val measure_space_PiM = store_thm ("measure_space_PiM",
   METIS_TAC [prod_algebra_sets_into_space]);
 
 val indep_vars_setsum = store_thm ("indep_vars_setsum",
- ``!p X ii i. prob_space p /\ FINITE ii /\ i NOTIN ii /\ 
+ ``!p X ii i. prob_space p /\ FINITE ii /\ i NOTIN ii /\
     indep_vars p (\x. (space borel,subsets borel,(\x. 0))) X (i INSERT ii) ==>
-    indep_var p (space borel,subsets borel,(\x. 0)) (X i) 
+    indep_var p (space borel,subsets borel,(\x. 0)) (X i)
                 (space borel,subsets borel,(\x. 0)) (\w. sum ii (\i. X i w))``,
   RW_TAC std_ss [] THEN
   Q_TAC SUFF_TAC `X i = (\f. f i) o (\w j. if j IN {i} then X j w else undefined)` THENL
   [DISC_RW_KILL, ASM_SET_TAC [o_DEF]] THEN
-  Q_TAC SUFF_TAC `(\w. sum ii (\i. X i w)) = 
+  Q_TAC SUFF_TAC `(\w. sum ii (\i. X i w)) =
           (\f. sum ii f) o (\w j. if j IN ii then X j w else undefined)` THENL
   [DISC_RW_KILL,
    SIMP_TAC std_ss [o_DEF] THEN ABS_TAC THEN MATCH_MP_TAC SUM_EQ THEN
    SET_TAC []] THEN
-  MATCH_MP_TAC indep_var_compose THEN 
+  MATCH_MP_TAC indep_var_compose THEN
   Q.EXISTS_TAC `PiM {i} (\i. (space borel,subsets borel,(\x. 0)))` THEN
   Q.EXISTS_TAC `PiM ii (\i. (space borel,subsets borel,(\x. 0)))` THEN
   ASM_SIMP_TAC std_ss [GSYM restrict, measure_space_borel] THEN
@@ -6813,11 +6638,11 @@ val indep_vars_setsum = store_thm ("indep_vars_setsum",
 
 val setsum_indep_normal = store_thm ("setsum_indep_normal",
   ``!p X mu sig ii.
-     prob_space p /\ FINITE ii /\ ii <> {} /\ 
+     prob_space p /\ FINITE ii /\ ii <> {} /\
      indep_vars p (\i. (space borel, subsets borel, (\x. 0))) X ii /\
      (!i. i IN ii ==> 0 < sig i) /\
      (!i. i IN ii ==> normal_rv (X i) p (mu i) (sig i)) ==>
-     normal_rv (\x. sum ii (\i. (X i) x)) p (sum ii (\i. mu i)) 
+     normal_rv (\x. sum ii (\i. (X i) x)) p (sum ii (\i. mu i))
                (sqrt (sum ii (\i. (sig i) pow 2)))``,
   REPEAT GEN_TAC THEN REWRITE_TAC [GSYM AND_IMP_INTRO] THEN DISCH_TAC THEN
   Q.SPEC_TAC (`ii`,`ii`) THEN SET_INDUCT_TAC THEN RW_TAC std_ss [] THEN
@@ -6840,13 +6665,13 @@ val setsum_indep_normal = store_thm ("setsum_indep_normal",
    MATCH_MP_TAC SUM_POS_LT THEN
    FULL_SIMP_TAC std_ss [GSYM MEMBER_NOT_EMPTY] THEN
     `0 < 1:real` by REAL_ARITH_TAC THEN
-    `!x. x  IN s ==> 0 < sig x pow (SUC 1)` by 
+    `!x. x  IN s ==> 0 < sig x pow (SUC 1)` by
      (GEN_TAC THEN DISCH_TAC THEN MATCH_MP_TAC POW_POS_LT THEN
       ASM_SET_TAC []) THEN
-    FULL_SIMP_TAC real_ss [] THEN CONJ_TAC THENL 
+    FULL_SIMP_TAC real_ss [] THEN CONJ_TAC THENL
     [RW_TAC std_ss [] THEN MATCH_MP_TAC REAL_LT_IMP_LE THEN
      ASM_SET_TAC [], ALL_TAC] THEN Q.EXISTS_TAC `x'` THEN
-    ASM_SET_TAC []] THEN  
+    ASM_SET_TAC []] THEN
   `0 <= sum s (\i. sig i pow 2)` by METIS_TAC [REAL_LT_IMP_LE] THEN
   Q_TAC SUFF_TAC `normal_rv (\x. X e x + Y x) p (mu e + mu2)
                             (sqrt (sig e pow 2 + sig2 pow 2))` THENL
@@ -6854,9 +6679,9 @@ val setsum_indep_normal = store_thm ("setsum_indep_normal",
    Q.UNABBREV_TAC `mu2` THEN ASM_SIMP_TAC std_ss [SQRT_POW_2],
    ALL_TAC] THEN
   MATCH_MP_TAC sum_indep_normal THEN ASM_SIMP_TAC std_ss [] THEN
-  CONJ_TAC THENL 
+  CONJ_TAC THENL
   [Q.UNABBREV_TAC `sig2` THEN ASM_SIMP_TAC std_ss [SQRT_POS_LT], ALL_TAC] THEN
-  `normal_rv (X e) p (mu e) (sig e)` by ASM_SET_TAC [] THEN 
+  `normal_rv (X e) p (mu e) (sig e)` by ASM_SET_TAC [] THEN
   `normal_rv Y p mu2 sig2` by
    (FULL_SIMP_TAC std_ss [AND_IMP_INTRO] THEN FIRST_X_ASSUM MATCH_MP_TAC THEN
     RW_TAC std_ss [] THENL [ALL_TAC, ASM_SET_TAC [], ASM_SET_TAC []] THEN
@@ -6874,7 +6699,7 @@ val joint_distribution_sym = store_thm
  ("joint_distribution_sym",``!p X Y a b. prob_space p  ==>
        (joint_distribution p X Y (a CROSS b) = joint_distribution p Y X (b CROSS a))``,
   RW_TAC std_ss [joint_distribution_def] THEN
-  Q_TAC SUFF_TAC 
+  Q_TAC SUFF_TAC
    `PREIMAGE (\x. (X x,Y x)) (a CROSS b) INTER p_space p =
     PREIMAGE (\x. (Y x,X x)) (b CROSS a) INTER p_space p` THENL
   [METIS_TAC [], ALL_TAC] THEN
@@ -6885,10 +6710,9 @@ val pos_fn_integral_not_neginf = store_thm ("pos_fn_integral_not_neginf",
   ``!f. (!x. 0 <= f x) ==> pos_fn_integral lborel f <> NegInf``,
   RW_TAC std_ss [lt_infty] THEN
   Q_TAC SUFF_TAC `0 <= pos_fn_integral lborel f` THENL
-   [ALL_TAC, MATCH_MP_TAC pos_fn_integral_pos THEN 
+   [ALL_TAC, MATCH_MP_TAC pos_fn_integral_pos THEN
     ASM_SIMP_TAC std_ss [measure_space_lborel]] THEN
   DISCH_TAC THEN METIS_TAC [lt_infty, lte_trans, num_not_infty]);
 
-  
-val _ = export_theory();
 
+val _ = export_theory();
