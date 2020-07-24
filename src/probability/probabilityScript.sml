@@ -1064,7 +1064,7 @@ val distribution_le_1 = store_thm
  >> RW_TAC std_ss [IN_POW, INTER_SUBSET]);
 
 (* Theorem 3.1.3 [2, p.36], cf. measure_space_distr *)
-val distribution_prob_space = store_thm
+val distribution_prob_space = store_thm (* was: prob_space_distr *)
   ("distribution_prob_space",
   ``!p X s. prob_space p /\ random_variable X p s ==>
             prob_space (space s, subsets s, distribution p X)``,
