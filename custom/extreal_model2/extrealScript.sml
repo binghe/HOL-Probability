@@ -942,6 +942,12 @@ val extreal_mean = store_thm
 (*   Addition  *)
 (***************)
 
+Theorem extreal_add_eq :
+    !x y. Normal x + Normal y = Normal (x + y)
+Proof
+    rw [extreal_add_def]
+QED
+
 (* added two antecedents due to new definition of ``extreal_add``, excluded cases are:
    1. x = NegInf /\ y = PosInf
    2. x = PosInf /\ y = NegInf *)
@@ -1027,6 +1033,12 @@ val lt_addr_imp = save_thm
 (*********************)
 (*   Substraction    *)
 (*********************)
+
+Theorem extreal_sub_eq :
+    !x y. Normal x - Normal y = Normal (x - y)
+Proof
+    rw [extreal_sub_def]
+QED
 
 Theorem sub_rzero[simp] :
     !x :extreal. x - 0 = x
@@ -3537,26 +3549,28 @@ Proof
   >> METIS_TAC [add_not_infty, add_comm, add_assoc]
 QED
 
-val EXTREAL_SUM_IMAGE_EQ_CARD = store_thm
-  ("EXTREAL_SUM_IMAGE_EQ_CARD",
-   ``!s. FINITE s ==>
-        (EXTREAL_SUM_IMAGE (\x. if x IN s then 1 else 0) s = (&(CARD s)))``,
-  Suff `!s. FINITE s ==>
-        (\s. EXTREAL_SUM_IMAGE (\x. if x IN s then 1 else 0) s = (&(CARD s))) s`
-  >- METIS_TAC []
-  >> MATCH_MP_TAC FINITE_INDUCT
-  >> RW_TAC real_ss [EXTREAL_SUM_IMAGE_EMPTY, CARD_EMPTY,IN_INSERT]
-  >> `!x. (\x. if (x = e) \/ x IN s then 1 else 0) x <> NegInf`
+Theorem EXTREAL_SUM_IMAGE_EQ_CARD :
+    !s. FINITE s ==>
+       (EXTREAL_SUM_IMAGE (\x. if x IN s then 1 else 0) s = &(CARD s))
+Proof
+    Suff `!s. FINITE s ==>
+             (\s. EXTREAL_SUM_IMAGE (\x. if x IN s then 1 else 0) s = (&(CARD s))) s`
+ >- METIS_TAC []
+ >> MATCH_MP_TAC FINITE_INDUCT
+ >> RW_TAC real_ss [EXTREAL_SUM_IMAGE_EMPTY, CARD_EMPTY, IN_INSERT]
+ >> `!x. (\x. if (x = e) \/ x IN s then 1 else 0) x <> NegInf`
       by RW_TAC real_ss [extreal_of_num_def,extreal_not_infty]
-  >> FULL_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_PROPERTY,DELETE_NON_ELEMENT]
-  >> (MP_TAC o Q.SPECL [`s`]) CARD_INSERT
-  >> `~(e IN s)` by METIS_TAC [DELETE_NON_ELEMENT]
-  >> RW_TAC std_ss [ADD1,extreal_of_num_def,GSYM REAL_ADD,GSYM extreal_add_def]
-  >> RW_TAC std_ss [GSYM extreal_of_num_def]
-  >> Suff `EXTREAL_SUM_IMAGE (\x. (if (x = e) \/ x IN s then 1 else 0)) s =
-                EXTREAL_SUM_IMAGE (\x. (if x IN s then 1 else 0)) s`
-  >- METIS_TAC [EXTREAL_SUM_IMAGE_NOT_INFTY,add_comm,extreal_not_infty,extreal_of_num_def]
-  >> RW_TAC std_ss [EXTREAL_SUM_IMAGE_IN_IF]);
+ >> FULL_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_PROPERTY, DELETE_NON_ELEMENT]
+ >> (MP_TAC o Q.SPECL [`s`]) CARD_INSERT
+ >> `~(e IN s)` by METIS_TAC [DELETE_NON_ELEMENT]
+ >> RW_TAC std_ss [ADD1,extreal_of_num_def, GSYM REAL_ADD, GSYM extreal_add_eq]
+ >> RW_TAC std_ss [GSYM extreal_of_num_def]
+ >> Suff `EXTREAL_SUM_IMAGE (\x. (if (x = e) \/ x IN s then 1 else 0)) s =
+          EXTREAL_SUM_IMAGE (\x. (if x IN s then 1 else 0)) s`
+ >- METIS_TAC [EXTREAL_SUM_IMAGE_NOT_INFTY, add_comm, extreal_not_infty,
+               extreal_of_num_def]
+ >> RW_TAC std_ss [EXTREAL_SUM_IMAGE_IN_IF]
+QED
 
 val EXTREAL_SUM_IMAGE_INV_CARD_EQ_1 = store_thm
   ("EXTREAL_SUM_IMAGE_INV_CARD_EQ_1",

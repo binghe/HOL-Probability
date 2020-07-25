@@ -2421,7 +2421,7 @@ val BOREL_MEASURABLE_SETS_SING_r = prove (
      by RW_TAC std_ss [IN_FUNSET, BOREL_MEASURABLE_SETS_CO]
  >> METIS_TAC []);
 
-val BOREL_MEASURABLE_SETS_SING = store_thm (* new *)
+val BOREL_MEASURABLE_SETS_SING = store_thm (* was: BOREL_MEASURABLE_SING *)
   ("BOREL_MEASURABLE_SETS_SING", ``!c. {c} IN subsets Borel``,
     GEN_TAC >> Cases_on `c`
  >- REWRITE_TAC [BOREL_MEASURABLE_SETS_NEGINF']
@@ -3773,6 +3773,56 @@ Proof
   RW_TAC std_ss [] THEN Q.EXISTS_TAC `x'` THEN
   ASM_REWRITE_TAC [IN_UNIV] THEN Q.EXISTS_TAC `A i` THEN
   METIS_TAC []
+QED
+
+Theorem in_measurable_sigma_pow : (* was: measurable_measure_of *)
+    !m sp N f. measure_space m /\
+               N SUBSET POW sp /\ f IN (m_space m -> sp) /\
+              (!y. y IN N ==> (PREIMAGE f y) INTER m_space m IN measurable_sets m) ==>
+               f IN measurable (m_space m, measurable_sets m) (sigma sp N)
+Proof
+    RW_TAC std_ss [] >> MATCH_MP_TAC MEASURABLE_SIGMA
+ >> FULL_SIMP_TAC std_ss [measure_space_def, subset_class_def]
+ >> CONJ_TAC >- (ASM_SET_TAC [POW_DEF])
+ >> RW_TAC std_ss []
+ >- (SIMP_TAC std_ss [space_def, sigma_def] \\
+     POP_ASSUM MP_TAC >> POP_ASSUM MP_TAC >> EVAL_TAC >> METIS_TAC [])
+ >> FULL_SIMP_TAC std_ss [space_def, subsets_def]
+QED
+
+Theorem in_measurable_borel_imp : (* was: borel_measurableI *)
+    !m f. measure_space m /\
+         (!s. open s ==> (PREIMAGE f s) INTER m_space m IN measurable_sets m) ==>
+          f IN measurable (m_space m, measurable_sets m) borel
+Proof
+    RW_TAC std_ss [borel]
+ >> MATCH_MP_TAC in_measurable_sigma_pow
+ >> ASM_SIMP_TAC std_ss [IN_FUNSET, IN_UNIV]
+ >> CONJ_TAC >- SET_TAC [POW_DEF]
+ >> ASM_SET_TAC []
+QED
+
+Theorem in_measurable_borel_continuous_on : (* was: borel_measurable_continuous_on1 *)
+    !f. f continuous_on UNIV ==> f IN measurable borel borel
+Proof
+    rpt STRIP_TAC
+ >> Q.ABBREV_TAC `M = (space borel, subsets borel, (\x:real->bool. 0))`
+ >> Suff `f IN measurable (m_space M, measurable_sets M) borel`
+ >- (SIMP_TAC std_ss [Abbr ‘M’, m_space_def, measurable_sets_def] \\
+     SIMP_TAC std_ss [SPACE])
+ >> MATCH_MP_TAC in_measurable_borel_imp
+ >> reverse CONJ_TAC
+ >- (RW_TAC std_ss [] \\
+     Know `open {x | x IN UNIV /\ f x IN s}`
+     >- (MATCH_MP_TAC CONTINUOUS_OPEN_PREIMAGE (* key lemma *) \\
+         ASM_SIMP_TAC std_ss [OPEN_UNIV]) >> DISCH_TAC \\
+     SIMP_TAC std_ss [Abbr ‘M’, m_space_def, measurable_sets_def] \\
+     SIMP_TAC std_ss [PREIMAGE_def, space_borel, INTER_UNIV] \\
+     MATCH_MP_TAC borel_open >> ASM_SET_TAC [])
+ >> Q.UNABBREV_TAC ‘M’
+ >> MP_TAC (REWRITE_RULE [sigma_finite_measure_space_def]
+                         (ISPEC “borel” measure_space_trivial))
+ >> RW_TAC std_ss [sigma_algebra_borel]
 QED
 
 (* ------------------------------------------------------------------------- *)

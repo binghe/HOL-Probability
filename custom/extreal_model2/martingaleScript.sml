@@ -2690,7 +2690,7 @@ End
 
 val _ = overload_on ("CROSS", “prod_measure”);
 
-Theorem measure_space_prod_measure :
+Theorem measure_space_prod_measure : (* was: measure_space_pair_measure *)
     !m1 m2. sigma_finite_measure_space m1 /\
             sigma_finite_measure_space m2 ==> measure_space (m1 CROSS m2)
 Proof
