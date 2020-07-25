@@ -1,5 +1,5 @@
 (* ------------------------------------------------------------------------- *)
-(* Fubini's Theorem under the old extreal definitions                        *)
+(* Fubini's Theorem under special extreal definitions                        *)
 (*                                                                           *)
 (* Author: Chun Tian (2020)                                                  *)
 (* Fondazione Bruno Kessler and University of Trento, Italy                  *)
@@ -18,20 +18,26 @@ val _ = new_theory "fubini";
 (* To build this theory, the following version of definitions must be present in
    your extrealTheory:
 
-val extreal_add_def = Define
-  `(extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
-   (extreal_add PosInf a = PosInf) /\
-   (extreal_add a PosInf = PosInf) /\
-   (extreal_add NegInf b = NegInf) /\
-   (extreal_add c NegInf = NegInf)`;
+Definition extreal_add_def :
+   (extreal_add (Normal x) (Normal y) = Normal (x + y)) /\
+   (extreal_add (Normal _) a = a) /\
+   (extreal_add b (Normal _) = b) /\
+   (extreal_add NegInf NegInf = NegInf) /\
+   (extreal_add PosInf PosInf = PosInf) /\
+   (extreal_add PosInf NegInf = Normal 0) /\
+   (extreal_add NegInf PosInf = Normal 0)
+End
 
-val extreal_sub_def = Define
-  `(extreal_sub (Normal x) (Normal y) = Normal (x - y)) /\
-   (extreal_sub PosInf a = PosInf) /\
-   (extreal_sub b PosInf = NegInf) /\
-   (extreal_sub NegInf NegInf = PosInf) /\
-   (extreal_sub NegInf c = NegInf) /\
-   (extreal_sub c NegInf = PosInf)`;
+Definition extreal_sub_def :
+   (extreal_sub (Normal x) (Normal y) = Normal (x - y)) /\
+   (extreal_sub a (Normal _) = a) /\
+   (extreal_sub (Normal _) NegInf = PosInf) /\
+   (extreal_sub (Normal _) PosInf = NegInf) /\
+   (extreal_sub NegInf PosInf = NegInf) /\
+   (extreal_sub PosInf NegInf = PosInf) /\
+   (extreal_sub PosInf PosInf = Normal 0) /\
+   (extreal_sub NegInf NegInf = Normal 0)
+End
  *)
 
 (* removed antecedents:
@@ -44,13 +50,6 @@ Proof
  >> RW_TAC std_ss [extreal_add_def, REAL_ADD_COMM]
 QED
 
-Theorem add_assoc__new :
-    !x y z. x + (y + z) = x + y + z
-Proof
-    Cases >> Cases_on `y` >> Cases_on `z`
- >> RW_TAC std_ss [extreal_add_def, REAL_ADD_ASSOC]
-QED
-
 (* removed antecedents:
      (x <> NegInf /\ y <> PosInf) \/ (x <> PosInf /\ y <> NegInf)
  *)
@@ -61,25 +60,6 @@ Proof
  >> RW_TAC std_ss [extreal_ainv_def, extreal_sub_def, extreal_add_def, real_sub]
 QED
 
-(* removed antecedents: x <> NegInf /\ y <> NegInf *)
-Theorem lt_sub_imp__new :
-    !x y z. y + x < z ==> y < z - x
-Proof
-    rpt Cases
- >> RW_TAC std_ss [extreal_lt_def, extreal_le_def, extreal_add_def, extreal_sub_def]
- >> METIS_TAC [real_lt, REAL_LT_ADD_SUB]
-QED
-
-(* removed antecedents: x <> NegInf /\ y <> NegInf *)
-Theorem lt_sub__new :
-    !x y z. z <> NegInf /\ z <> PosInf ==> (y + x < z <=> y < z - x)
-Proof
-    rpt Cases
- >> RW_TAC std_ss [extreal_lt_def, extreal_le_def, extreal_add_def,
-                   extreal_sub_def, le_infty]
- >> METIS_TAC [REAL_LE_SUB_RADD]
-QED
-
 (* removed antecedents:
 
      (!x. x IN space a ==> (f x <> NegInf /\ g x <> NegInf) \/
@@ -87,9 +67,7 @@ QED
 
    used custom theorems:
 
-   1. lt_sub_imp__new
-   2. lt_sub__new
-   3. add_comm__new
+   - none (except for the very definitions)
  *)
 Theorem IN_MEASURABLE_BOREL_ADD__new :
     !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\
@@ -97,39 +75,144 @@ Theorem IN_MEASURABLE_BOREL_ADD__new :
           ==> h IN measurable a Borel
 Proof
     rpt STRIP_TAC
- >> RW_TAC std_ss [IN_MEASURABLE_BOREL] >- RW_TAC std_ss [IN_FUNSET, IN_UNIV]
+ >> RW_TAC std_ss [IN_MEASURABLE_BOREL, IN_FUNSET, IN_UNIV]
  >> Know `!c. {x | h x < Normal c} INTER (space a) =
-              BIGUNION (IMAGE (\r. {x | f x < r /\ r < Normal c - g x} INTER space a) Q_set)`
- >- (RW_TAC std_ss [EXTENSION, GSPECIFICATION, IN_BIGUNION_IMAGE, IN_UNIV, IN_INTER] \\
-     EQ_TAC >- (RW_TAC std_ss [] \\
-                MATCH_MP_TAC Q_DENSE_IN_R \\
-                METIS_TAC [lt_sub_imp__new]) \\
-     reverse (RW_TAC std_ss []) >- art [] \\
-    ‘h x = f x + g x’ by PROVE_TAC [] >> POP_ORW \\
-    ‘f x < Normal c - g x’ by PROVE_TAC [lt_trans] \\
-     METIS_TAC [lt_sub__new, extreal_not_infty])
- >> DISCH_TAC
- >> FULL_SIMP_TAC std_ss []
- >> MATCH_MP_TAC BIGUNION_IMAGE_Q
- >> RW_TAC std_ss [IN_FUNSET]
- >> `?y. r = Normal y` by METIS_TAC [Q_not_infty, extreal_cases]
- >> `{x | f x < Normal y /\ Normal y < Normal c - g x} =
-     {x | f x < Normal y} INTER {x | Normal y < Normal c - g x}`
-     by RW_TAC std_ss [EXTENSION, GSPECIFICATION, IN_INTER]
- >> `({x | f x < Normal y} INTER space a) IN subsets a` by RW_TAC std_ss [IN_MEASURABLE_BOREL_ALL]
- >> Know `!x. x IN space a ==> (Normal y < Normal c - g x <=> g x < Normal c - Normal y)`
- >- (rpt STRIP_TAC \\
-     METIS_TAC [lt_sub__new, extreal_not_infty, add_comm__new])
- >> DISCH_TAC
- >> `{x | Normal y < Normal c - g x} INTER space a = {x | g x < Normal c - Normal y} INTER space a`
-     by (RW_TAC std_ss [IN_INTER, EXTENSION, GSPECIFICATION] >> METIS_TAC [])
- >> `({x | Normal y < Normal c - g x} INTER space a) IN subsets a`
-     by METIS_TAC [IN_MEASURABLE_BOREL_ALL, extreal_sub_def]
- >> `({x | f x < Normal y} INTER space a) INTER ({x | Normal y < Normal c - g x} INTER space a) =
-     ({x | f x < Normal y} INTER {x | Normal y < Normal c - g x} INTER space a)`
-     by (RW_TAC std_ss [EXTENSION, GSPECIFICATION, IN_INTER] \\
-         EQ_TAC >> RW_TAC std_ss [])
- >> METIS_TAC [sigma_algebra_def, ALGEBRA_INTER]
+              {x | f x + g x < Normal c} INTER (space a)`
+ >- (rw [Once EXTENSION] >> METIS_TAC []) >> Rewr'
+ >> Know `!c. {x | f x + g x < Normal c} INTER (space a) =
+                ({x | f x + g x < Normal c /\ g x <> PosInf /\ g x <> NegInf} INTER (space a)) UNION
+                (({x | f x + g x < Normal c /\ g x = PosInf} INTER (space a)) UNION
+                 ({x | f x + g x < Normal c /\ g x = NegInf} INTER (space a)))`
+ >- (rw [Once EXTENSION] \\
+     Cases_on ‘g x = PosInf’ >- rw [] \\
+     Cases_on ‘g x = NegInf’ >- rw [] \\
+     rw []) >> Rewr'
+ >> MATCH_MP_TAC SIGMA_ALGEBRA_UNION >> rw []
+ >- (Know `!c. {x | f x + g x < Normal c /\ g x <> PosInf /\ g x <> NegInf} INTER (space a) =
+               BIGUNION (IMAGE (\r. {x | f x < r /\ r < Normal c - g x /\
+                                         g x <> PosInf /\ g x <> NegInf} INTER space a) Q_set)`
+     >- (RW_TAC std_ss [EXTENSION, GSPECIFICATION, IN_BIGUNION_IMAGE, IN_UNIV, IN_INTER] \\
+         EQ_TAC >- (RW_TAC std_ss [] \\
+                    MATCH_MP_TAC Q_DENSE_IN_R \\
+                    METIS_TAC [lt_sub_imp2]) \\
+         reverse (RW_TAC std_ss []) >- art [] >- art [] >- art [] \\
+        ‘f x < Normal c - g x’ by PROVE_TAC [lt_trans] \\
+         Cases_on ‘f x = PosInf’
+         >- (‘?e. g x = Normal e’ by METIS_TAC [extreal_cases] \\
+             fs [lt_infty]) \\
+         METIS_TAC [lt_sub', extreal_not_infty]) >> Rewr' \\
+     MATCH_MP_TAC BIGUNION_IMAGE_Q \\
+     RW_TAC std_ss [IN_FUNSET] \\
+    `?y. r = Normal y` by METIS_TAC [Q_not_infty, extreal_cases] >> POP_ORW \\
+    `{x | f x < Normal y /\ Normal y < Normal c - g x /\ g x <> PosInf /\ g x <> NegInf} =
+     {x | f x < Normal y} INTER {x | Normal y < Normal c - g x /\ g x <> PosInf /\ g x <> NegInf}`
+       by RW_TAC std_ss [EXTENSION, GSPECIFICATION, IN_INTER] >> POP_ORW \\
+    ‘{x | f x < Normal y} INTER
+     {x | Normal y < Normal c - g x /\ g x <> PosInf /\ g x <> NegInf} INTER space a =
+       ({x | f x < Normal y} INTER space a) INTER
+       ({x | Normal y < Normal c - g x /\ g x <> PosInf /\ g x <> NegInf} INTER space a)’
+       by SET_TAC [] >> POP_ORW \\
+     MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+     CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+     Know `{x | Normal y < Normal c - g x /\ g x <> PosInf /\ g x <> NegInf} INTER space a =
+           {x | g x < Normal c - Normal y /\ g x <> PosInf /\ g x <> NegInf} INTER space a`
+     >- (rw [Once EXTENSION] \\
+         EQ_TAC >> rw [] >| (* 2 subgoals *)
+         [ (* goal 1 (of 2) *)
+          ‘?e. g x = Normal e’ by METIS_TAC [extreal_cases] \\
+           fs [extreal_sub_def, extreal_lt_eq] \\
+           Q.PAT_X_ASSUM ‘y < c − e’ MP_TAC >> REAL_ARITH_TAC,
+           (* goal 2 (of 2) *)
+           ‘?e. g x = Normal e’ by METIS_TAC [extreal_cases] \\
+           fs [extreal_sub_def, extreal_lt_eq] \\
+           Q.PAT_X_ASSUM ‘e < c − y’ MP_TAC >> REAL_ARITH_TAC ]) >> Rewr' \\
+    ‘{x | g x < Normal c - Normal y /\ g x <> PosInf /\ g x <> NegInf} INTER space a =
+       ({x | g x < Normal c - Normal y} INTER space a) INTER
+       (({x | g x <> PosInf} INTER space a) INTER
+        ({x | g x <> NegInf} INTER space a))’ by SET_TAC [] >> POP_ORW \\
+     MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [extreal_sub_def] \\
+     CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+     MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+     METIS_TAC [IN_MEASURABLE_BOREL_ALL])
+ >> MATCH_MP_TAC SIGMA_ALGEBRA_UNION >> rw [] (* 2 subgoals *)
+ >| [ (* goal 1 (of 2) *)
+      Know ‘{x | f x + g x < Normal c /\ g x = PosInf} INTER space a =
+            ({x | f x + g x < Normal c /\ g x = PosInf /\ f x = PosInf} INTER space a) UNION
+            ({x | f x + g x < Normal c /\ g x = PosInf /\ f x = NegInf} INTER space a) UNION
+            ({x | f x + g x < Normal c /\ g x = PosInf /\ f x <> PosInf /\ f x <> NegInf} INTER space a)’
+      >- (rw [Once EXTENSION] \\
+          EQ_TAC >> rw [] >> art [] \\
+          METIS_TAC []) >> Rewr' \\
+      Know ‘{x | f x + g x < Normal c /\ g x = PosInf /\ f x = PosInf} = EMPTY’
+      >- (rw [Once EXTENSION, NOT_IN_EMPTY] \\
+          STRONG_DISJ_TAC >> CCONTR_TAC >> fs [extreal_add_def, lt_infty]) >> Rewr' \\
+      Know ‘{x | f x + g x < Normal c /\ g x = PosInf /\ f x <> PosInf /\ f x <> NegInf} = EMPTY’
+      >- (rw [Once EXTENSION, NOT_IN_EMPTY] \\
+          NTAC 2 STRONG_DISJ_TAC \\
+          CCONTR_TAC >> fs [] >> ‘?e. f x = Normal e’ by METIS_TAC [extreal_cases] \\
+          fs [extreal_add_def, lt_infty]) >> Rewr' \\
+      simp [] \\
+      Know ‘{x | f x + g x < Normal c /\ g x = PosInf /\ f x = NegInf} INTER space a =
+             ({x | x | 0 < Normal c} INTER space a) INTER
+             (({x | g x = PosInf} INTER space a) INTER
+              ({x | f x = NegInf} INTER space a))’
+      >- (rw [Once EXTENSION] >> EQ_TAC >> rw [extreal_add_def] \\
+          art [GSYM extreal_of_num_def] \\
+          fs [extreal_of_num_def, extreal_add_def]) >> Rewr' \\
+      MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+      reverse CONJ_TAC
+      >- (MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> METIS_TAC [IN_MEASURABLE_BOREL_ALL]) \\
+      Cases_on ‘0 < Normal c’ >> rw [] >| (* 2 subgoals *)
+      [ MATCH_MP_TAC SIGMA_ALGEBRA_SPACE >> art [],
+        MATCH_MP_TAC SIGMA_ALGEBRA_EMPTY >> art [] ],
+      (* goal 2 (of 2) *)
+      Know ‘{x | f x + g x < Normal c /\ g x = NegInf} INTER space a =
+            ({x | f x + g x < Normal c /\ g x = NegInf /\ f x = PosInf} INTER space a) UNION
+            ({x | f x + g x < Normal c /\ g x = NegInf /\ f x = NegInf} INTER space a) UNION
+            ({x | f x + g x < Normal c /\ g x = NegInf /\ f x <> PosInf /\ f x <> NegInf} INTER space a)’
+      >- (rw [Once EXTENSION] \\
+          EQ_TAC >> rw [] >> art [] \\
+          METIS_TAC []) >> Rewr' \\
+      MATCH_MP_TAC SIGMA_ALGEBRA_UNION >> art [] \\
+      reverse CONJ_TAC
+      >- (Know ‘{x | f x + g x < Normal c /\ g x = NegInf /\ f x <> PosInf /\
+                     f x <> NegInf} INTER space a =
+                space a INTER ({x | g x = NegInf} INTER space a)
+                        INTER ({x | f x <> PosInf} INTER space a)
+                        INTER ({x | f x <> NegInf} INTER space a)’
+          >- (rw [Once EXTENSION] >> EQ_TAC >> rw [] >> art [] \\
+             ‘?r. f x = Normal r’ by METIS_TAC [extreal_cases] \\
+              rw [extreal_add_def, lt_infty]) >> Rewr' \\
+          MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+          reverse CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+          MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+          reverse CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+          MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+          reverse CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+          MATCH_MP_TAC SIGMA_ALGEBRA_SPACE >> art []) \\
+      MATCH_MP_TAC SIGMA_ALGEBRA_UNION >> art [] \\
+      CONJ_TAC
+      >- (Know ‘{x | f x + g x < Normal c /\ g x = NegInf /\ f x = PosInf} INTER space a =
+                ({x | x | 0 < Normal c} INTER space a) INTER
+                ({x | g x = NegInf} INTER space a) INTER
+                ({x | f x = PosInf} INTER space a)’
+          >- (rw [Once EXTENSION] >> EQ_TAC >> rw [extreal_add_def] \\
+              art [GSYM extreal_of_num_def] \\
+              fs [extreal_of_num_def, extreal_add_def]) >> Rewr' \\
+          MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+          reverse CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+          MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+          reverse CONJ_TAC >- METIS_TAC [IN_MEASURABLE_BOREL_ALL] \\
+          Cases_on ‘0 < Normal c’ >> rw [] >| (* 2 subgoals *)
+          [ MATCH_MP_TAC SIGMA_ALGEBRA_SPACE >> art [],
+            MATCH_MP_TAC SIGMA_ALGEBRA_EMPTY >> art [] ]) \\
+      Know ‘{x | f x + g x < Normal c /\ g x = NegInf /\ f x = NegInf} INTER space a =
+            ({x | g x = NegInf} INTER space a) INTER
+            ({x | f x = NegInf} INTER space a)’
+      >- (rw [Once EXTENSION] >> EQ_TAC >> rw [] >> art [] \\
+          rw [extreal_add_def, lt_infty]) >> Rewr' \\
+      MATCH_MP_TAC SIGMA_ALGEBRA_INTER >> art [] \\
+      METIS_TAC [IN_MEASURABLE_BOREL_ALL] ]
 QED
 
 (* removed antecedents:
@@ -190,7 +273,9 @@ Proof
      Cases_on `f1 x` >> Cases_on `f2 x` \\
      FULL_SIMP_TAC std_ss [extreal_sub_def, extreal_add_def, extreal_ainv_def,
                            extreal_11, add_lzero, extreal_of_num_def, GSYM lt_infty,
-                           extreal_lt_eq, extreal_not_infty] \\
+                           extreal_lt_eq, extreal_not_infty]
+     >- (‘~(0 < 0)’ by PROVE_TAC [lt_refl] \\
+         rw [extreal_add_def]) \\
      Cases_on ‘0 < r - r'’
      >- (‘~(r - r' < 0)’ by METIS_TAC [REAL_LT_ANTISYM] \\
          fs [extreal_add_def, extreal_sub_def, add_lzero] >> REAL_ARITH_TAC) \\

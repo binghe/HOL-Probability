@@ -1,4 +1,4 @@
-# Customized HOL-Probability with old definitions of extreal_add/sub
+# Customized HOL-Probability with special definitions of extreals
 
 ## Changed definitions
 
@@ -22,3 +22,11 @@ End
 
 ## Added theorems
 
+* `add_comm`
+* `add_assoc` (not used)
+* `extreal_sub_add`
+* `sub_lt_imp`
+* `IN_MEASURABLE_BOREL_ADD`
+* `IN_MEASURABLE_BOREL_SUB`
+* `integral_add_lemma`
+* `FUBINI`

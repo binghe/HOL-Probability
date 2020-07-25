@@ -1,5 +1,5 @@
 (* ------------------------------------------------------------------------- *)
-(* Fubini's Theorem under the old extreal definitions                        *)
+(* Fubini's Theorem under special extreal definitions                        *)
 (*                                                                           *)
 (* Author: Chun Tian (2020)                                                  *)
 (* Fondazione Bruno Kessler and University of Trento, Italy                  *)

@@ -44,6 +44,7 @@ Proof
  >> RW_TAC std_ss [extreal_add_def, REAL_ADD_COMM]
 QED
 
+(* not used *)
 Theorem add_assoc__new :
     !x y z. x + (y + z) = x + y + z
 Proof

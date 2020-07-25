@@ -232,6 +232,7 @@ Proof
  >> fs [sigma_algebra_def]
 QED
 
+(* This proof is more difficult than the case of model 1 & 2, yet still possible. *)
 Theorem IN_MEASURABLE_BOREL_ADD__model3 :
     extreal_model3 ==>
     !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\
