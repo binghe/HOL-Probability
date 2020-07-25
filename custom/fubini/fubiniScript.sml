@@ -16,30 +16,44 @@ open hurdUtils util_probTheory extrealTheory sigma_algebraTheory
 val _ = new_theory "fubini";
 
 (* Isabelle, HOL4 (old) *)
-val extreal_model1_def = Define ‘
+Definition extreal_model1_def :
     extreal_model1 = ((PosInf + NegInf = PosInf) /\
                       (NegInf + PosInf = PosInf) /\
                       (PosInf - PosInf = PosInf) /\
-                      (NegInf - NegInf = PosInf))’;
+                      (NegInf - NegInf = PosInf))
+End
 
-val extreal_model2_def = Define ‘
+(* The dual version of model1 *)
+Definition extreal_model2_def :
     extreal_model2 = ((PosInf + NegInf = NegInf) /\
                       (NegInf + PosInf = NegInf) /\
                       (PosInf - PosInf = NegInf) /\
-                      (NegInf - NegInf = NegInf))’;
+                      (NegInf - NegInf = NegInf))
+End
 
 (* Mizar *)
-val extreal_model3_def = Define ‘
+Definition extreal_model3_def :
     extreal_model3 = ((PosInf + NegInf = 0) /\
                       (NegInf + PosInf = 0) /\
                       (PosInf - PosInf = 0) /\
-                      (NegInf - NegInf = 0))’;
+                      (NegInf - NegInf = 0))
+End
 
-val extreal_model4_def = Define ‘
+(* The parameterized version of Model 3 *)
+Definition extreal_model4_def :
     extreal_model4 r = ((PosInf + NegInf = Normal r) /\
                         (NegInf + PosInf = Normal r) /\
                         (PosInf - PosInf = Normal r) /\
-                        (NegInf - NegInf = Normal r))’;
+                        (NegInf - NegInf = Normal r))
+End
+
+(* The combined version of all previous models *)
+Definition extreal_model_def :
+    extreal_model z = ((PosInf + NegInf = z) /\
+                        (NegInf + PosInf = z) /\
+                        (PosInf - PosInf = z) /\
+                        (NegInf - NegInf = z))
+End
 
 Theorem add_comm__model1 :
     extreal_model1 ==> !x y. x + y = y + x
@@ -1296,6 +1310,34 @@ Proof
  >> FUBINI_TAC “extreal_model4 r0”
                IN_MEASURABLE_BOREL_SUB__model4
                integral_add_lemma__model4
+QED
+
+Theorem FUBINI__model :
+    !z. extreal_model z ==> ^FUBINI_tm
+Proof
+    GEN_TAC >> STRIP_TAC
+ >> Cases_on ‘z’
+ >| [ (* goal 1 (of 3): NegInf *)
+      Know ‘extreal_model2’ >- fs [extreal_model2_def, extreal_model_def] \\
+      POP_ASSUM K_TAC \\
+      FUBINI_TAC “extreal_model2”
+                 IN_MEASURABLE_BOREL_SUB__model2
+                 integral_add_lemma__model2,
+      (* goal 2 (of 3): PosInf *)
+      Know ‘extreal_model1’ >- fs [extreal_model1_def, extreal_model_def] \\
+      POP_ASSUM K_TAC \\
+      FUBINI_TAC “extreal_model1”
+                 IN_MEASURABLE_BOREL_SUB__model1
+                 integral_add_lemma__model1,
+      (* goal 3 (of 3): Normal r *)
+      rename1 ‘extreal_model (Normal r0)’ \\
+      Know ‘extreal_model4 r0’
+      >- (fs [extreal_model4_def, extreal_model_def] \\
+          METIS_TAC []) \\
+      POP_ASSUM K_TAC \\
+      FUBINI_TAC “extreal_model4 r0”
+                 IN_MEASURABLE_BOREL_SUB__model4
+                 integral_add_lemma__model4 ]
 QED
 
 val _ = export_theory ();
