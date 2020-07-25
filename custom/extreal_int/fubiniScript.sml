@@ -44,6 +44,13 @@ Proof
  >> RW_TAC std_ss [extreal_add_def, REAL_ADD_COMM]
 QED
 
+Theorem add_assoc__new :
+    !x y z. x + (y + z) = x + y + z
+Proof
+    Cases >> Cases_on `y` >> Cases_on `z`
+ >> RW_TAC std_ss [extreal_add_def, REAL_ADD_ASSOC]
+QED
+
 (* removed antecedents:
      (x <> NegInf /\ y <> PosInf) \/ (x <> PosInf /\ y <> NegInf)
  *)
