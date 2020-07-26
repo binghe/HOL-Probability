@@ -15,7 +15,7 @@ open hurdUtils util_probTheory extrealTheory sigma_algebraTheory
 
 val _ = new_theory "fubini";
 
-(* Isabelle, HOL4 (old) *)
+(* Isabelle, HOL4 (<= K13) *)
 Definition extreal_model1_def :
     extreal_model1 = ((PosInf + NegInf = PosInf) /\
                       (NegInf + PosInf = PosInf) /\
@@ -23,7 +23,7 @@ Definition extreal_model1_def :
                       (NegInf - NegInf = PosInf))
 End
 
-(* The dual version of model1 *)
+(* The dual version of Model 1 *)
 Definition extreal_model2_def :
     extreal_model2 = ((PosInf + NegInf = NegInf) /\
                       (NegInf + PosInf = NegInf) /\
@@ -48,8 +48,8 @@ Definition extreal_model4_def :
 End
 
 (* The combined version of all previous models *)
-Definition extreal_model_def :
-    extreal_model z = ((PosInf + NegInf = z) /\
+Definition extreal_model5_def :
+    extreal_model5 z = ((PosInf + NegInf = z) /\
                         (NegInf + PosInf = z) /\
                         (PosInf - PosInf = z) /\
                         (NegInf - NegInf = z))
@@ -914,8 +914,7 @@ val FUBINI_tm =
         integral (X,A,u) (\x. integral (Y,B,v) (\y. f (x,y))))”;
 
 fun FUBINI_TAC tm thm1 thm2 =
-    DISCH_TAC (* tm *)
- >> rpt GEN_TAC
+    rpt GEN_TAC
  (* prevent from separating ‘P \/ Q \/ R’ *)
  >> ONCE_REWRITE_TAC [DECIDE “(A /\ B /\ C /\ D ==> E) <=>
                               (A ==> B ==> C ==> D ==> E)”]
@@ -1282,7 +1281,8 @@ fun FUBINI_TAC tm thm1 thm2 =
 Theorem FUBINI__model1 :
     extreal_model1 ==> ^FUBINI_tm
 Proof
-    FUBINI_TAC “extreal_model1”
+    DISCH_TAC
+ >> FUBINI_TAC “extreal_model1”
                IN_MEASURABLE_BOREL_SUB__model1
                integral_add_lemma__model1
 QED
@@ -1290,7 +1290,8 @@ QED
 Theorem FUBINI__model2 :
     extreal_model2 ==> ^FUBINI_tm
 Proof
-    FUBINI_TAC “extreal_model2”
+    DISCH_TAC
+ >> FUBINI_TAC “extreal_model2”
                IN_MEASURABLE_BOREL_SUB__model2
                integral_add_lemma__model2
 QED
@@ -1298,7 +1299,8 @@ QED
 Theorem FUBINI__model3 :
     extreal_model3 ==> ^FUBINI_tm
 Proof
-    FUBINI_TAC “extreal_model3”
+    DISCH_TAC
+ >> FUBINI_TAC “extreal_model3”
                IN_MEASURABLE_BOREL_SUB__model3
                integral_add_lemma__model3
 QED
@@ -1307,34 +1309,32 @@ Theorem FUBINI__model4 :
     !r. extreal_model4 r ==> ^FUBINI_tm
 Proof
     Q.X_GEN_TAC ‘r0’
+ >> DISCH_TAC
  >> FUBINI_TAC “extreal_model4 r0”
                IN_MEASURABLE_BOREL_SUB__model4
                integral_add_lemma__model4
 QED
 
-Theorem FUBINI__model :
-    !z. extreal_model z ==> ^FUBINI_tm
+Theorem FUBINI__model5 :
+    !z. extreal_model5 z ==> ^FUBINI_tm
 Proof
-    GEN_TAC >> STRIP_TAC
+    GEN_TAC >> DISCH_TAC
  >> Cases_on ‘z’
  >| [ (* goal 1 (of 3): NegInf *)
-      Know ‘extreal_model2’ >- fs [extreal_model2_def, extreal_model_def] \\
-      POP_ASSUM K_TAC \\
+     ‘extreal_model2’ by fs [extreal_model2_def, extreal_model5_def] \\
       FUBINI_TAC “extreal_model2”
                  IN_MEASURABLE_BOREL_SUB__model2
                  integral_add_lemma__model2,
       (* goal 2 (of 3): PosInf *)
-      Know ‘extreal_model1’ >- fs [extreal_model1_def, extreal_model_def] \\
+     ‘extreal_model1’ by fs [extreal_model1_def, extreal_model5_def] \\
       POP_ASSUM K_TAC \\
       FUBINI_TAC “extreal_model1”
                  IN_MEASURABLE_BOREL_SUB__model1
                  integral_add_lemma__model1,
       (* goal 3 (of 3): Normal r *)
-      rename1 ‘extreal_model (Normal r0)’ \\
-      Know ‘extreal_model4 r0’
-      >- (fs [extreal_model4_def, extreal_model_def] \\
-          METIS_TAC []) \\
-      POP_ASSUM K_TAC \\
+      rename1 ‘extreal_model5 (Normal r0)’ \\
+     ‘extreal_model4 r0’ by (fs [extreal_model4_def, extreal_model5_def] \\
+                             METIS_TAC []) \\
       FUBINI_TAC “extreal_model4 r0”
                  IN_MEASURABLE_BOREL_SUB__model4
                  integral_add_lemma__model4 ]
