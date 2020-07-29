@@ -2764,7 +2764,7 @@ QED
 
 (* cf. IN_MEASURABLE_BOREL_TIMES for a more general version *)
 Theorem IN_MEASURABLE_BOREL_MUL :
-    !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\ 
+    !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\
              (!x. x IN space a ==> (h x = f x * g x)) /\
              (!x. x IN space a ==> f x <> NegInf /\ f x <> PosInf /\
                                    g x <> NegInf /\ g x <> PosInf)
@@ -3691,7 +3691,7 @@ Proof
 QED
 
 Theorem IN_MEASURABLE_BOREL_TIMES' :
-    !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\ 
+    !a f g h. sigma_algebra a /\ f IN measurable a Borel /\ g IN measurable a Borel /\
              (!x. x IN space a ==> (h x = f x * g x)) ==> h IN measurable a Borel
 Proof
     rpt STRIP_TAC

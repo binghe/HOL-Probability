@@ -318,7 +318,6 @@ val PROB_FINITE = store_thm
  >> METIS_TAC [MEASURE_SPACE_SUBSET_MSPACE, INCREASING, MEASURE_SPACE_INCREASING,
                MEASURE_SPACE_MSPACE_MEASURABLE]);
 
-
 val PROB_LT_POSINF = store_thm
   ("PROB_LT_POSINF",
   ``!p s. prob_space p /\ s IN events p ==> prob p s < PosInf``,

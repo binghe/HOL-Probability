@@ -4163,8 +4163,10 @@ QED
    Note that, e.g., we didn't know if (\x. f (x,y)) is (X,A)/Borel-measurable for any
    y IN Y, but it turns out so for every y, cf. IN_MEASURABLE_BOREL_FROM_PROD_SIGMA.
 
-   (FIXME: without the additional astecedents, and with the new definition of
-    extreal_add and extreal_sub, the proof seems impossible. -- Chun Tian, 22/7/2020)
+  (NOTE: without the additional astecedents, and with the new definition of
+   extreal_add and extreal_sub, the proof seems impossible.
+
+   See examples/fubiniScript.sml for more details. -- Chun Tian, 25/7/2020)
 
    Named after Guido Fubini, an Italian mathematician [6].
  *)
