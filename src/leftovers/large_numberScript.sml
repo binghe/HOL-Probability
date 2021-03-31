@@ -118,25 +118,6 @@ val indep_varD = store_thm ("indep_varD",
 *)
 
 
-(* Theorem 5.2.2 [2]. This law of large numbers is due to Khintchine. *)
-Theorem Weak_Law_of_Large_Numbers :
-    !p X S m. prob_space p /\ (!n. real_random_variable (X n) p) /\
-       pairwise_indep_vars p X (\n. Borel) UNIV /\
-       identical_distribution p X Borel UNIV /\ integrable p (X 0) /\
-       (m = expectation p (X 0)) /\
-       (!n x. S n x = SIGMA (\i. X i x) (count n))
-      ==>
-       ((\n x. S (SUC n) x / &SUC n) --> (\x. m)) (in_probability p)
-Proof
-    rpt STRIP_TAC >> POP_ORW
- (* re-define S as an abbreviation *)
- >> Q.ABBREV_TAC ‘S = \n x. SIGMA (\i. X i x) (count n)’
- >> ‘!n x. SIGMA (\i. X i x) (count (SUC n)) = S (SUC n) x’ by METIS_TAC []
- >> POP_ORW
- >>
-    cheat
-QED
-
 val _ = export_theory ();
 
 (* References:
