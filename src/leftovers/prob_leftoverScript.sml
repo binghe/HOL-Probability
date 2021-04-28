@@ -1037,4 +1037,62 @@ val indep_varD = store_thm ("indep_varD",
 
 *)
 
+(*
+(* The Strong Law of Large Numbers for I.I.D. Random Variables (Part I)
+
+   Theorem 5.4.4 [3, p.62], which follows Theorem 22.1 of [6, p.282], which
+   essentially comes from N. Etmadi's elementary proof [12].
+ *)
+Theorem SLLN_IID :
+    !p X. prob_space p /\ (!n. real_random_variable (X n) p) /\
+          pairwise_indep_vars p X (\n. Borel) UNIV /\
+          identical_distribution p X Borel UNIV /\ integrable p (X 0)
+      ==> LLN p X almost_everywhere
+Proof
+    cheat
+QED
+
+(* The Strong Law of Large Numbers for I.I.D. Random Variables (Part II)
+
+   The purpose of ‘(pos_fn_integral p (fn_plus  (X 0)) <> PosInf \/
+                    pos_fn_integral p (fn_minus (X 0)) <> PosInf)’ is to make sure that
+   the expectation of each (X n) is specified (either finite or infinite)
+
+   This is Theorem 5.4.2 (Part 2) of [2, p.133].
+ *)
+Theorem SLLN_IID_divergence :
+    !p X. prob_space p /\ (!n. real_random_variable (X n) p) /\
+          pairwise_indep_vars p X (\n. Borel) UNIV /\
+          identical_distribution p X Borel UNIV /\
+         (pos_fn_integral p (fn_plus  (X 0)) <> PosInf \/
+          pos_fn_integral p (fn_minus (X 0)) <> PosInf) /\
+          expectation p (abs o X 0) = PosInf
+      ==> let Z n x = SIGMA (\i. X i x) (count n)
+          in AE x::p.
+                limsup (\n. abs (Z (SUC n) x - expectation p (Z (SUC n))) / &SUC n) = PosInf
+Proof
+    cheat
+QED
+
+(* The Strong Law of Large Numbers for I.I.D. Random Variables (Full Version)
+
+   Thus "finite mean" is the necessary and sufficient condition for SLLN of I.I.D r.v.'s.
+   Also see [14, Chapitre VI] for more details.
+
+   NOTE: see [15] for the necessary and sufficient condition of SLLN of independent but not
+         identically distributed r.v.'s.
+ *)
+Theorem SLLN_IID_full :
+    !p X. prob_space p /\ (!n. real_random_variable (X n) p) /\
+          pairwise_indep_vars p X (\n. Borel) UNIV /\
+          identical_distribution p X Borel UNIV /\
+         (pos_fn_integral p (fn_plus  (X 0)) <> PosInf \/
+          pos_fn_integral p (fn_minus (X 0)) <> PosInf) ==>
+         (expectation p (abs o X 0) < PosInf <=> LLN p X almost_everywhere)
+Proof
+    cheat
+QED
+
+ *)
+
 val _ = export_theory ();
