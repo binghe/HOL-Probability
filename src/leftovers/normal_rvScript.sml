@@ -51,7 +51,8 @@ val ASM_REAL_ARITH_TAC = REPEAT (POP_ASSUM MP_TAC) THEN REAL_ARITH_TAC;
 (*                                                                           *)
 (* ------------------------------------------------------------------------- *)
 
-val lemma1 = store_thm ("lemma1",
+(* DONE *)
+val lemma1 = store_thm ("lemma1", (* new: distribution_space_eq_1 *)
  ``!p X. prob_space p ==> (distribution p X (IMAGE X (m_space p)) = 1)``,
   REWRITE_TAC [prob_space_def] THEN REPEAT STRIP_TAC THEN
   SIMP_TAC std_ss [distribution_def] THEN

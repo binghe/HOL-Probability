@@ -690,7 +690,7 @@ val fatou_lemma_liminf = store_thm (* new *)
   ("fatou_lemma_liminf",
   ``!m u f. measure_space m /\
          (!n. u n IN measurable (m_space m,measurable_sets m) Borel) /\
-         (!x n. x IN m_space m ==> f x <= u n x) /\ NegInf < integral m f
+         (!x n. x IN m_space m ==> f x <= u n x) /\ integral m f <> NegInf
        ==>
          (\x. liminf (\n. u n x)) IN borel_measurable (m_space m,measurable_sets m) /\
          (integral m (\x. liminf (\n. u n x)) <= liminf (\n. integral m (u n)))``,
@@ -701,7 +701,7 @@ val fatou_lemma_limsup = store_thm (* new *)
   ("fatou_lemma_limsup",
   ``!m u f. measure_space m /\
          (!n. u n IN measurable (m_space m,measurable_sets m) Borel) /\
-         (!x n. x IN m_space m ==> u n x <= f x) /\ integral m f < PosInf
+         (!x n. x IN m_space m ==> u n x <= f x) /\ integral m f <> PosInf
        ==>
          (\x. limsup (\n. u n x)) IN measurable (m_space m,measurable_sets m) Borel /\
          (limsup (\n. integral m (u n)) <= integral m (\x. limsup (\n. u n x)))``,
@@ -741,12 +741,14 @@ val integrable_monotone_convergence_inf = store_thm (* new *)
    with necessary and sufficient conditions will be given in the form of Vitali`s
    convergence theorem."
  *)
-val uniformly_bounded_def = Define
-   `uniformly_bounded m (u :num -> 'a -> extreal) =
-      ?w. w IN measurable (m_space m, measurable_sets m) Borel /\
-          integrable m w /\
-          (!x. x IN m_space m ==> 0 <= w x) /\
-          (AE x::m. !n. abs (u n x) <= w x)`;
+
+(* TODO: enhance lebesgue_dominated_convergence with this definition *)
+Definition uniformly_bounded_def :
+   uniformly_bounded m (u :num -> 'a -> extreal) =
+     ?w. integrable m w /\
+        (!x. x IN m_space m ==> 0 <= w x /\ w x <> PosInf) /\
+        (!n. AE x::m. abs (u n x) <= w x)
+End
 
 val lebesgue_dominated_convergence = store_thm (* new *)
   ("lebesgue_dominated_convergence",
@@ -1037,62 +1039,43 @@ val indep_varD = store_thm ("indep_varD",
 
 *)
 
+(* ------------------------------------------------------------------------- *)
+(*      The Law of the Iterated Logarithm (for I.I.D. r.v.'s) [6, p.154]     *)
+(* ------------------------------------------------------------------------- *)
+
+(*  LIL statements
+
+   TODO: confirm the position(s) of ‘variance p (X 0)’ in the statements
+ *)
+Definition LIL_def :
+    LIL p X =
+    let Z n x = SIGMA (\i. X i x) (count n);
+        B n = variance p (Z n)
+    in
+        AE x::p. limsup (\n. (Z n x - expectation p (Z n)) /
+                             sqrt (2 * (B n) * ln (ln (B n)))) = 1
+End
+
 (*
-(* The Strong Law of Large Numbers for I.I.D. Random Variables (Part I)
-
-   Theorem 5.4.4 [3, p.62], which follows Theorem 22.1 of [6, p.282], which
-   essentially comes from N. Etmadi's elementary proof [12].
- *)
-Theorem SLLN_IID :
+Theorem LIL_alt_IID :
     !p X. prob_space p /\ (!n. real_random_variable (X n) p) /\
-          pairwise_indep_vars p X (\n. Borel) UNIV /\
-          identical_distribution p X Borel UNIV /\ integrable p (X 0)
-      ==> LLN p X almost_everywhere
-Proof
-    cheat
-QED
-
-(* The Strong Law of Large Numbers for I.I.D. Random Variables (Part II)
-
-   The purpose of ‘(pos_fn_integral p (fn_plus  (X 0)) <> PosInf \/
-                    pos_fn_integral p (fn_minus (X 0)) <> PosInf)’ is to make sure that
-   the expectation of each (X n) is specified (either finite or infinite)
-
-   This is Theorem 5.4.2 (Part 2) of [2, p.133].
- *)
-Theorem SLLN_IID_divergence :
-    !p X. prob_space p /\ (!n. real_random_variable (X n) p) /\
-          pairwise_indep_vars p X (\n. Borel) UNIV /\
+          indep_vars p X (\n. Borel) UNIV /\
           identical_distribution p X Borel UNIV /\
-         (pos_fn_integral p (fn_plus  (X 0)) <> PosInf \/
-          pos_fn_integral p (fn_minus (X 0)) <> PosInf) /\
-          expectation p (abs o X 0) = PosInf
-      ==> let Z n x = SIGMA (\i. X i x) (count n)
-          in AE x::p.
-                limsup (\n. abs (Z (SUC n) x - expectation p (Z (SUC n))) / &SUC n) = PosInf
+          integrable p (X 0) ==>
+         (LIL p X <=> ...)
 Proof
     cheat
 QED
-
-(* The Strong Law of Large Numbers for I.I.D. Random Variables (Full Version)
-
-   Thus "finite mean" is the necessary and sufficient condition for SLLN of I.I.D r.v.'s.
-   Also see [14, Chapitre VI] for more details.
-
-   NOTE: see [15] for the necessary and sufficient condition of SLLN of independent but not
-         identically distributed r.v.'s.
  *)
-Theorem SLLN_IID_full :
+
+Theorem LIL_IID :
     !p X. prob_space p /\ (!n. real_random_variable (X n) p) /\
-          pairwise_indep_vars p X (\n. Borel) UNIV /\
+          indep_vars p X (\n. Borel) UNIV /\
           identical_distribution p X Borel UNIV /\
-         (pos_fn_integral p (fn_plus  (X 0)) <> PosInf \/
-          pos_fn_integral p (fn_minus (X 0)) <> PosInf) ==>
-         (expectation p (abs o X 0) < PosInf <=> LLN p X almost_everywhere)
+          integrable p (X 0)
+      ==> LIL p X
 Proof
     cheat
 QED
-
- *)
 
 val _ = export_theory ();
