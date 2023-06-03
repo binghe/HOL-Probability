@@ -18,21 +18,6 @@ val _ = new_theory "hausdorff_measure";
 (*  Metric outer measure space                                               *)
 (* ------------------------------------------------------------------------- *)
 
-(* c.f. `diameter` in real_topologyTheory, now with a parameter d *)
-val set_diameter_def = Define
-   `set_diameter (d :'a metric) (s :'a set) =
-      if s = {} then (0 :real)
-      else sup {dist d (x,y) | x IN s /\ y IN s}`;
-
-(* c.f. `setdist` in real_topologyTheory, now with a parameter `d` *)
-val set_dist_def = Define
-   `set_dist (d :'a metric) ((s,t) :'a set # 'a set) =
-      if (s = {}) \/ (t = {}) then (0 :real)
-      else inf {dist d (x,y) | x IN s /\ y IN t}`;
-
-val _ = overload_on ("diameter", ``set_diameter``);
-val _ = overload_on ("dist",     ``set_dist``);
-
 (* (OM4) in Theorem 18.5 [1] *)
 val metric_additive_def = Define
    `metric_additive (d :'a metric) (m :'a m_space) =
@@ -45,20 +30,12 @@ val metric_outer_measure_space_def = Define
    `metric_outer_measure_space d m <=>
            outer_measure_space m /\ metric_additive d m`;
 
-(* Definition 18.4 [1] (countable diameter-restrict covering)
-   c.f. countable_covers_def in measureTheory)
- *)
-val countable_e_covers_def = Define
-   `countable_e_covers (sts :'a set set) (d :'a metric) (e :real) =
-      \a. {f | f IN (univ(:num) -> sts) /\ (!i. diameter d (f i) <= e) /\
-               a SUBSET (BIGUNION (IMAGE f UNIV))}`;
-
 (* Definition 18.4 [1] (metric outer measure) *)
 val metric_outer_measure_def = Define
    `metric_outer_measure (d :'a metric) (m :'a m_space) =
       \a. sup {r | ?e. 0 < e /\
                       (r = outer_measure (measure m)
-                             (countable_e_covers (measurable_sets m) d e) a)}`;
+                             (metric_countable_covers d e (measurable_sets m)) a)}`;
 
 val rich_system_def = Define
    `rich_system sp sts (d :'a metric) <=>
@@ -110,6 +87,7 @@ Proof
  >> rw [m_space_def, measurable_sets_def, measure_def]
 QED
 
+(* TODO: use ‘m’ instead of ‘sp,sts,u’ *)
 Theorem METRIC_OUTER_MEASURE_EMPTY :
     !sp sts u d. subset_class sp sts /\ {} IN sts /\ positive (sp,sts,u) ==>
                  (metric_outer_measure d (sp,sts,u) {} = 0)
