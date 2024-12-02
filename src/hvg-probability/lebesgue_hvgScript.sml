@@ -10,7 +10,7 @@
 
 val () = app load
  ["bossLib", "metisLib", "arithmeticTheory", "pred_setTheory", "realLib", "pairTheory",
-   "seqTheory", "transcTheory", "util_probTheory", "extreal_hvgTheory", 
+   "seqTheory", "transcTheory", "util_probTheory", "extreal_hvgTheory",
    "prim_recTheory", "measure_hvgTheory"];
 
 set_trace "Unicode" 0;
@@ -18,7 +18,7 @@ set_trace "Unicode" 0;
 *)
 
 open HolKernel Parse boolLib bossLib metisLib
-     combinTheory pred_setTheory arithmeticTheory realTheory realLib pairTheory 
+     combinTheory pred_setTheory arithmeticTheory realTheory realLib pairTheory
       seqTheory transcTheory real_sigmaTheory jrhUtils util_probTheory
       extreal_hvgTheory prim_recTheory measure_hvgTheory;
 
@@ -118,20 +118,20 @@ val pos_simple_fn_integral_present = store_thm
    ++ Q.ABBREV_TAC `G = IMAGE (\i j. p' (i,j)) s'`
    ++ Q.ABBREV_TAC `H = IMAGE (\j i. p' (i,j)) s`
    ++ CONJ_TAC
-   >> (RW_TAC std_ss [FUN_EQ_THM] 
+   >> (RW_TAC std_ss [FUN_EQ_THM]
        ++ FULL_SIMP_TAC std_ss [pos_simple_fn_def]
-       ++ `!i. i IN s ==> (\i. Normal (x i) * indicator_fn (a i) t) i <> NegInf` 
+       ++ `!i. i IN s ==> (\i. Normal (x i) * indicator_fn (a i) t) i <> NegInf`
             by METIS_TAC [indicator_fn_def,mul_rzero,mul_rone,extreal_not_infty,extreal_of_num_def]
        ++ FULL_SIMP_TAC std_ss [(Once o UNDISCH o Q.ISPEC `(s :num -> bool)`) EXTREAL_SUM_IMAGE_IN_IF]
        ++ `(\x'. (if x' IN s then (\i. Normal (x i) * indicator_fn (a i) t) x' else 0)) =
-	   (\x'. (if x' IN s then (\i. Normal (x i) * 
+	   (\x'. (if x' IN s then (\i. Normal (x i) *
 		SIGMA (\j. indicator_fn (a i INTER b j) t) s') x' else 0))`
 	by (RW_TAC std_ss [FUN_EQ_THM]
 	    ++ RW_TAC std_ss []
 	    ++ FULL_SIMP_TAC std_ss [GSYM AND_IMP_INTRO]
-	    ++ (MP_TAC o Q.ISPEC `(a :num -> 'a -> bool) (x' :num)` o 
-		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o 
-		Q.ISPECL 
+	    ++ (MP_TAC o Q.ISPEC `(a :num -> 'a -> bool) (x' :num)` o
+		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o
+		Q.ISPECL
 		[`(s' :num -> bool)`,
 		 `m_space (m:('a -> bool) #
           	  (('a -> bool) -> bool) # (('a -> bool) -> extreal))`,
@@ -161,7 +161,7 @@ val pos_simple_fn_integral_present = store_thm
 	   (IMAGE p' (s CROSS s'))`
 	   by METIS_TAC [INJ_IMAGE_BIJ, BIJ_DEF]
        ++ (MP_TAC o Q.SPEC `(\i:num. Normal (x (FST (p i))) * indicator_fn ((\(i:num,j:num). a i INTER b j) (p i)) t)` o UNDISCH o Q.SPEC `p'` o UNDISCH o Q.SPEC `s CROSS s'` o INST_TYPE [alpha |-> ``:num#num``, beta |-> ``:num``]) EXTREAL_SUM_IMAGE_IMAGE
-       ++ `!x'. Normal (x (FST (p x'))) * indicator_fn ((\(i,j). a i INTER b j) (p x')) t <> NegInf` 
+       ++ `!x'. Normal (x (FST (p x'))) * indicator_fn ((\(i,j). a i INTER b j) (p x')) t <> NegInf`
             by METIS_TAC [indicator_fn_def,mul_rzero,mul_rone,extreal_not_infty,extreal_of_num_def]
        ++ RW_TAC std_ss []
        ++ `!x'. ((\i. Normal (x (FST (p i))) * indicator_fn ((\(i,j). a i INTER b j) (p i)) t) o p') x' <> NegInf`
@@ -181,7 +181,7 @@ val pos_simple_fn_integral_present = store_thm
                 ++ METIS_TAC [extreal_not_infty,extreal_of_num_def])
        ++ (MP_TAC o Q.SPEC `(\x'. Normal (x (FST x')) * indicator_fn ((\(i,j). a i INTER b j) x') t)` o UNDISCH o Q.ISPEC `(s :num -> bool)CROSS(s' :num -> bool)`) (GSYM EXTREAL_SUM_IMAGE_IN_IF)
        ++ RW_TAC std_ss []
-       ++ `!x'. NegInf <> (\i:num. SIGMA (\j:num. Normal (x i) * indicator_fn (a i INTER b j) t) s') x'`      
+       ++ `!x'. NegInf <> (\i:num. SIGMA (\j:num. Normal (x i) * indicator_fn (a i INTER b j) t) s') x'`
             by (RW_TAC std_ss []
                 ++ `!j. (\j. Normal (x x') * indicator_fn (a x' INTER b j) t) j <> NegInf`
                      by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
@@ -196,7 +196,7 @@ val pos_simple_fn_integral_present = store_thm
              by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
                  ++ METIS_TAC [extreal_of_num_def,extreal_not_infty])
        ++ RW_TAC std_ss []
-       ++ Suff `(\i. Normal (x (FST i)) * indicator_fn (a (FST i) INTER b (SND i)) t) = 
+       ++ Suff `(\i. Normal (x (FST i)) * indicator_fn (a (FST i) INTER b (SND i)) t) =
                 (\x'. Normal (x (FST x')) * indicator_fn ((\(i,j). a i INTER b j) x') t)`
        >> RW_TAC std_ss []
        ++ RW_TAC std_ss [FUN_EQ_THM]
@@ -209,20 +209,20 @@ val pos_simple_fn_integral_present = store_thm
            by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
                  ++ METIS_TAC [extreal_of_num_def,extreal_not_infty])
        ++ RW_TAC std_ss []
-       ++ `(\x. if x IN s' then Normal (y x) * indicator_fn (b x) t else 0) = 
+       ++ `(\x. if x IN s' then Normal (y x) * indicator_fn (b x) t else 0) =
            (\x. (if x IN s' then (\i. Normal (y i) * indicator_fn (b i) t) x else 0))`
              by RW_TAC std_ss []
        ++ POP_ORW
        ++ `(\x. (if x IN s' then (\i. Normal (y i) * indicator_fn (b i) t) x else 0)) =
-	   (\x. (if x IN s' then (\i. Normal (y i) * 
+	   (\x. (if x IN s' then (\i. Normal (y i) *
 		SIGMA (\j. indicator_fn (a j INTER b i) t) s) x else 0))`
 	by (RW_TAC std_ss [FUN_EQ_THM]
 	    ++ RW_TAC std_ss []
 	    ++ FULL_SIMP_TAC std_ss [GSYM AND_IMP_INTRO]
-	    ++ (MP_TAC o REWRITE_RULE [Once INTER_COMM] o 
-		Q.ISPEC `(b :num -> 'a -> bool) (x' :num)` o 
-		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o 
-		Q.ISPECL 
+	    ++ (MP_TAC o REWRITE_RULE [Once INTER_COMM] o
+		Q.ISPEC `(b :num -> 'a -> bool) (x' :num)` o
+		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o
+		Q.ISPECL
 		[`(s :num -> bool)`,
 		 `m_space (m:('a -> bool) #
           	  (('a -> bool) -> bool) # (('a -> bool) -> extreal))`,
@@ -262,7 +262,7 @@ val pos_simple_fn_integral_present = store_thm
                 ++ METIS_TAC [extreal_not_infty,extreal_of_num_def])
        ++ (MP_TAC o Q.SPEC `(\x'. Normal (y (SND x')) * indicator_fn ((\(i,j). a i INTER b j) x') t)` o UNDISCH o Q.ISPEC `(s :num -> bool)CROSS(s' :num -> bool)`) (GSYM EXTREAL_SUM_IMAGE_IN_IF)
        ++ RW_TAC std_ss []
-       ++ `!x'. NegInf <> (\x:num. SIGMA (\j:num. Normal (y x) * indicator_fn (a j INTER b x) t) s) x'`      
+       ++ `!x'. NegInf <> (\x:num. SIGMA (\j:num. Normal (y x) * indicator_fn (a j INTER b x) t) s) x'`
             by (RW_TAC std_ss []
                 ++ `!j. (\j. Normal (y x') * indicator_fn (a j INTER b x') t) j <> NegInf`
                      by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
@@ -297,8 +297,8 @@ val pos_simple_fn_integral_present = store_thm
 	    ++ (MP_TAC o Q.ISPEC `x'':num#num`) pair_CASES
 	    ++ RW_TAC std_ss []
 	    ++ FULL_SIMP_TAC std_ss [FST,SND])
-       ++ (MP_TAC o Q.SPEC `(\x. Normal (y (FST x)) * indicator_fn (a (SND x) INTER b (FST x)) t)` o UNDISCH o Q.SPEC `(\x. (SND x, FST x))` o UNDISCH o 
-	   Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o 
+       ++ (MP_TAC o Q.SPEC `(\x. Normal (y (FST x)) * indicator_fn (a (SND x) INTER b (FST x)) t)` o UNDISCH o Q.SPEC `(\x. (SND x, FST x))` o UNDISCH o
+	   Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o
 		INST_TYPE [``:'b``|->``:num#num``]) EXTREAL_SUM_IMAGE_IMAGE
        ++ `!x. (\x. Normal (y (FST x)) * indicator_fn (a (SND x) INTER b (FST x)) t) x <> NegInf`
              by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
@@ -317,19 +317,19 @@ val pos_simple_fn_integral_present = store_thm
              by (RW_TAC std_ss []
                  ++ METIS_TAC [positive_not_infty,mul_not_infty,measure_space_def])
        ++ RW_TAC std_ss []
-       ++ `(\x'. if x' IN s then Normal (x x') * measure m (a x') else 0) = 
+       ++ `(\x'. if x' IN s then Normal (x x') * measure m (a x') else 0) =
            (\x'. (if x' IN s then (\i. Normal (x i) * measure m (a i)) x' else 0))`
             by METIS_TAC []
        ++ POP_ORW
        ++ `(\x'. (if x' IN s then (\i. Normal (x i) * measure m (a i)) x' else 0)) =
-	   (\x'. (if x' IN s then (\i. Normal (x i) * 
+	   (\x'. (if x' IN s then (\i. Normal (x i) *
 		SIGMA (\j. measure m (a i INTER b j)) s') x' else 0))`
 	by (RW_TAC std_ss [FUN_EQ_THM]
 	    ++ RW_TAC std_ss []
 	    ++ FULL_SIMP_TAC std_ss [GSYM AND_IMP_INTRO]
-	    ++ (MP_TAC o Q.SPEC `a (x' :num)` o 
-		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o 
-		Q.SPECL 
+	    ++ (MP_TAC o Q.SPEC `a (x' :num)` o
+		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o
+		Q.SPECL
 		[`s'`, `b`, `m`]) measure_split
 	   ++ RW_TAC std_ss [])
        ++ POP_ORW
@@ -345,8 +345,8 @@ val pos_simple_fn_integral_present = store_thm
 	   (IMAGE p' (s CROSS s'))`
    	    by METIS_TAC [INJ_IMAGE_BIJ, BIJ_DEF]
        ++ (MP_TAC o Q.SPEC `(\i:num. Normal (x (FST (p i))) * measure m ((\(i:num,j:num). a i INTER b j) (p i)))` o UNDISCH o Q.SPEC `p'` o UNDISCH o Q.SPEC `s CROSS s'` o INST_TYPE [alpha |-> ``:num#num``, beta |-> ``:num``]) EXTREAL_SUM_IMAGE_IMAGE
-       ++ `!x'. x' IN IMAGE p' (s CROSS s') ==> Normal (x (FST (p x'))) * measure m ((\(i,j). a i INTER b j) (p x'))  <> NegInf` 
-           by (RW_TAC std_ss [] 
+       ++ `!x'. x' IN IMAGE p' (s CROSS s') ==> Normal (x (FST (p x'))) * measure m ((\(i,j). a i INTER b j) (p x'))  <> NegInf`
+           by (RW_TAC std_ss []
                ++ Cases_on `p x'`
 	       ++ RW_TAC std_ss []
 	       ++ FULL_SIMP_TAC std_ss [IN_IMAGE,IN_CROSS]
@@ -391,7 +391,7 @@ val pos_simple_fn_integral_present = store_thm
 		 ++ FULL_SIMP_TAC std_ss [IN_CROSS]
 		 ++ METIS_TAC [positive_not_infty,measure_space_def,mul_not_infty,MEASURE_SPACE_INTER])
        ++ RW_TAC std_ss []
-       ++ Suff `(\i. Normal (x (FST i)) * measure m (a (FST i) INTER b (SND i))) = 
+       ++ Suff `(\i. Normal (x (FST i)) * measure m (a (FST i) INTER b (SND i))) =
                 (\x'. Normal (x (FST x')) * measure m ((\(i,j). a i INTER b j) x'))`
        >> RW_TAC std_ss []
        ++ RW_TAC std_ss [FUN_EQ_THM]
@@ -404,19 +404,19 @@ val pos_simple_fn_integral_present = store_thm
              by (RW_TAC std_ss []
                  ++ METIS_TAC [positive_not_infty,mul_not_infty,measure_space_def])
        ++ RW_TAC std_ss []
-       ++ `(\x'. if x' IN s' then Normal (y x') * measure m (b x') else 0) = 
+       ++ `(\x'. if x' IN s' then Normal (y x') * measure m (b x') else 0) =
            (\x'. (if x' IN s' then (\i. Normal (y i) * measure m (b i)) x' else 0))`
             by METIS_TAC []
        ++ POP_ORW
        ++ `(\x'. (if x' IN s' then (\i. Normal (y i) * measure m (b i)) x' else 0)) =
-	   (\x'. (if x' IN s' then (\i. Normal (y i) * 
+	   (\x'. (if x' IN s' then (\i. Normal (y i) *
 		SIGMA (\j. measure m (b i INTER a j)) s) x' else 0))`
 	by (RW_TAC std_ss [FUN_EQ_THM]
 	    ++ RW_TAC std_ss []
 	    ++ FULL_SIMP_TAC std_ss [GSYM AND_IMP_INTRO]
-	    ++ (MP_TAC o Q.SPEC `b (x' :num)` o 
-		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o 
-		Q.SPECL 
+	    ++ (MP_TAC o Q.SPEC `b (x' :num)` o
+		UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o
+		Q.SPECL
 		[`s`, `a`, `m`]) measure_split
 	   ++ RW_TAC std_ss [])
        ++ POP_ORW
@@ -432,8 +432,8 @@ val pos_simple_fn_integral_present = store_thm
 	   (IMAGE p' (s CROSS s'))`
    	    by METIS_TAC [INJ_IMAGE_BIJ, BIJ_DEF]
        ++ (MP_TAC o Q.SPEC `(\i:num. Normal (y (SND (p i))) * measure m ((\(i:num,j:num). a i INTER b j) (p i)))` o UNDISCH o Q.SPEC `p'` o UNDISCH o Q.SPEC `s CROSS s'` o INST_TYPE [alpha |-> ``:num#num``, beta |-> ``:num``]) EXTREAL_SUM_IMAGE_IMAGE
-       ++ `!x'. x' IN IMAGE p' (s CROSS s') ==> Normal (y (SND (p x'))) * measure m ((\(i,j). a i INTER b j) (p x'))  <> NegInf` 
-           by (RW_TAC std_ss [] 
+       ++ `!x'. x' IN IMAGE p' (s CROSS s') ==> Normal (y (SND (p x'))) * measure m ((\(i,j). a i INTER b j) (p x'))  <> NegInf`
+           by (RW_TAC std_ss []
                ++ Cases_on `p x'`
 	       ++ RW_TAC std_ss []
 	       ++ FULL_SIMP_TAC std_ss [IN_IMAGE,IN_CROSS]
@@ -494,8 +494,8 @@ val pos_simple_fn_integral_present = store_thm
 	    ++ (MP_TAC o Q.ISPEC `x'':num#num`) pair_CASES
 	    ++ RW_TAC std_ss []
 	    ++ FULL_SIMP_TAC std_ss [FST,SND])
-       ++ (MP_TAC o Q.SPEC `(\x. Normal (y (FST x)) * measure m (a (SND x) INTER b (FST x)))` o UNDISCH o Q.SPEC `(\x. (SND x, FST x))` o UNDISCH o 
-	   Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o 
+       ++ (MP_TAC o Q.SPEC `(\x. Normal (y (FST x)) * measure m (a (SND x) INTER b (FST x)))` o UNDISCH o Q.SPEC `(\x. (SND x, FST x))` o UNDISCH o
+	   Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o
 		INST_TYPE [``:'b``|->``:num#num``]) EXTREAL_SUM_IMAGE_IMAGE
        ++ `!x. x IN IMAGE (\x. (SND x,FST x)) (s CROSS s') ==>
               (\x. Normal (y (FST x)) * measure m (a (SND x) INTER b (FST x))) x <> NegInf`
@@ -545,7 +545,7 @@ val pos_simple_fn_integral_present = store_thm
        ++ (MP_TAC o Q.ISPEC `x':num#num`) pair_CASES
        ++ RW_TAC std_ss []
        ++ FULL_SIMP_TAC std_ss [IN_CROSS, FST, SND, pos_simple_fn_def]
-       ++ METIS_TAC [ALGEBRA_INTER, subsets_def, space_def, 
+       ++ METIS_TAC [ALGEBRA_INTER, subsets_def, space_def,
 		     sigma_algebra_def, measure_space_def])
    ++ RW_TAC std_ss [Once EXTENSION, IN_BIGUNION, IN_IMAGE, IN_CROSS]
    ++ `!s'' x. (?x'. ((x = p' x') /\ FST x' IN s /\ SND x' IN s')) =
@@ -559,9 +559,9 @@ val pos_simple_fn_integral_present = store_thm
 	by METIS_TAC []
    ++ POP_ORW
    ++ FULL_SIMP_TAC std_ss [o_DEF, IN_CROSS]
-   ++ `!s''. (?x1 x2. (s'' = (\(i,j). a i INTER b j) (p (p' (x1,x2)))) /\ 
+   ++ `!s''. (?x1 x2. (s'' = (\(i,j). a i INTER b j) (p (p' (x1,x2)))) /\
 		  x1 IN s /\ x2 IN s') =
-		 (?x1 x2. (s'' = (\(i,j). a i INTER b j) (x1,x2)) /\ 
+		 (?x1 x2. (s'' = (\(i,j). a i INTER b j) (x1,x2)) /\
 		  x1 IN s /\ x2 IN s')`
 	by METIS_TAC [FST,SND]
    ++ POP_ORW
@@ -571,7 +571,7 @@ val pos_simple_fn_integral_present = store_thm
    >> METIS_TAC []
    ++ RW_TAC std_ss [IN_INTER]
    ++ FULL_SIMP_TAC std_ss [pos_simple_fn_def]
-   ++ `m_space m = (BIGUNION (IMAGE a s)) INTER (BIGUNION (IMAGE b s'))` 
+   ++ `m_space m = (BIGUNION (IMAGE a s)) INTER (BIGUNION (IMAGE b s'))`
 		by METIS_TAC [INTER_IDEMPOT]
    ++ POP_ORW
    ++ Q.PAT_X_ASSUM `BIGUNION (IMAGE b s') = m_space m` (K ALL_TAC)
@@ -615,7 +615,7 @@ val pos_simple_fn_thm1 = store_thm
   ++ `!x'. (\i. Normal (x i) * indicator_fn (a i) y) x' <> NegInf`
         by (RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero] ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss [INSERT_DELETE,DELETE_DELETE]
-  ++ `!j. j IN (s DELETE i) ==> ~(y IN a j)` 
+  ++ `!j. j IN (s DELETE i) ==> ~(y IN a j)`
 	    by (RW_TAC std_ss [IN_DELETE]
 		++ `DISJOINT (a i) (a j)` by METIS_TAC []
 		++ FULL_SIMP_TAC std_ss [DISJOINT_DEF,INTER_DEF,EXTENSION,GSPECIFICATION,NOT_IN_EMPTY]
@@ -629,7 +629,7 @@ val pos_simple_fn_thm1 = store_thm
 
 val pos_simple_fn_le = store_thm
   ("pos_simple_fn_le",``!m f g s a x x' i. measure_space m /\ pos_simple_fn m f s a x /\ pos_simple_fn m g s a x' /\
-                        (!x. x IN m_space m ==> g x <= f x) /\ 
+                        (!x. x IN m_space m ==> g x <= f x) /\
  			(i IN s) /\ ~(a i = {}) ==> (Normal (x' i) <= Normal (x i))``,
   RW_TAC std_ss []
   ++ `!t. t IN a i ==> (f t = Normal (x i))` by METIS_TAC [pos_simple_fn_thm1]
@@ -638,7 +638,7 @@ val pos_simple_fn_le = store_thm
 
 val pos_simple_fn_cmul = store_thm
  ("pos_simple_fn_cmul", ``!m f z. measure_space m /\ pos_simple_fn m f s a x /\ 0 <= z ==> (?s' a' x'. pos_simple_fn m (\t. Normal z * f t) s' a' x')``,
-  RW_TAC std_ss [pos_simple_fn_def] 
+  RW_TAC std_ss [pos_simple_fn_def]
   ++ Q.EXISTS_TAC `s` ++ Q.EXISTS_TAC `a` ++ Q.EXISTS_TAC `(\i. z * (x i))`
   ++ RW_TAC std_ss [REAL_LE_MUL,GSYM extreal_mul_def]
   >> METIS_TAC [extreal_le_def,extreal_of_num_def,le_mul]
@@ -658,10 +658,10 @@ val pos_simple_fn_cmul_alt = store_thm
 
 val pos_simple_fn_add = store_thm
  ("pos_simple_fn_add",``!m f g. measure_space m /\ pos_simple_fn m f s a x /\ pos_simple_fn m g s' a' x' ==> (?s'' a'' x''. pos_simple_fn m (\t. f t + g t) s'' a'' x'') ``,
-  REPEAT STRIP_TAC 
-  ++ (MP_TAC o Q.SPECL [`m`,`f`,`s`,`a`,`x`,`g`,`s'`,`a'`,`x'`]) pos_simple_fn_integral_present 
-  ++ RW_TAC std_ss [] 
-  ++ Q.EXISTS_TAC `k` 
+  REPEAT STRIP_TAC
+  ++ (MP_TAC o Q.SPECL [`m`,`f`,`s`,`a`,`x`,`g`,`s'`,`a'`,`x'`]) pos_simple_fn_integral_present
+  ++ RW_TAC std_ss []
+  ++ Q.EXISTS_TAC `k`
   ++ Q.EXISTS_TAC `c` ++ Q.EXISTS_TAC `(\i. z i + z' i)`
   ++ RW_TAC std_ss [pos_simple_fn_def,REAL_LE_ADD,GSYM extreal_add_def]
   >> METIS_TAC [le_add,pos_simple_fn_def]
@@ -677,7 +677,7 @@ val pos_simple_fn_add = store_thm
         by (RW_TAC std_ss [extreal_add_def,indicator_fn_def,mul_rzero,mul_rone,add_rzero]
             ++ METIS_TAC [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss []
-  ++ `(\x. Normal (z x) * indicator_fn (c x) t + Normal (z' x) * indicator_fn (c x) t) = 
+  ++ `(\x. Normal (z x) * indicator_fn (c x) t + Normal (z' x) * indicator_fn (c x) t) =
       (\x. (\x. Normal (z x) * indicator_fn (c x) t) x + (\x. Normal (z' x) * indicator_fn (c x) t) x)`
            by METIS_TAC []
   ++ POP_ORW
@@ -704,7 +704,7 @@ val pos_simple_fn_add_alt = store_thm
         by (RW_TAC std_ss [extreal_add_def,indicator_fn_def,mul_rzero,mul_rone,add_rzero]
             ++ METIS_TAC [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss []
-  ++ `(\i. Normal (x i) * indicator_fn (a i) t + Normal (y i) * indicator_fn (a i) t) = 
+  ++ `(\i. Normal (x i) * indicator_fn (a i) t + Normal (y i) * indicator_fn (a i) t) =
       (\i. (\i. Normal (x i) * indicator_fn (a i) t) i + (\i. Normal (y i) * indicator_fn (a i) t) i)`
            by METIS_TAC []
   ++ POP_ORW
@@ -743,7 +743,7 @@ val pos_simple_fn_indicator = store_thm
      ++ METIS_TAC [UNION_DIFF,MEASURE_SPACE_SUBSET_MSPACE]]);
 
 val pos_simple_fn_indicator_alt = store_thm
-("pos_simple_fn_indicator_alt",``!m s. measure_space m /\ s IN measurable_sets m ==> 
+("pos_simple_fn_indicator_alt",``!m s. measure_space m /\ s IN measurable_sets m ==>
    pos_simple_fn m (indicator_fn s) {0:num;1:num} (\i:num. if i = 0 then (m_space m DIFF s) else s) (\i. if i = 0 then 0 else 1)``,
   RW_TAC std_ss []
   ++ `FINITE {0:num;1:num}` by METIS_TAC [FINITE_INSERT,FINITE_SING]
@@ -779,7 +779,7 @@ val pos_simple_fn_max = store_thm
   ++ Q.EXISTS_TAC `IMAGE p' (s CROSS s')`
   ++ Q.EXISTS_TAC `(\(i,j). a i INTER b j) o p`
   ++ Q.EXISTS_TAC `(\n. max ((x o FST o p) n) ((y o SND o p)n))`
-  ++ RW_TAC std_ss [FUN_EQ_THM] 
+  ++ RW_TAC std_ss [FUN_EQ_THM]
   ++ FULL_SIMP_TAC std_ss [pos_simple_fn_def,extreal_max_def]
   ++ `!i j. i IN IMAGE p' (s CROSS s') /\ j IN IMAGE p' (s CROSS s') /\ i <> j ==> DISJOINT (((\(i,j). a i INTER b j) o p) i) (((\(i,j). a i INTER b j) o p) j)`
     by (RW_TAC std_ss [DISJOINT_DEF, IN_IMAGE]
@@ -801,11 +801,11 @@ val pos_simple_fn_max = store_thm
         ++ METIS_TAC [ALGEBRA_INTER, subsets_def, space_def,sigma_algebra_def, measure_space_def])
   ++ `BIGUNION (IMAGE ((\(i,j). a i INTER b j) o p) (IMAGE p' (s CROSS s'))) =  m_space m`
      by (RW_TAC std_ss [Once EXTENSION, IN_BIGUNION, IN_IMAGE, IN_CROSS]
-	++ `!s'' x. (?x'. ((x = p' x') /\ FST x' IN s /\ SND x' IN s')) = (?x1 x2. ((x = p' (x1,x2)) /\ x1 IN s /\ x2 IN s'))` 
+	++ `!s'' x. (?x'. ((x = p' x') /\ FST x' IN s /\ SND x' IN s')) = (?x1 x2. ((x = p' (x1,x2)) /\ x1 IN s /\ x2 IN s'))`
             by METIS_TAC [PAIR, FST, SND]
 	++ POP_ORW
-        ++ `!s''. (?x. (s'' = (\(i,j). a i INTER b j) (p x)) /\ ?x1 x2. (x = p' (x1,x2)) /\ x1 IN s /\ x2 IN s') = 
-                  (?x1 x2. (s'' = (\(i,j). a i INTER b j) (p (p' (x1,x2)))) /\  x1 IN s /\ x2 IN s')` 
+        ++ `!s''. (?x. (s'' = (\(i,j). a i INTER b j) (p x)) /\ ?x1 x2. (x = p' (x1,x2)) /\ x1 IN s /\ x2 IN s') =
+                  (?x1 x2. (s'' = (\(i,j). a i INTER b j) (p (p' (x1,x2)))) /\  x1 IN s /\ x2 IN s')`
             by METIS_TAC []
         ++ POP_ORW
         ++ FULL_SIMP_TAC std_ss [o_DEF, IN_CROSS]
@@ -845,22 +845,22 @@ val pos_simple_fn_max = store_thm
 		++ `!a m. measure_space m /\ a IN measurable_sets m ==> a SUBSET m_space m` by RW_TAC std_ss [measure_space_def, sigma_algebra_def, algebra_def,subset_class_def, subsets_def, space_def]
 		++ POP_ASSUM (ASSUME_TAC o UNDISCH_ALL o REWRITE_RULE [GSYM AND_IMP_INTRO] o Q.ISPECL [`(b :num -> 'a -> bool) (x'' :num)`,`(m : ('a -> bool) # (('a -> bool) -> bool) # (('a -> bool) -> extreal))`])
 		++ ASM_SIMP_TAC std_ss [])
-      ++ `(\x. if x IN s' then Normal (y x) * indicator_fn (b x) x' else 0) = 
+      ++ `(\x. if x IN s' then Normal (y x) * indicator_fn (b x) x' else 0) =
         (\x. if x IN s' then (\i. Normal (y i) * indicator_fn (b i) x') x else 0)`
           by METIS_TAC []
       ++ POP_ORW
       ++ POP_ORW
-      ++ `!(x:num) (i:num). Normal (y i) * SIGMA (\j. indicator_fn (a j INTER b i) x') s = SIGMA (\j. Normal (y i) * indicator_fn (a j INTER b i) x') s` 
+      ++ `!(x:num) (i:num). Normal (y i) * SIGMA (\j. indicator_fn (a j INTER b i) x') s = SIGMA (\j. Normal (y i) * indicator_fn (a j INTER b i) x') s`
            by (RW_TAC std_ss []
                ++ (MP_TAC o Q.SPECL [`(\j. indicator_fn (a j INTER (b:num->'a->bool) i) x')`,`y (i:num)`] o UNDISCH o Q.ISPEC `s:num->bool` o GSYM o INST_TYPE [alpha |-> ``:num``, beta |-> ``:num``]) EXTREAL_SUM_IMAGE_CMUL
 	       ++ `!x. NegInf <> (\j. indicator_fn (a j INTER b i) x') x`
                      by RW_TAC std_ss [indicator_fn_def,extreal_of_num_def,extreal_not_infty]
 	       ++ RW_TAC std_ss [])
       ++ POP_ORW
-      ++ (MP_TAC o Q.ISPEC `(\n':num. Normal (max (x (FST (p n'))) (y (SND (p n')))) * 
-                           indicator_fn ((\(i:num,j:num). a i INTER b j) (p n')) x')` o 
-                   UNDISCH o Q.SPEC `p'` o UNDISCH o 
-                   Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o 
+      ++ (MP_TAC o Q.ISPEC `(\n':num. Normal (max (x (FST (p n'))) (y (SND (p n')))) *
+                           indicator_fn ((\(i:num,j:num). a i INTER b j) (p n')) x')` o
+                   UNDISCH o Q.SPEC `p'` o UNDISCH o
+                   Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o
                    INST_TYPE [``:'b``|->``:num``]) EXTREAL_SUM_IMAGE_IMAGE
       ++ `!x''. (\n'. Normal (max (x (FST (p n'))) (y (SND (p n')))) *
                  indicator_fn ((\(i,j). a i INTER b j) (p n')) x') x'' <> NegInf`
@@ -868,9 +868,9 @@ val pos_simple_fn_max = store_thm
                      ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
       ++ RW_TAC std_ss [o_DEF]
       ++ POP_ASSUM (K ALL_TAC)
-      ++ (MP_TAC o Q.SPEC `(\x''. Normal (max (x (FST ((p :num -> num # num) (p' x'')))) (y (SND (p (p' x''))))) * 
-                           indicator_fn ((\(i:num,j:num). a i INTER b j) (p (p' x''))) x')` o 
-                   UNDISCH o Q.ISPEC `(s :num -> bool)CROSS(s' :num -> bool)`) 
+      ++ (MP_TAC o Q.SPEC `(\x''. Normal (max (x (FST ((p :num -> num # num) (p' x'')))) (y (SND (p (p' x''))))) *
+                           indicator_fn ((\(i:num,j:num). a i INTER b j) (p (p' x''))) x')` o
+                   UNDISCH o Q.ISPEC `(s :num -> bool)CROSS(s' :num -> bool)`)
                    EXTREAL_SUM_IMAGE_IN_IF
       ++ `!x''. (\x''. Normal (max (x (FST (p (p' x'')))) (y (SND (p (p' x''))))) *
                       indicator_fn ((\(i,j). a i INTER b j) (p (p' x''))) x') x'' <> NegInf`
@@ -939,7 +939,7 @@ val pos_simple_fn_max = store_thm
              ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss []
   ++ POP_ASSUM (K ALL_TAC)
-  ++ `(\x''. if x'' IN s then Normal (x x'') * indicator_fn (a x'') x' else 0) = 
+  ++ `(\x''. if x'' IN s then Normal (x x'') * indicator_fn (a x'') x' else 0) =
       (\x''. if x'' IN s then (\i. Normal (x i) * indicator_fn (a i) x') x'' else 0)`
           by METIS_TAC []
   ++ POP_ORW
@@ -951,17 +951,17 @@ val pos_simple_fn_max = store_thm
 	     ++ `a x'' SUBSET m_space m` by METIS_TAC [MEASURE_SPACE_SUBSET_MSPACE]
 	     ++ RW_TAC std_ss [])
   ++ POP_ORW
-  ++ `!(i:num). Normal (x i) * SIGMA (\j. indicator_fn (a i INTER b j) x') s' = SIGMA (\j. Normal (x i) * indicator_fn (a i INTER b j) x') s'` 
+  ++ `!(i:num). Normal (x i) * SIGMA (\j. indicator_fn (a i INTER b j) x') s' = SIGMA (\j. Normal (x i) * indicator_fn (a i INTER b j) x') s'`
          by (RW_TAC std_ss []
              ++ (MP_TAC o Q.SPECL [`(\j. indicator_fn ((a:num->'a->bool) i INTER b j) x')`,`x (i:num)`] o UNDISCH o Q.ISPEC `s':num->bool` o GSYM o INST_TYPE [alpha |-> ``:num``, beta |-> ``:num``]) EXTREAL_SUM_IMAGE_CMUL
 	     ++ `!x. NegInf <> (\j. indicator_fn (a i INTER b j) x') x`
                     by RW_TAC std_ss [indicator_fn_def,extreal_of_num_def,extreal_not_infty]
 	     ++ RW_TAC std_ss [])
   ++ POP_ORW
-  ++ (MP_TAC o Q.ISPEC `(\n':num. Normal (max (x (FST (p n'))) (y (SND (p n')))) * 
-                         indicator_fn ((\(i:num,j:num). a i INTER b j) (p n')) x')` o 
-               UNDISCH o Q.SPEC `p'` o UNDISCH o 
-               Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o 
+  ++ (MP_TAC o Q.ISPEC `(\n':num. Normal (max (x (FST (p n'))) (y (SND (p n')))) *
+                         indicator_fn ((\(i:num,j:num). a i INTER b j) (p n')) x')` o
+               UNDISCH o Q.SPEC `p'` o UNDISCH o
+               Q.ISPEC `((s:num->bool) CROSS (s':num->bool))` o
                INST_TYPE [``:'b``|->``:num``]) EXTREAL_SUM_IMAGE_IMAGE
   ++ `!x''. (\n'. Normal (max (x (FST (p n'))) (y (SND (p n')))) *
              indicator_fn ((\(i,j). a i INTER b j) (p n')) x') x'' <> NegInf`
@@ -969,9 +969,9 @@ val pos_simple_fn_max = store_thm
                   ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss [o_DEF]
   ++ POP_ASSUM (K ALL_TAC)
-  ++ (MP_TAC o Q.SPEC `(\x''. Normal (max (x (FST ((p :num -> num # num) (p' x'')))) (y (SND (p (p' x''))))) * 
-                       indicator_fn ((\(i:num,j:num). a i INTER b j) (p (p' x''))) x')` o 
-               UNDISCH o Q.ISPEC `(s :num -> bool)CROSS(s' :num -> bool)`) 
+  ++ (MP_TAC o Q.SPEC `(\x''. Normal (max (x (FST ((p :num -> num # num) (p' x'')))) (y (SND (p (p' x''))))) *
+                       indicator_fn ((\(i:num,j:num). a i INTER b j) (p (p' x''))) x')` o
+               UNDISCH o Q.ISPEC `(s :num -> bool)CROSS(s' :num -> bool)`)
                EXTREAL_SUM_IMAGE_IN_IF
   ++ `!x''. (\x''. Normal (max (x (FST (p (p' x'')))) (y (SND (p (p' x''))))) *
                   indicator_fn ((\(i,j). a i INTER b j) (p (p' x''))) x') x'' <> NegInf`
@@ -1016,7 +1016,7 @@ val pos_simple_fn_max = store_thm
   ++ FULL_SIMP_TAC std_ss [extreal_le_def,max_def]);
 
 val pos_simple_fn_not_infty = store_thm
-("pos_simple_fn_not_infty",``!m f s a x. pos_simple_fn m f s a x ==> (!x. x IN m_space m ==> f x <> NegInf /\ f x <> PosInf)``, 
+("pos_simple_fn_not_infty",``!m f s a x. pos_simple_fn m f s a x ==> (!x. x IN m_space m ==> f x <> NegInf /\ f x <> PosInf)``,
   RW_TAC std_ss [pos_simple_fn_def]
   ++ `(!i. i IN s ==> (\i. Normal (x i) * indicator_fn (a i) x') i <> NegInf)`
        by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
@@ -1058,7 +1058,7 @@ val pos_simple_fn_integral_add = store_thm
            (\x. Normal (z x) * measure m (c x) + Normal (z' x) * measure m (c x)) x`
              by METIS_TAC [extreal_add_def,mul_not_infty,positive_not_infty,measure_space_def,REAL_LE_ADD,add_not_infty]
        ++ RW_TAC std_ss []
-       ++ `(\x. Normal (z x) * measure m (c x) + Normal (z' x) * measure m (c x)) = 
+       ++ `(\x. Normal (z x) * measure m (c x) + Normal (z' x) * measure m (c x)) =
            (\x. (\x. Normal (z x) * measure m (c x)) x + (\x. Normal (z' x) * measure m (c x)) x)`
               by METIS_TAC []
        ++ POP_ORW
@@ -1079,7 +1079,7 @@ val pos_simple_fn_integral_add = store_thm
          by (RW_TAC std_ss [extreal_add_def,indicator_fn_def,mul_rzero,mul_rone,add_rzero]
              ++ METIS_TAC [extreal_of_num_def,extreal_not_infty])
    ++ RW_TAC std_ss []
-   ++ `(\x. Normal (z x) * indicator_fn (c x) x' + Normal (z' x) * indicator_fn (c x) x') = 
+   ++ `(\x. Normal (z x) * indicator_fn (c x) x' + Normal (z' x) * indicator_fn (c x) x') =
        (\x. (\x. Normal (z x) * indicator_fn (c x) x') x + (\x. Normal (z' x) * indicator_fn (c x) x') x)`
             by METIS_TAC []
    ++ POP_ORW
@@ -1091,9 +1091,9 @@ val pos_simple_fn_integral_add = store_thm
    ++ METIS_TAC []);
 
 val pos_simple_fn_integral_add_alt = store_thm
-  ("pos_simple_fn_integral_add_alt", ``!m f s a x g y.	measure_space m /\ 
+  ("pos_simple_fn_integral_add_alt", ``!m f s a x g y.	measure_space m /\
         pos_simple_fn m f s a x /\ pos_simple_fn m g s a y ==>
-  	  (pos_simple_fn_integral m s a x + 
+  	  (pos_simple_fn_integral m s a x +
            pos_simple_fn_integral m s a y =
  	   pos_simple_fn_integral m s a (\i. x i + y i))``,
 
@@ -1109,7 +1109,7 @@ val pos_simple_fn_integral_add_alt = store_thm
         (\i. Normal (x i) * measure m (a i) + Normal (y i) * measure m (a i)) i`
            by METIS_TAC [extreal_add_def,mul_not_infty,positive_not_infty,measure_space_def,REAL_LE_ADD,add_not_infty]
    ++ RW_TAC std_ss []
-   ++ `(\i. Normal (x i) * measure m (a i) + Normal (y i) * measure m (a i)) = 
+   ++ `(\i. Normal (x i) * measure m (a i) + Normal (y i) * measure m (a i)) =
        (\i. (\i. Normal (x i) * measure m (a i)) i + (\i. Normal (y i) * measure m (a i)) i)`
           by METIS_TAC []
    ++ POP_ORW
@@ -1159,8 +1159,8 @@ val pos_simple_fn_integral_mono = store_thm
       ++ METIS_TAC [real_lte,REAL_LE_ANTISYM])
   ++ Cases_on `c x' = {}`
   >> RW_TAC real_ss [MEASURE_EMPTY,mul_rzero,le_refl]
-  ++ `pos_simple_fn m f k c z` by FULL_SIMP_TAC std_ss [pos_simple_fn_def] 
-  ++ `pos_simple_fn m g k c z'` by FULL_SIMP_TAC std_ss [pos_simple_fn_def] 
+  ++ `pos_simple_fn m f k c z` by FULL_SIMP_TAC std_ss [pos_simple_fn_def]
+  ++ `pos_simple_fn m g k c z'` by FULL_SIMP_TAC std_ss [pos_simple_fn_def]
   ++ `?t. t IN c x'` by METIS_TAC [CHOICE_DEF]
   ++ `f t = Normal (z x')` by METIS_TAC [pos_simple_fn_thm1]
   ++ `g t = Normal (z' x')` by METIS_TAC [pos_simple_fn_thm1]
@@ -1175,7 +1175,7 @@ val psfis_mono = store_thm
 	(!x. x IN m_space m ==> f x <= g x) ==>	a <= b``,
   RW_TAC std_ss [psfis_def, IN_IMAGE, psfs_def, GSPECIFICATION]
   ++ Cases_on `x'` ++ Cases_on `x` ++ Cases_on `x''` ++ Cases_on `x'''`
-  ++ Cases_on `r'` ++ Cases_on `r` ++ Cases_on `r''` ++ Cases_on `r'''` 
+  ++ Cases_on `r'` ++ Cases_on `r` ++ Cases_on `r''` ++ Cases_on `r'''`
   ++ RW_TAC std_ss []
   ++ FULL_SIMP_TAC std_ss [PAIR_EQ]
   ++ MATCH_MP_TAC pos_simple_fn_integral_mono
@@ -1230,7 +1230,7 @@ val pos_simple_fn_integral_cmul = store_thm
 	    (pos_simple_fn_integral m s a (\i. z * x i) = Normal z * pos_simple_fn_integral m s a x))``,
   RW_TAC std_ss [pos_simple_fn_integral_def, pos_simple_fn_def,REAL_LE_MUL,GSYM extreal_mul_def]
   << [METIS_TAC [le_mul,extreal_le_def,extreal_of_num_def],
-      `(\i. Normal z * Normal (x i) * indicator_fn (a i) x') = 
+      `(\i. Normal z * Normal (x i) * indicator_fn (a i) x') =
        (\i. Normal z * (\i. Normal (x i) * indicator_fn (a i) x') i)`
          by METIS_TAC [mul_assoc]
       ++ POP_ORW
@@ -1238,7 +1238,7 @@ val pos_simple_fn_integral_cmul = store_thm
       ++ DISJ1_TAC
       ++ RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero]
       ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty],
-      `(\i. Normal z * Normal (x i) * measure m (a i)) = 
+      `(\i. Normal z * Normal (x i) * measure m (a i)) =
          (\i. Normal z * (\i. Normal (x i) * measure m (a i)) i)` by METIS_TAC [mul_assoc]
       ++ POP_ORW
       ++ (MATCH_MP_TAC o UNDISCH o Q.ISPEC `s:num->bool`) EXTREAL_SUM_IMAGE_CMUL
@@ -1266,7 +1266,7 @@ val pos_simple_fn_integral_cmul_alt = store_thm
   ++ Q.EXISTS_TAC `s` ++ Q.EXISTS_TAC `a` ++ Q.EXISTS_TAC `(\i. z * x i)`
   ++ RW_TAC std_ss [pos_simple_fn_cmul_alt]
   ++ FULL_SIMP_TAC real_ss [pos_simple_fn_integral_def,pos_simple_fn_def,mul_assoc,GSYM extreal_mul_def]
-  ++ `(\i. Normal z * Normal (x i) * measure m (a i)) = 
+  ++ `(\i. Normal z * Normal (x i) * measure m (a i)) =
       (\j. Normal z * (\i. Normal (x i) * measure m (a i)) j)`
         by RW_TAC std_ss [FUN_EQ_THM,mul_assoc]
   ++ POP_ORW
@@ -1309,13 +1309,13 @@ val psfis_pos = store_thm
 val pos_simple_fn_integral_zero = store_thm
 ("pos_simple_fn_integral_zero",``!m s a x. measure_space m /\ pos_simple_fn m (\t. 0) s a x ==> (pos_simple_fn_integral m s a x = 0)``,
   RW_TAC std_ss []
-  ++ `pos_simple_fn m (\t. 0) {1:num} (\i:num. if i=1 then (m_space m) else {}) (\i:num. 0) /\ 
-     (pos_simple_fn_integral m  {1:num} (\i:num. if i=1 then (m_space m) else {}) (\i:num. 0) = 0)` 
+  ++ `pos_simple_fn m (\t. 0) {1:num} (\i:num. if i=1 then (m_space m) else {}) (\i:num. 0) /\
+     (pos_simple_fn_integral m  {1:num} (\i:num. if i=1 then (m_space m) else {}) (\i:num. 0) = 0)`
       by  RW_TAC real_ss [pos_simple_fn_integral_def, pos_simple_fn_def,FINITE_SING, EXTREAL_SUM_IMAGE_SING, EXTREAL_SUM_IMAGE_SING, IMAGE_SING,BIGUNION_SING,IN_SING,MEASURE_SPACE_MSPACE_MEASURABLE,GSYM extreal_of_num_def,mul_lzero,le_refl]
-  ++ METIS_TAC [pos_simple_fn_integral_unique]);   
+  ++ METIS_TAC [pos_simple_fn_integral_unique]);
 
 val pos_simple_fn_integral_zero_alt = store_thm
-("pos_simple_fn_integral_zero_alt",``!m s a x. measure_space m /\ pos_simple_fn m g s a x /\ (!x. x IN m_space m ==> (g x = 0))  
+("pos_simple_fn_integral_zero_alt",``!m s a x. measure_space m /\ pos_simple_fn m g s a x /\ (!x. x IN m_space m ==> (g x = 0))
                                       ==> (pos_simple_fn_integral m s a x = 0)``,
   RW_TAC std_ss [pos_simple_fn_integral_def]
   ++ MATCH_MP_TAC EXTREAL_SUM_IMAGE_0
@@ -1365,10 +1365,10 @@ val pos_simple_fn_integral_sum = store_thm
   >> METIS_TAC []
   ++ MATCH_MP_TAC FINITE_INDUCT
   ++ CONJ_TAC
-  >> RW_TAC std_ss [NOT_IN_EMPTY,EXTREAL_SUM_IMAGE_EMPTY,REAL_SUM_IMAGE_THM] 
+  >> RW_TAC std_ss [NOT_IN_EMPTY,EXTREAL_SUM_IMAGE_EMPTY,REAL_SUM_IMAGE_THM]
   ++ RW_TAC std_ss [REAL_SUM_IMAGE_THM,DELETE_NON_ELEMENT]
   >> (`(\t. SIGMA (\i. f i t) (e INSERT s)) = (\t. f e t + (\t. SIGMA (\i. f i t) s) t)`
-          by (RW_TAC std_ss [FUN_EQ_THM] 
+          by (RW_TAC std_ss [FUN_EQ_THM]
              ++ (MP_TAC o UNDISCH o Q.SPECL [`(\i. f i t)`,`s`] o INST_TYPE [alpha |-> beta]) EXTREAL_SUM_IMAGE_PROPERTY
 	     ++ FULL_SIMP_TAC std_ss [DELETE_NON_ELEMENT])
       ++ POP_ORW
@@ -1396,7 +1396,7 @@ val pos_simple_fn_integral_sum = store_thm
   ++ `SIGMA (\i. pos_simple_fn_integral m s' a (x i)) s = pos_simple_fn_integral m s' a (\j. SIGMA (\i. x i j) s)`
       by METIS_TAC []
   ++ POP_ORW
-  ++ `(\j. x e j + SIGMA (\i. x i j) s) = 
+  ++ `(\j. x e j + SIGMA (\i. x i j) s) =
       (\j. x e j + (\j. SIGMA (\i. x i j) s) j)` by METIS_TAC []
   ++ POP_ORW
   ++(MATCH_MP_TAC o GSYM) pos_simple_fn_integral_add_alt
@@ -1424,13 +1424,13 @@ val pos_simple_fn_integral_sum_alt = store_thm
   ++ `?c k z. pos_simple_fn m (\t. SIGMA (\i. f i t) s) k c z /\
         (pos_simple_fn_integral m k c z =
          SIGMA (\i. pos_simple_fn_integral m (s' i) (a i) (x i)) s)`
-        by METIS_TAC [IN_INSERT]  
-  ++ `!i. i IN e INSERT s ==> (\i. pos_simple_fn_integral m (s' i) (a i) (x i)) i <> NegInf` 
+        by METIS_TAC [IN_INSERT]
+  ++ `!i. i IN e INSERT s ==> (\i. pos_simple_fn_integral m (s' i) (a i) (x i)) i <> NegInf`
        by METIS_TAC [pos_simple_fn_integral_not_infty,IN_INSERT]
   ++ FULL_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_PROPERTY]
   ++ (MP_TAC o Q.SPECL [`m`,`f (e:'b)`,`s' (e:'b)`,`a (e:'b)`,`x (e:'b)`,`(\t. SIGMA (\i:'b. f i t) s)`,`k`,`c`,`z`]) pos_simple_fn_integral_present
   ++ FULL_SIMP_TAC std_ss [IN_INSERT,DELETE_NON_ELEMENT]
-  ++ RW_TAC std_ss [] 
+  ++ RW_TAC std_ss []
   ++ METIS_TAC [pos_simple_fn_integral_add]);
 
 val psfis_sum = store_thm
@@ -1458,7 +1458,7 @@ val psfis_sum = store_thm
 
 val psfis_intro = store_thm
  ("psfis_intro",
-   ``!m a x P. measure_space m /\ (!i. i IN P ==> a i IN measurable_sets m) /\ (!i. i IN P ==> 0 <= x i) /\ 
+   ``!m a x P. measure_space m /\ (!i. i IN P ==> a i IN measurable_sets m) /\ (!i. i IN P ==> 0 <= x i) /\
 	FINITE P ==> (SIGMA (\i. Normal (x i) * measure m (a i)) P) IN psfis m (\t. SIGMA (\i. Normal (x i) * indicator_fn (a i) t) P)``,
   RW_TAC std_ss []
   ++ `!t. (\i. Normal (x i) * indicator_fn (a i) t) =
@@ -1474,8 +1474,8 @@ val psfis_intro = store_thm
 val pos_simple_fn_integral_sub = store_thm
   ("pos_simple_fn_integral_sub",
    ``!m f s a x g s' b y.
-	measure_space m /\ (measure m (m_space m) <> PosInf) /\ 
-	(!x. g x <= f x) /\ (!x. g x <> PosInf) /\ 
+	measure_space m /\ (measure m (m_space m) <> PosInf) /\
+	(!x. g x <= f x) /\ (!x. g x <> PosInf) /\
 	pos_simple_fn m f s a x /\ pos_simple_fn m g s' b y ==>
 	?s'' c z. pos_simple_fn m (\x. f x - g x) s'' c z /\
 		(pos_simple_fn_integral m s a x -
@@ -1484,8 +1484,8 @@ val pos_simple_fn_integral_sub = store_thm
    REPEAT STRIP_TAC
    ++ (MP_TAC o Q.SPECL [`m`,`f`,`s`,`a`,`x`,`g`,`s'`,`b`,`y`]) pos_simple_fn_integral_present
    ++ RW_TAC std_ss [] ++ ASM_SIMP_TAC std_ss []
-   ++ Q.EXISTS_TAC `k` 
-   ++ Q.EXISTS_TAC `c` 
+   ++ Q.EXISTS_TAC `k`
+   ++ Q.EXISTS_TAC `c`
    ++ Q.EXISTS_TAC `(\i. if (i IN k /\ ~(c i = {})) then (z i - z' i) else 0)`
    ++ FULL_SIMP_TAC std_ss [pos_simple_fn_def, pos_simple_fn_integral_def]
    ++ `pos_simple_fn m f k c z` by FULL_SIMP_TAC std_ss [pos_simple_fn_def]
@@ -1500,16 +1500,16 @@ val pos_simple_fn_integral_sub = store_thm
              ++ `0 <= z x' - z' x'` by METIS_TAC [extreal_le_def,REAL_SUB_LE,extreal_of_num_def]
              ++ METIS_TAC [mul_not_infty,positive_not_infty,MEASURE_SPACE_POSITIVE])
    ++ REVERSE CONJ_TAC
-   >> (`!i. (Normal (if (i IN k /\ ~(c i = {})) then z i - z' i else 0) * measure m (c i)) = 
+   >> (`!i. (Normal (if (i IN k /\ ~(c i = {})) then z i - z' i else 0) * measure m (c i)) =
 	(Normal (if i IN k then z i - z' i else 0) * measure m (c i))`
 		by (RW_TAC std_ss [] ++ FULL_SIMP_TAC real_ss [MEASURE_EMPTY,mul_rzero])
 	++ POP_ORW
-	++ `SIGMA (\i. Normal (if i IN k then z i - z' i else 0) * measure m (c i)) k = 
+	++ `SIGMA (\i. Normal (if i IN k then z i - z' i else 0) * measure m (c i)) k =
 	    SIGMA (\i. Normal (z i - z' i) * measure m (c i)) k`
 	      by ((MP_TAC o REWRITE_RULE [SPECIFICATION] o Q.SPECL [`k`,`k`,`(\i. Normal (z i - z' i) * measure m (c i))`])(INST_TYPE [alpha |-> ``:num``] EXTREAL_SUM_IMAGE_IF_ELIM)
 		  ++ RW_TAC real_ss []
-                  ++ `(\x. if x IN k then Normal (z x - z' x) * measure m (c x) else 0) = 
-                      (\i. Normal (if i IN k then z i - z' i else 0) * measure m (c i))` 
+                  ++ `(\x. if x IN k then Normal (z x - z' x) * measure m (c x) else 0) =
+                      (\i. Normal (if i IN k then z i - z' i else 0) * measure m (c i))`
                         by (RW_TAC real_ss [FUN_EQ_THM]
 		            ++ Cases_on `i IN k` >> METIS_TAC []
 			    ++ RW_TAC real_ss [mul_lzero, GSYM extreal_of_num_def])
@@ -1522,7 +1522,7 @@ val pos_simple_fn_integral_sub = store_thm
        ++ `!x. x IN k ==> (\i. (Normal (z i) - Normal (z' i)) * measure m (c i)) x <> NegInf`
             by RW_TAC std_ss [extreal_sub_def]
        ++ RW_TAC std_ss []
-       ++ `!x. x IN k ==> ((Normal (z x) - Normal (z' x)) * measure m (c x) = 
+       ++ `!x. x IN k ==> ((Normal (z x) - Normal (z' x)) * measure m (c x) =
              Normal (z x) * measure m (c x) - Normal (z' x) *  measure m (c x))`
                 by (RW_TAC std_ss []
                     ++ `measure m (c x') <> NegInf` by METIS_TAC [positive_not_infty,MEASURE_SPACE_POSITIVE]
@@ -1533,25 +1533,25 @@ val pos_simple_fn_integral_sub = store_thm
        ++ FULL_SIMP_TAC std_ss []
        ++ `(\x. Normal (z x) * measure m (c x) - Normal (z' x) * measure m (c x)) =
            (\x. (\x. Normal (z x) * measure m (c x)) x - (\x. Normal (z' x) * measure m (c x)) x)` by METIS_TAC []
-												 
+
        ++ POP_ORW
        ++ (MATCH_MP_TAC o UNDISCH o Q.SPEC `k` o GSYM o INST_TYPE [alpha |-> ``:num``]) EXTREAL_SUM_IMAGE_SUB
-       ++ DISJ1_TAC 
+       ++ DISJ1_TAC
        ++ RW_TAC std_ss []
        >> METIS_TAC [mul_not_infty,positive_not_infty,MEASURE_SPACE_POSITIVE]
        ++ METIS_TAC [mul_not_infty])
   ++ `!x. g x <> NegInf` by METIS_TAC [lt_infty,lte_trans,extreal_not_infty,extreal_of_num_def]
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> METIS_TAC [le_sub_imp,add_lzero]
   ++ REVERSE (RW_TAC real_ss [])
   >> (`?q. q IN c i` by METIS_TAC [CHOICE_DEF]
       ++ METIS_TAC [pos_simple_fn_thm1,REAL_SUB_LE,extreal_le_def])
-  ++ `!i. (Normal (if (i IN k /\ ~(c i = {})) then z i - z' i else 0) * indicator_fn (c i) x') = 
+  ++ `!i. (Normal (if (i IN k /\ ~(c i = {})) then z i - z' i else 0) * indicator_fn (c i) x') =
 	(Normal (if i IN k then z i - z' i else 0) * indicator_fn (c i) x')`
 	by (RW_TAC std_ss [] ++ FULL_SIMP_TAC real_ss [indicator_fn_def,mul_rzero,mul_rone,NOT_IN_EMPTY])
   ++ POP_ORW
 
-  ++ `SIGMA (\i. Normal (if i IN k then z i - z' i else 0) * indicator_fn (c i) x') k = 
+  ++ `SIGMA (\i. Normal (if i IN k then z i - z' i else 0) * indicator_fn (c i) x') k =
       SIGMA (\i. Normal (z i - z' i) * indicator_fn (c i) x') k`
          by ((MP_TAC o REWRITE_RULE [SPECIFICATION] o Q.SPECL [`k`,`k`,`(\i. Normal (z i - z' i) * indicator_fn (c i) x')`])(INST_TYPE [alpha |-> ``:num``] EXTREAL_SUM_IMAGE_IF_ELIM)
 	     ++ RW_TAC real_ss []
@@ -1559,8 +1559,8 @@ val pos_simple_fn_integral_sub = store_thm
                   by (RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
                       ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
              ++ RW_TAC std_ss []
-             ++ `(\x. if x IN k then Normal (z x - z' x) * indicator_fn (c x) x' else 0) = 
-                 (\i. Normal (if i IN k then z i - z' i else 0) * indicator_fn (c i) x')` 
+             ++ `(\x. if x IN k then Normal (z x - z' x) * indicator_fn (c x) x' else 0) =
+                 (\i. Normal (if i IN k then z i - z' i else 0) * indicator_fn (c i) x')`
                    by (RW_TAC real_ss [FUN_EQ_THM,indicator_fn_def,mul_rzero,mul_rone]
 	               ++ Cases_on `i IN k` >> METIS_TAC []
 		       ++ RW_TAC real_ss [mul_lzero, GSYM extreal_of_num_def])
@@ -1572,7 +1572,7 @@ val pos_simple_fn_integral_sub = store_thm
         by (RW_TAC std_ss [extreal_sub_def,indicator_fn_def,mul_rzero,mul_rone]
             ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss []
-  ++ `!x. x IN k ==> ((Normal (z x) - Normal (z' x)) * indicator_fn (c x) x' = 
+  ++ `!x. x IN k ==> ((Normal (z x) - Normal (z' x)) * indicator_fn (c x) x' =
          Normal (z x) *  indicator_fn (c x) x' - Normal (z' x) *   indicator_fn (c x) x')`
             by RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,sub_rzero]
   ++ RW_TAC std_ss []
@@ -1584,9 +1584,9 @@ val pos_simple_fn_integral_sub = store_thm
             ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty])
   ++ RW_TAC std_ss []
   ++ FULL_SIMP_TAC std_ss []
-  ++ `SIGMA (\i. Normal (x i) * indicator_fn (a i) x') s = 
+  ++ `SIGMA (\i. Normal (x i) * indicator_fn (a i) x') s =
       SIGMA (\i. Normal (z i) * indicator_fn (c i) x') k` by METIS_TAC []
-  ++ `SIGMA (\i. Normal (y i) * indicator_fn (b i) x') s' = 
+  ++ `SIGMA (\i. Normal (y i) * indicator_fn (b i) x') s' =
       SIGMA (\i. Normal (z' i) * indicator_fn (c i) x') k` by METIS_TAC []
   ++ POP_ORW
   ++ POP_ORW
@@ -1594,14 +1594,14 @@ val pos_simple_fn_integral_sub = store_thm
       (\x. (\x. Normal (z x) * indicator_fn (c x) x') x - (\x. Normal (z' x) * indicator_fn (c x) x') x)` by METIS_TAC []
   ++ POP_ORW
   ++ (MATCH_MP_TAC o UNDISCH o Q.SPEC `k` o GSYM o INST_TYPE [alpha |-> ``:num``]) EXTREAL_SUM_IMAGE_SUB
-  ++ DISJ1_TAC 
+  ++ DISJ1_TAC
   ++ RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone]
   ++ RW_TAC std_ss [extreal_of_num_def,extreal_not_infty]);
 
 val psfis_sub = store_thm
   ("psfis_sub",
    ``!m f g a b.
-	measure_space m /\ measure m (m_space m) <> PosInf /\ (!x. g x <= f x) /\ (!x. g x <> PosInf) /\ 
+	measure_space m /\ measure m (m_space m) <> PosInf /\ (!x. g x <= f x) /\ (!x. g x <> PosInf) /\
 	a IN psfis m f /\ b IN psfis m g ==>
 	a - b IN psfis m (\x. f x - g x)``,
    RW_TAC std_ss [psfis_def, IN_IMAGE, psfs_def, GSPECIFICATION]
@@ -1627,19 +1627,19 @@ val psfis_sub = store_thm
 val pos_fn_integral_pos_simple_fn = store_thm
 ("pos_fn_integral_pos_simple_fn",``!m f s a x. measure_space m /\ pos_simple_fn m f s a x ==> (pos_fn_integral m f = pos_simple_fn_integral m s a x)``,
   RW_TAC std_ss [pos_fn_integral_def,sup_eq,IN_psfis_eq]
-  >> (POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION]) 
+  >> (POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
       ++ RW_TAC std_ss [GSPECIFICATION]
       ++ METIS_TAC [pos_simple_fn_integral_mono])
   ++ POP_ASSUM MATCH_MP_TAC
   ++ ONCE_REWRITE_TAC [GSYM SPECIFICATION]
   ++ RW_TAC std_ss [GSPECIFICATION]
   ++ METIS_TAC [le_refl]);
- 
+
 val pos_fn_integral_mspace = store_thm
   ("pos_fn_integral_mspace",``!m f. measure_space m  /\ (!x. 0 <= f x)
 	 ==> (pos_fn_integral m f = pos_fn_integral m (\x. f x * indicator_fn (m_space m) x))``,
   RW_TAC std_ss [pos_fn_integral_def,sup_eq]
-  >> (RW_TAC real_ss [le_sup] 
+  >> (RW_TAC real_ss [le_sup]
       ++ POP_ASSUM MATCH_MP_TAC
       ++ ONCE_REWRITE_TAC [GSYM SPECIFICATION]
       ++ POP_ASSUM (MP_TAC o REWRITE_RULE [Once (GSYM SPECIFICATION)])
@@ -1654,14 +1654,14 @@ val pos_fn_integral_mspace = store_thm
       ++ MATCH_MP_TAC EXTREAL_SUM_IMAGE_POS
       ++ RW_TAC std_ss [mul_rzero,le_refl,mul_rone,indicator_fn_def]
       ++ METIS_TAC [extreal_of_num_def,extreal_le_def])
-  ++ RW_TAC real_ss [sup_le] 
+  ++ RW_TAC real_ss [sup_le]
   ++ POP_ASSUM (MP_TAC o REWRITE_RULE [Once (GSYM SPECIFICATION)])
   ++ RW_TAC real_ss [GSPECIFICATION]
   ++ Q.PAT_X_ASSUM `!z. Q z ==> z <= y` MATCH_MP_TAC
   ++ RW_TAC std_ss [Once (GSYM SPECIFICATION),GSPECIFICATION]
   ++ Q.EXISTS_TAC `(\x. g x * indicator_fn (m_space m) x)`
   ++ RW_TAC std_ss [IN_psfis_eq]
-  >> (FULL_SIMP_TAC real_ss [IN_psfis_eq,pos_simple_fn_def,indicator_fn_def] 
+  >> (FULL_SIMP_TAC real_ss [IN_psfis_eq,pos_simple_fn_def,indicator_fn_def]
       ++ Q.EXISTS_TAC `s`
       ++ Q.EXISTS_TAC `a`
       ++ Q.EXISTS_TAC `x`
@@ -1700,7 +1700,7 @@ val pos_fn_integral_mono = store_thm
   ++ METIS_TAC [le_trans]);
 
 val pos_fn_integral_mono_mspace = store_thm
-  ("pos_fn_integral_mono_mspace",``!m f g. measure_space m /\ (!x. x IN m_space m ==> g x <= f x) /\ 
+  ("pos_fn_integral_mono_mspace",``!m f g. measure_space m /\ (!x. x IN m_space m ==> g x <= f x) /\
    (!x. 0 <= f x) /\ (!x. 0 <= g x) ==> (pos_fn_integral m g <= pos_fn_integral m f)``,
   RW_TAC std_ss [Once pos_fn_integral_mspace]
   ++ `pos_fn_integral m f = pos_fn_integral m (\x. f x * indicator_fn (m_space m) x)`
@@ -1736,7 +1736,7 @@ val pos_fn_integral_cmul = store_thm
       >> METIS_TAC [mul_comm,le_ldiv]
       ++ RW_TAC std_ss [extreal_div_def]
 	  ++ `inv (Normal c) * y IN psfis m (\x. inv (Normal c) * g x)` by METIS_TAC [psfis_cmul,extreal_inv_def,REAL_LE_INV]
-          ++ `(\x. g x * inv (Normal c)) = (\x. inv (Normal c) * g x)` by RW_TAC std_ss [FUN_EQ_THM,mul_comm] 
+          ++ `(\x. g x * inv (Normal c)) = (\x. inv (Normal c) * g x)` by RW_TAC std_ss [FUN_EQ_THM,mul_comm]
           ++ RW_TAC std_ss [Once mul_comm])
   ++ Suff `sup {r | ?g. r IN psfis m g /\ !x. g x <= f x} <= y / Normal c`
   >> METIS_TAC [le_rdiv,extreal_not_infty,mul_comm]
@@ -1769,9 +1769,9 @@ val pos_fn_integral_cmul_indicator = store_thm
 
 val pos_fn_integral_sum_cmul_indicator = store_thm
 ("pos_fn_integral_sum_cmul_indicator",
-   ``!m s a x. measure_space m /\ FINITE s /\ (!i:num. i IN s ==> 0 <= x i) /\ 
+   ``!m s a x. measure_space m /\ FINITE s /\ (!i:num. i IN s ==> 0 <= x i) /\
             (!i:num. i IN s ==> a i IN measurable_sets m)  ==>
-	   (pos_fn_integral m (\t. SIGMA (\i:num. Normal (x i) * indicator_fn (a i) t) s) = 
+	   (pos_fn_integral m (\t. SIGMA (\i:num. Normal (x i) * indicator_fn (a i) t) s) =
             SIGMA (\i. Normal (x i) * measure m (a i)) s)``,
   RW_TAC std_ss []
   ++ Cases_on `s = {}` >> RW_TAC std_ss [EXTREAL_SUM_IMAGE_EMPTY,pos_fn_integral_zero]
@@ -1791,7 +1791,7 @@ val pos_fn_integral_sum_cmul_indicator = store_thm
 		      ++ METIS_TAC [mul_not_infty,positive_not_infty,MEASURE_SPACE_POSITIVE,IN_INSERT])
            ++ (MP_TAC o Q.SPEC `0` o UNDISCH o Q.SPECL [`(\n. Normal (x (i:num) * if n = 0 then 0 else 1) * measure m (if n = 0 then m_space m DIFF a i else a i))`,`{1}`] o INST_TYPE [alpha |-> ``:num``]) EXTREAL_SUM_IMAGE_PROPERTY
            ++ RW_TAC real_ss [mul_lzero,add_lzero,EXTREAL_SUM_IMAGE_SING,GSYM extreal_of_num_def])
- 
+
   ++ (MP_TAC o Q.SPEC `(\i:num. pos_simple_fn_integral m {0:num; 1} (\n:num. if n = 0 then m_space m DIFF a i else a i) (\n:num. x i * if n = 0 then 0 else 1:real))` o UNDISCH o Q.SPEC `s` o INST_TYPE [alpha |-> ``:num``]) EXTREAL_SUM_IMAGE_IN_IF
   ++ `!x'. x' IN s ==> (\i. pos_simple_fn_integral m {0; 1}
              (\n. if n = 0 then m_space m DIFF a i else a i)
@@ -1844,12 +1844,12 @@ val pos_mono_conv_mono_borel = store_thm
   ++ FULL_SIMP_TAC std_ss [extreal_le_def,extreal_lt_eq]
   ++ Q.ABBREV_TAC `b = \n. {t | Normal r'' * g t <= (fi n) t}`
   ++ `?s a x. pos_simple_fn m g s a x` by METIS_TAC [IN_psfis]
-  ++ `!i j. i <= j ==> ri i <= ri j` 
-      by (Q.UNABBREV_TAC `ri` 
-          ++ RW_TAC std_ss [] 
-          ++ MATCH_MP_TAC pos_fn_integral_mono 
+  ++ `!i j. i <= j ==> ri i <= ri j`
+      by (Q.UNABBREV_TAC `ri`
+          ++ RW_TAC std_ss []
+          ++ MATCH_MP_TAC pos_fn_integral_mono
 	  ++ FULL_SIMP_TAC std_ss [ext_mono_increasing_def, GSYM extreal_of_num_def])
-  ++ `f IN measurable (m_space m, measurable_sets m) Borel` 
+  ++ `f IN measurable (m_space m, measurable_sets m) Borel`
       by (MATCH_MP_TAC IN_MEASURABLE_BOREL_MONO_SUP
           ++ Q.EXISTS_TAC `fi`
 	  ++ RW_TAC std_ss [space_def]
@@ -1861,11 +1861,11 @@ val pos_mono_conv_mono_borel = store_thm
 	     ++ Q.EXISTS_TAC `g` ++ Q.EXISTS_TAC `r''`
 	     ++ RW_TAC real_ss [extreal_not_infty]
 	     ++ METIS_TAC [measure_space_def])
-  ++ `!n:num. {t | Normal r'' * g t <= fi n t} INTER m_space m = {t | 0 <= (fi n t) - Normal r'' * (g t)} INTER m_space m` 
+  ++ `!n:num. {t | Normal r'' * g t <= fi n t} INTER m_space m = {t | 0 <= (fi n t) - Normal r'' * (g t)} INTER m_space m`
 	by (RW_TAC real_ss [EXTENSION,GSPECIFICATION,IN_INTER]
             ++ METIS_TAC [pos_simple_fn_not_infty,mul_not_infty,add_lzero,le_sub_eq,num_not_infty])
-  ++ `!n. (\t. fi n t - Normal r'' * g t) IN measurable (m_space m, measurable_sets m) Borel` 
-	by ( RW_TAC std_ss [] 
+  ++ `!n. (\t. fi n t - Normal r'' * g t) IN measurable (m_space m, measurable_sets m) Borel`
+	by ( RW_TAC std_ss []
       	     ++ MATCH_MP_TAC IN_MEASURABLE_BOREL_SUB
 	     ++ Q.EXISTS_TAC `fi n`
 	     ++ Q.EXISTS_TAC `(\t. Normal r'' * g t)`
@@ -1873,14 +1873,14 @@ val pos_mono_conv_mono_borel = store_thm
              << [FULL_SIMP_TAC std_ss [measure_space_def],
 		 METIS_TAC [lt_infty,lte_trans,extreal_not_infty,extreal_of_num_def],
 		 METIS_TAC [pos_simple_fn_not_infty,mul_not_infty]])
-  ++ `!n. {t | Normal r'' * g t <= fi n t} INTER m_space m IN measurable_sets m` 
+  ++ `!n. {t | Normal r'' * g t <= fi n t} INTER m_space m IN measurable_sets m`
 	by METIS_TAC [IN_MEASURABLE_BOREL_ALL,m_space_def,space_def,
 			subsets_def,measurable_sets_def,measure_space_def,extreal_of_num_def]
   ++ `!n. b n INTER m_space m IN measurable_sets m` by ( Q.UNABBREV_TAC `b` ++ METIS_TAC [])
   ++ Suff  `r' = sup (IMAGE (\n. pos_fn_integral m (\x. g x * indicator_fn (b n INTER m_space m) x)) UNIV )`
   >> (Q.UNABBREV_TAC `r`
       ++ RW_TAC std_ss [le_sup]
-      ++ Cases_on `r'' = 0` 
+      ++ Cases_on `r'' = 0`
       >> (RW_TAC std_ss [mul_lzero,GSYM extreal_of_num_def]
           ++ MATCH_MP_TAC le_trans
 	  ++ Q.EXISTS_TAC `ri (1:num)`
@@ -1919,7 +1919,7 @@ val pos_mono_conv_mono_borel = store_thm
       ++ Q.EXISTS_TAC `n`
       ++ Q.UNABBREV_TAC `ri`
       ++ RW_TAC std_ss [])
-  ++ `!n:num. (\x. g x * indicator_fn (b n INTER m_space m) x) = 
+  ++ `!n:num. (\x. g x * indicator_fn (b n INTER m_space m) x) =
       (\t. SIGMA (\i. Normal (x i) * indicator_fn (a i INTER (b n INTER m_space m)) t) s)`
         by (RW_TAC std_ss [] ++ FUN_EQ_TAC
 	    ++ RW_TAC std_ss []
@@ -1930,16 +1930,16 @@ val pos_mono_conv_mono_borel = store_thm
 	    ++ FULL_SIMP_TAC std_ss [pos_simple_fn_def,EXTREAL_SUM_IMAGE_ZERO])
   ++ RW_TAC std_ss []
   ++ `!n:num i. i IN s ==> (a i INTER (b n INTER m_space m)) IN measurable_sets m`
-         by METIS_TAC [MEASURE_SPACE_INTER,pos_simple_fn_def] 
+         by METIS_TAC [MEASURE_SPACE_INTER,pos_simple_fn_def]
   ++ `FINITE s` by FULL_SIMP_TAC std_ss [pos_simple_fn_def]
   ++ `!n:num. (pos_fn_integral m (\t. SIGMA (\i. Normal (x i) * indicator_fn ((\i. a i INTER (b n INTER m_space m)) i) t) s) =
            SIGMA (\i. Normal (x i) * measure m ((\i. a i INTER (b n INTER m_space m)) i)) s)`
-              by (RW_TAC std_ss [] 
+              by (RW_TAC std_ss []
 	          ++ (MP_TAC o Q.SPECL [`m`,`s:num->bool`,`(\i:num. a i INTER (b (n:num) INTER m_space m))`,`(x:num->real)`]) pos_fn_integral_sum_cmul_indicator
 		  ++ FULL_SIMP_TAC std_ss [pos_simple_fn_def])
   ++ FULL_SIMP_TAC std_ss []
   ++ Know `!i. i IN s ==> !n.
-            (\i n. Normal (x i) * measure m (a i INTER (b n INTER m_space m))) i n <=  
+            (\i n. Normal (x i) * measure m (a i INTER (b n INTER m_space m))) i n <=
 	    (\i n. Normal (x i) * measure m (a i INTER (b n INTER m_space m))) i (SUC n)`
   >> (RW_TAC std_ss []
       ++ MATCH_MP_TAC le_lmul_imp
@@ -1988,7 +1988,7 @@ val pos_mono_conv_mono_borel = store_thm
 	   ++ RW_TAC real_ss [GSPECIFICATION]
 	   ++ `f x' = sup (IMAGE (\i. fi i x') UNIV)` by FULL_SIMP_TAC std_ss []
 	   ++ Cases_on `g x' = 0` >> METIS_TAC [mul_rzero,extreal_of_num_def]
-           ++ `Normal r'' * g x' < f x'` 
+           ++ `Normal r'' * g x' < f x'`
                 by (Cases_on `g x' = f x'`
                     >> (`0 < f x'` by METIS_TAC [le_lt,pos_simple_fn_def]
                         ++ METIS_TAC [lt_rmul,mul_lone,IN_psfis_eq,pos_simple_fn_not_infty,extreal_lt_eq,extreal_of_num_def])
@@ -1997,7 +1997,7 @@ val pos_mono_conv_mono_borel = store_thm
 	   ++ Suff `?n. Normal r'' * g x' <= (\n. fi n x') n` >> RW_TAC std_ss []
            ++ MATCH_MP_TAC sup_le_mono
 	   ++ CONJ_TAC >> FULL_SIMP_TAC std_ss [ext_mono_increasing_def,ext_mono_increasing_suc]
-	   ++ METIS_TAC []) 
+	   ++ METIS_TAC [])
   ++ `!i. i IN s==> (a i INTER m_space m = a i)`
        by METIS_TAC [pos_simple_fn_def,SUBSET_INTER1,MEASURE_SPACE_SUBSET_MSPACE]
   ++ `!i. i IN s ==> (sup (IMAGE (measure m o (\n. a i INTER (b n INTER m_space m))) UNIV) = measure m (a i))`
@@ -2016,7 +2016,7 @@ val pos_mono_conv_mono_borel = store_thm
        by METIS_TAC [IN_psfis_eq,psfis_unique,pos_simple_fn_integral_def,pos_simple_fn_integral_unique]
   ++ POP_ORW
   ++ `!i. i IN s ==> (\i. Normal (x i) * measure m (a i)) i <> NegInf`
-      by METIS_TAC [] 
+      by METIS_TAC []
   ++ (MP_TAC o Q.SPEC `(\i. Normal (x i) * measure m (a i))` o UNDISCH o Q.ISPEC `s:num->bool`) EXTREAL_SUM_IMAGE_IN_IF
   ++ RW_TAC std_ss []);
 
@@ -2025,7 +2025,7 @@ val pos_mono_conv_mono_borel = store_thm
 (************************************************************)
 
 val lebesgue_monotone_convergence = store_thm
-  ("lebesgue_monotone_convergence", ``!m f fi. measure_space m /\ 
+  ("lebesgue_monotone_convergence", ``!m f fi. measure_space m /\
 	(!i. fi i IN measurable (m_space m, measurable_sets m) Borel) /\
         (!i x. 0 <= fi i x) /\ (!x. 0 <= f x) /\
 	(!x. mono_increasing (\i. fi i x)) /\
@@ -2053,9 +2053,9 @@ val lebesgue_monotone_convergence = store_thm
 
 
 val lebesgue_monotone_convergence_subset = store_thm
-  ("lebesgue_monotone_convergence_subset", ``!m f fi A. measure_space m /\ 
-	(!i. fi i IN measurable (m_space m, measurable_sets m) Borel) /\ (!i x. 0 <= fi i x) /\ (!x. 0 <= f x) /\ 
-	(!x. x IN m_space m ==> (sup (IMAGE (\i. fi i x) UNIV) = f x)) /\ 
+  ("lebesgue_monotone_convergence_subset", ``!m f fi A. measure_space m /\
+	(!i. fi i IN measurable (m_space m, measurable_sets m) Borel) /\ (!i x. 0 <= fi i x) /\ (!x. 0 <= f x) /\
+	(!x. x IN m_space m ==> (sup (IMAGE (\i. fi i x) UNIV) = f x)) /\
 	(!x. mono_increasing (\i. fi i x)) /\ (A IN measurable_sets m) ==>
 	(pos_fn_integral m (\x. f x * indicator_fn A x) = sup (IMAGE (\i. pos_fn_integral m (\x. fi i x * indicator_fn A x)) UNIV))``,
   RW_TAC std_ss []
@@ -2076,8 +2076,8 @@ val lebesgue_monotone_convergence_subset = store_thm
 
 
 (**** Define the sequence ****)
-val fn_seq_def = Define `fn_seq m f = (\n. 
-         (\x. SIGMA (\k. (&k / (2 pow n)) * indicator_fn {x | x IN m_space m /\ (&k / (2 pow n) <= f x) /\ (f x < (&k + 1) /(2 pow n))} x) (count (4 ** n)) + 
+val fn_seq_def = Define `fn_seq m f = (\n.
+         (\x. SIGMA (\k. (&k / (2 pow n)) * indicator_fn {x | x IN m_space m /\ (&k / (2 pow n) <= f x) /\ (f x < (&k + 1) /(2 pow n))} x) (count (4 ** n)) +
               2 pow (n) * indicator_fn {x | x IN m_space m /\ 2 pow n <= f x} x))`;
 
 (**** Define their integrals ****)
@@ -2089,10 +2089,10 @@ val fn_seq_integral_def = Define `fn_seq_integral m f = (\n. SIGMA (\k. (&k / (2
 (****   f_n(x) = &k / 2 pow n in the k^th interval ****)
 (******************************************************)
 
-val lemma_fn_1 = store_thm 
-  ("lemma_fn_1",``!m f n x k. x IN m_space m /\ 
-			  k IN count (4 ** n) /\ 
-			  &k / 2 pow n <= f x /\ 
+val lemma_fn_1 = store_thm
+  ("lemma_fn_1",``!m f n x k. x IN m_space m /\
+			  k IN count (4 ** n) /\
+			  &k / 2 pow n <= f x /\
 			  f x < (&k + 1) / 2 pow n ==>
 			  (fn_seq m f n x = &k / 2 pow n)``,
   RW_TAC std_ss []
@@ -2103,7 +2103,7 @@ val lemma_fn_1 = store_thm
   ++ `f x <> NegInf` by METIS_TAC [lt_infty,lte_trans]
   ++ `?r. f x = Normal r` by METIS_TAC [extreal_cases]
   ++ FULL_SIMP_TAC std_ss [extreal_lt_eq,extreal_le_def]
-  ++ `(\k'. Normal (&k' / 2 pow n) * if &k' / 2 pow n <= r /\ r < &(k' + 1) / 2 pow n then Normal 1 else Normal 0) = 
+  ++ `(\k'. Normal (&k' / 2 pow n) * if &k' / 2 pow n <= r /\ r < &(k' + 1) / 2 pow n then Normal 1 else Normal 0) =
       (\k'. Normal((&k' / 2 pow n) * if &k' / 2 pow n <= r /\ r < &(k' + 1) / 2 pow n then 1 else 0))`
          by (RW_TAC std_ss [FUN_EQ_THM] ++ METIS_TAC [extreal_add_def,extreal_mul_def])
   ++ POP_ORW
@@ -2148,7 +2148,7 @@ val lemma_fn_1 = store_thm
 (****   f_n(x) = 2 pow n if 2 pow n <= f x ****)
 (**********************************************)
 
-val lemma_fn_2 = store_thm 
+val lemma_fn_2 = store_thm
   ("lemma_fn_2",``!m f n x. x IN m_space m /\ 2 pow n <= f x ==> (fn_seq m f n x = 2 pow n)``,
   RW_TAC real_ss [fn_seq_def,indicator_fn_def,GSPECIFICATION,mul_rone]
   ++ `FINITE (count (4 ** n))` by RW_TAC std_ss [FINITE_COUNT]
@@ -2157,7 +2157,7 @@ val lemma_fn_2 = store_thm
   ++ Suff `SIGMA (\k. &k / 2 pow n *  if &k / 2 pow n <= f x /\ f x < (&k + 1) / 2 pow n then 1 else 0) (count (4 ** n)) = 0`
   >> RW_TAC real_ss [add_lzero]
   ++ (MP_TAC o Q.SPEC `(\k. &k / 2 pow n * if &k / 2 pow n <= f x /\ f x < (&k + 1) / 2 pow n then 1 else 0)` o UNDISCH o Q.SPEC `count (4 ** n)` o INST_TYPE [alpha |-> ``:num``]) EXTREAL_SUM_IMAGE_IN_IF
-  ++ `!x'. (\k. &k / 2 pow n * if &k / 2 pow n <= f x /\ f x < (&k + 1) / 2 pow n then 1 else 0) x' <> NegInf` 
+  ++ `!x'. (\k. &k / 2 pow n * if &k / 2 pow n <= f x /\ f x < (&k + 1) / 2 pow n then 1 else 0) x' <> NegInf`
       by (RW_TAC std_ss [mul_rone,mul_rzero]
           ++ RW_TAC std_ss [extreal_of_num_def,extreal_pow_def,extreal_mul_def,extreal_div_eq,extreal_not_infty])
   ++ Suff `(\x'. if x' IN count (4 ** n) then &x' / 2 pow n * if &x' / 2 pow n <= f x /\ f x < (&x' + 1) / 2 pow n then 1 else 0 else 0) = (\x. 0)`
@@ -2165,7 +2165,7 @@ val lemma_fn_2 = store_thm
   ++ RW_TAC real_ss [FUN_EQ_THM,IN_COUNT]
   ++ RW_TAC real_ss [COND_EXPAND,mul_rzero,mul_rone]
   ++ `&(x' + 1):real <= 4 pow n` by RW_TAC real_ss [LESS_EQ,REAL_OF_NUM_POW]
-  ++ `&(x' + 1):real / 2 pow n <= 4 pow n / 2 pow n` by RW_TAC real_ss [REAL_LE_LDIV_EQ,REAL_POS_NZ,REAL_DIV_RMUL] 
+  ++ `&(x' + 1):real / 2 pow n <= 4 pow n / 2 pow n` by RW_TAC real_ss [REAL_LE_LDIV_EQ,REAL_POS_NZ,REAL_DIV_RMUL]
   ++ `(&x' + 1) / 2 pow n <= 4 pow n / 2 pow n` by RW_TAC real_ss [extreal_div_eq,extreal_pow_def,extreal_add_def,extreal_of_num_def,extreal_le_def]
   ++ `f x < 4 pow n / 2 pow n` by METIS_TAC [lte_trans]
   ++ `4 pow n / 2 pow n = 2 pow n` by RW_TAC std_ss [extreal_pow_def,extreal_div_eq,extreal_of_num_def,GSYM REAL_POW_DIV,EVAL ``4/2:real``]
@@ -2175,7 +2175,7 @@ val lemma_fn_2 = store_thm
 (*** f(x) is either larger than 2 pow n or is inside some k interval ****)
 (************************************************************************)
 
-val lemma_fn_3 = store_thm 
+val lemma_fn_3 = store_thm
   ("lemma_fn_3",``!m f n x. x IN m_space m /\ 0 <= f x ==> (2 pow n <= f x) \/ (?k. k IN count (4 ** n) /\ &k / 2 pow n <= f x /\ f x < (&k + 1) / 2 pow n)``,
   RW_TAC real_ss [IN_COUNT]
   ++ Cases_on `2 pow n <= f x`
@@ -2214,7 +2214,7 @@ val lemma_fn_3 = store_thm
 (*   fn_(x) = 0 outside m_space  *)
 (*********************************)
 
-val lemma_fn_4 = store_thm 
+val lemma_fn_4 = store_thm
 ("lemma_fn_4",``!m f n x. ~(x IN m_space m) ==> (fn_seq m f n x = 0)``,
   RW_TAC real_ss [fn_seq_def,indicator_fn_def,GSPECIFICATION,mul_rzero,add_rzero]
   ++ METIS_TAC [FINITE_COUNT,EXTREAL_SUM_IMAGE_ZERO]);
@@ -2224,7 +2224,7 @@ val lemma_fn_4 = store_thm
 (*       fn_(x) positive         *)
 (*********************************)
 
-val lemma_fn_5 = store_thm 
+val lemma_fn_5 = store_thm
   ("lemma_fn_5",``!m f n x. 0 <= f x ==> (0 <= fn_seq m f n x)``,
   RW_TAC real_ss []
   ++ `0:real < 2 pow n` by RW_TAC real_ss [REAL_POW_LT]
@@ -2241,7 +2241,7 @@ val lemma_fn_5 = store_thm
   ++ RW_TAC std_ss [extreal_of_num_def,extreal_pow_def,extreal_div_eq,extreal_le_def]
   ++ MATCH_MP_TAC REAL_LE_DIV
   ++ RW_TAC real_ss [REAL_POW_LT,REAL_LT_IMP_LE]);
- 
+
 
 (*******************************************************************************)
 (*                        MONOTONICALLY INCREASING                             *)
@@ -2269,7 +2269,7 @@ val lemma_fn_mono_increasing = store_thm
            ++ FULL_SIMP_TAC std_ss [extreal_of_num_def,extreal_pow_def,extreal_div_eq,extreal_add_def,extreal_mul_def,extreal_le_def,extreal_lt_eq]
 	   ++ `&(k + 1) / (2 pow (n + 1)):real = (&(k + 1) / 2) / (2 pow (n + 1) / 2)` by RW_TAC real_ss [REAL_DIV_DENOM_CANCEL]
 	   ++ `2 pow (n + 1) / 2 = (2 pow n):real` by (RW_TAC std_ss [GSYM ADD1,pow] ++ RW_TAC real_ss [REAL_EQ_LDIV_EQ,REAL_MUL_COMM])
-	   ++ `&k / 2 pow (n + 1) = (&k / 2) / (2 pow (n + 1) / 2):real` by RW_TAC real_ss [REAL_DIV_DENOM_CANCEL] 
+	   ++ `&k / 2 pow (n + 1) = (&k / 2) / (2 pow (n + 1) / 2):real` by RW_TAC real_ss [REAL_DIV_DENOM_CANCEL]
 	   ++ FULL_SIMP_TAC std_ss []
 	   ++ STRUCT_CASES_TAC (Q.SPEC `k` EVEN_OR_ODD)
 	   >> (FULL_SIMP_TAC std_ss [EVEN_EXISTS]
@@ -2301,7 +2301,7 @@ val lemma_fn_mono_increasing = store_thm
 	   ++ `&(k - 1):real = 2 * &m'` by RW_TAC real_ss []
 	   ++ `!x. 2 * x / 2 = x:real` by RW_TAC real_ss [REAL_EQ_LDIV_EQ,REAL_MUL_COMM]
            ++ `&m' / (2 pow n) <= r` by METIS_TAC [REAL_MUL]
- 	   ++ `&(k + 1):real = 2 * (&m' + 1)` by RW_TAC real_ss []  
+ 	   ++ `&(k + 1):real = 2 * (&m' + 1)` by RW_TAC real_ss []
            ++ FULL_SIMP_TAC real_ss []
 	   ++ `r < &(m' + 1) / (2 pow n)` by METIS_TAC [REAL_MUL,REAL_ADD]
     	   ++ Cases_on `m' IN count (4 ** n)`
@@ -2337,7 +2337,7 @@ val lemma_fn_mono_increasing = store_thm
    ++ METIS_TAC []);
 
 
- 
+
 (*******************************************************************************)
 (*                            UPPER BOUNDED BY f                               *)
 (*******************************************************************************)
@@ -2363,8 +2363,8 @@ val lemma_fn_sup = store_thm
   ++ Cases_on `f x = PosInf`
   >> (`!n:num. fn_seq m f n x = 2 pow n` by METIS_TAC [le_infty,lemma_fn_2]
       ++ RW_TAC std_ss [sup_eq,le_infty]
-      ++ `!n. 2 pow n <= y` 
-            by (RW_TAC std_ss [] 
+      ++ `!n. 2 pow n <= y`
+            by (RW_TAC std_ss []
 		++ POP_ASSUM MATCH_MP_TAC
                 ++ ONCE_REWRITE_TAC [GSYM SPECIFICATION]
 	        ++ RW_TAC std_ss [IN_IMAGE,IN_UNIV]
@@ -2375,9 +2375,9 @@ val lemma_fn_sup = store_thm
   ++ `?r. f x = Normal r` by METIS_TAC [extreal_cases,lt_infty,lte_trans,extreal_of_num_def]
   ++ `!n. fn_seq m f n x <> PosInf` by METIS_TAC [lt_infty,let_trans]
   ++ `!n. fn_seq m f n x <> NegInf` by METIS_TAC [lt_infty,lte_trans,lemma_fn_5,extreal_of_num_def]
-  ++ `?r. !n. fn_seq m f n x = Normal (r n)` 
+  ++ `?r. !n. fn_seq m f n x = Normal (r n)`
          by (Q.EXISTS_TAC `\n. @r. fn_seq m f n x = Normal r`
-             ++ GEN_TAC ++ RW_TAC std_ss [] 
+             ++ GEN_TAC ++ RW_TAC std_ss []
              ++ SELECT_ELIM_TAC
    	     ++ RW_TAC std_ss []
 	     ++ METIS_TAC [extreal_cases])
@@ -2399,7 +2399,7 @@ val lemma_fn_sup = store_thm
 	    ++ `r' n = &k / 2 pow n` by METIS_TAC [extreal_div_eq,extreal_11]
             ++ FULL_SIMP_TAC std_ss [])
   ++ FULL_SIMP_TAC std_ss []
-  ++ `!n. N <= n ==> (r - 1 / 2 pow n < r' n)` 
+  ++ `!n. N <= n ==> (r - 1 / 2 pow n < r' n)`
         by (FULL_SIMP_TAC std_ss [extreal_le_def,extreal_lt_eq,extreal_of_num_def,extreal_pow_def,extreal_div_eq,extreal_add_def]
             ++ RW_TAC std_ss []
 	    ++ METIS_TAC [extreal_sub_def,extreal_lt_eq])
@@ -2439,14 +2439,14 @@ val lemma_fn_in_psfis = store_thm
   ++ `!n k. &k / 2 pow n = Normal (&k / 2 pow n)` by METIS_TAC [extreal_of_num_def,extreal_pow_def,extreal_div_eq]
   ++ `!n z. Normal z / 2 pow n = Normal (z / 2 pow n)` by METIS_TAC [extreal_pow_def,extreal_div_eq,extreal_of_num_def]
   ++ CONJ_TAC
-  >> (CONJ_TAC 
+  >> (CONJ_TAC
       >> RW_TAC std_ss [lemma_fn_5]
-      ++ CONJ_TAC  
+      ++ CONJ_TAC
       >> (RW_TAC real_ss [fn_seq_def,IN_COUNT,GSYM ADD1,COUNT_SUC]
           ++ `(\i. Normal (if i < 4 ** n then &i / 2 pow n else 2 pow n) *
 		   indicator_fn (if i < 4 ** n then
 		   {x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n}
-                   else {x | x IN m_space m /\ 2 pow n <= f x}) t) = 
+                   else {x | x IN m_space m /\ 2 pow n <= f x}) t) =
 	      (\i. if i < 4 ** n then &i / 2 pow n  *
                    indicator_fn {x | x IN m_space m /\ &i / 2 pow n <= f x /\ f x < (&i + 1) / 2 pow n} t
                    else 2 pow n * indicator_fn {x | x IN m_space m /\ 2 pow n <= f x} t)`
@@ -2461,7 +2461,7 @@ val lemma_fn_in_psfis = store_thm
                by (RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,num_not_infty]
                    ++ METIS_TAC [extreal_of_num_def,extreal_pow_def,extreal_not_infty])
           ++ RW_TAC std_ss []
-	  ++ `count (4 ** n) DELETE 4 ** n = count (4 ** n)` 
+	  ++ `count (4 ** n) DELETE 4 ** n = count (4 ** n)`
               by METIS_TAC [DELETE_NON_ELEMENT,IN_COUNT,LESS_EQ_REFL,NOT_LESS]
           ++ RW_TAC std_ss []
 	  ++ Q.PAT_X_ASSUM `SIGMA f s = Q` (K ALL_TAC)
@@ -2480,9 +2480,9 @@ val lemma_fn_in_psfis = store_thm
 	  >> (RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,num_not_infty]
               ++ METIS_TAC [extreal_of_num_def,extreal_pow_def,extreal_not_infty])
 	  ++ FULL_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_NOT_INFTY])
-      ++ CONJ_TAC  
+      ++ CONJ_TAC
       >> (RW_TAC real_ss []
-	  >> (`{x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n} = 
+	  >> (`{x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n} =
 	       {x | Normal (&i / 2 pow n) <= f x /\ f x < Normal (&(i + 1) / 2 pow n)} INTER m_space m`
 	         by (RW_TAC std_ss [EXTENSION,GSPECIFICATION,IN_INTER,CONJ_COMM]
                      ++ `(&i + 1:extreal) = &(i + 1)` by RW_TAC std_ss [extreal_add_def,extreal_of_num_def,REAL_ADD]
@@ -2503,14 +2503,14 @@ val lemma_fn_in_psfis = store_thm
 	     ++ RW_TAC std_ss [NOT_IN_EMPTY]
 	     ++ Cases_on `i<j`
 	     >> (`i + 1 <= j` by RW_TAC real_ss []
-	         ++ `&(i + 1) / 2:real pow n <= &j / 2 pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ] 
+	         ++ `&(i + 1) / 2:real pow n <= &j / 2 pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ]
                  ++ `&(i + 1) / 2 pow n <= &j / 2 pow n` by RW_TAC std_ss [extreal_of_num_def,extreal_add_def,extreal_pow_def,extreal_div_eq,extreal_lt_eq,extreal_le_def]
                  ++ `&j / 2 pow n <= f x` by METIS_TAC []
                  ++ `(&i + 1) = &(i + 1)` by METIS_TAC [extreal_of_num_def,extreal_add_def,REAL_ADD]
 	         ++ METIS_TAC [lte_trans,extreal_lt_def])
 	     ++ `j < i` by RW_TAC real_ss [LESS_OR_EQ]
 	     ++ `j + 1 <= i` by RW_TAC real_ss []
-	     ++ `&(j + 1) / 2 pow n <= &i / 2:real pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ] 
+	     ++ `&(j + 1) / 2 pow n <= &i / 2:real pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ]
 	     ++ `&(j + 1) / 2 pow n <= &i / 2 pow n` by RW_TAC std_ss [extreal_of_num_def,extreal_add_def,extreal_pow_def,extreal_div_eq,extreal_lt_eq,extreal_le_def]
              ++ `(&j + 1) = &(j + 1)` by METIS_TAC [extreal_of_num_def,extreal_add_def,REAL_ADD]
 	     ++ METIS_TAC [lte_trans,extreal_lt_def],
@@ -2520,8 +2520,8 @@ val lemma_fn_in_psfis = store_thm
 	     ++ RW_TAC real_ss [NOT_IN_EMPTY]
 	     ++ `&(i + 1) <= &(4 ** n):real` by RW_TAC real_ss []
 	     ++ FULL_SIMP_TAC std_ss [GSYM REAL_OF_NUM_POW]
- 	     ++ `&(i + 1) / 2 pow n <= 4 pow n / 2:real pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ] 
- 	     ++ `&(i + 1) / 2 pow n <= 2:real pow n` by METIS_TAC [REAL_POW_DIV,EVAL ``4/2:real``] 
+ 	     ++ `&(i + 1) / 2 pow n <= 4 pow n / 2:real pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ]
+ 	     ++ `&(i + 1) / 2 pow n <= 2:real pow n` by METIS_TAC [REAL_POW_DIV,EVAL ``4/2:real``]
  	     ++ `&(i + 1) / 2 pow n <= 2 pow n` by RW_TAC std_ss [extreal_of_num_def,extreal_add_def,extreal_pow_def,extreal_div_eq,extreal_lt_eq,extreal_le_def]
              ++ `(&i + 1) = &(i + 1)` by METIS_TAC [extreal_of_num_def,extreal_add_def,REAL_ADD]
 	     ++ METIS_TAC [le_trans,extreal_lt_def],
@@ -2531,13 +2531,13 @@ val lemma_fn_in_psfis = store_thm
 	     ++ RW_TAC std_ss [NOT_IN_EMPTY]
 	     ++ `&(j + 1) <= &(4 ** n):real` by RW_TAC real_ss []
 	     ++ FULL_SIMP_TAC std_ss [GSYM REAL_OF_NUM_POW]
- 	     ++ `&(j + 1) / 2 pow n <= 4:real pow n / 2 pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ] 
- 	     ++ `&(j + 1) / 2 pow n <= 2:real pow n` by  METIS_TAC [REAL_POW_DIV,EVAL ``4/2:real``] 
+ 	     ++ `&(j + 1) / 2 pow n <= 4:real pow n / 2 pow n` by RW_TAC real_ss [REAL_LE_RDIV_EQ,REAL_POW_LT,REAL_DIV_RMUL,REAL_POS_NZ]
+ 	     ++ `&(j + 1) / 2 pow n <= 2:real pow n` by  METIS_TAC [REAL_POW_DIV,EVAL ``4/2:real``]
  	     ++ `&(j + 1) / 2 pow n <= 2 pow n` by RW_TAC std_ss [extreal_of_num_def,extreal_add_def,extreal_pow_def,extreal_div_eq,extreal_lt_eq,extreal_le_def]
              ++ `(&j + 1) = &(j + 1)` by METIS_TAC [extreal_of_num_def,extreal_add_def,REAL_ADD]
 	     ++ METIS_TAC [lte_trans,extreal_lt_def]])
      ++ RW_TAC std_ss [EXTENSION,IN_BIGUNION_IMAGE,GSPECIFICATION]
-     ++ EQ_TAC 
+     ++ EQ_TAC
      >> (RW_TAC std_ss []
 	 ++ Cases_on `k IN count (4 ** n)`
 	 >> FULL_SIMP_TAC std_ss [GSPECIFICATION,lemma_fn_3]
@@ -2546,7 +2546,7 @@ val lemma_fn_in_psfis = store_thm
      ++ `2 pow n <= f x \/ ?k. k IN count (4 ** n) /\ &k / 2 pow n <= f x /\ f x < (&k + 1) / 2 pow n` by METIS_TAC [lemma_fn_3]
      >> (Q.EXISTS_TAC `4 ** n`
 	 ++ RW_TAC real_ss [GSPECIFICATION])
-     ++ Q.EXISTS_TAC `k` 
+     ++ Q.EXISTS_TAC `k`
      ++ FULL_SIMP_TAC real_ss [IN_COUNT,GSPECIFICATION]
      ++ METIS_TAC [])
   ++ RW_TAC real_ss [pos_simple_fn_integral_def,fn_seq_integral_def]
@@ -2556,7 +2556,7 @@ val lemma_fn_in_psfis = store_thm
   ++ `(\i. Normal (if i < 4 ** n then &i / 2 pow n else 2 pow n) *
 		   measure m (if i < 4 ** n then
 		   {x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n}
-                   else {x | x IN m_space m /\ 2 pow n <= f x})) = 
+                   else {x | x IN m_space m /\ 2 pow n <= f x})) =
 	      (\i. if i < 4 ** n then &i / 2 pow n  *
                    measure m {x | x IN m_space m /\ &i / 2 pow n <= f x /\ f x < (&i + 1) / 2 pow n}
                    else 2 pow n * measure m {x | x IN m_space m /\ 2 pow n <= f x})`
@@ -2566,7 +2566,7 @@ val lemma_fn_in_psfis = store_thm
   ++ POP_ORW
   ++ (MP_TAC o Q.SPEC `4 ** n` o UNDISCH o Q.SPECL [`(\i. if i < 4 ** n then &i / 2 pow n * measure m {x | x IN m_space m /\ &i / 2 pow n <= f x /\ f x < (&i + 1) / 2 pow n}
          else 2 pow n * measure m {x | x IN m_space m /\ 2 pow n <= f x})`,`count (4 ** n)`] o INST_TYPE [alpha |-> ``:num``]) EXTREAL_SUM_IMAGE_PROPERTY
-  ++ `!x. (\i. if i < 4 ** n then &i / 2 pow n * measure m {x | x IN m_space m /\ &i / 2 pow n <= f x /\ f x < (&i + 1) / 2 pow n} 
+  ++ `!x. (\i. if i < 4 ** n then &i / 2 pow n * measure m {x | x IN m_space m /\ &i / 2 pow n <= f x /\ f x < (&i + 1) / 2 pow n}
            else 2 pow n * measure m {x | x IN m_space m /\ 2 pow n <= f x}) x <> NegInf`
              by (RW_TAC std_ss []
                    >> (`0 <= &x / 2:real pow n` by RW_TAC real_ss [REAL_LE_DIV,REAL_LT_IMP_LE]
@@ -2587,7 +2587,7 @@ val lemma_fn_in_psfis = store_thm
                          by (RW_TAC std_ss [EXTENSION,GSPECIFICATION,IN_INTER] ++ METIS_TAC [])
 	           ++ METIS_TAC [IN_MEASURABLE_BOREL_ALL, measurable_sets_def,subsets_def,space_def,m_space_def])
   ++ RW_TAC std_ss []
-  ++ `count (4 ** n) DELETE 4 ** n = count (4 ** n)` 
+  ++ `count (4 ** n) DELETE 4 ** n = count (4 ** n)`
              by METIS_TAC [DELETE_NON_ELEMENT,IN_COUNT,LESS_EQ_REFL,NOT_LESS]
   ++ RW_TAC std_ss []
   ++ Q.PAT_X_ASSUM `SIGMA f s = Q` (K ALL_TAC)
@@ -2599,7 +2599,7 @@ val lemma_fn_in_psfis = store_thm
             ++ `0 <= &i / 2:real pow n` by RW_TAC real_ss [REAL_LE_DIV,REAL_LT_IMP_LE]
             ++ Suff `{x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n} IN measurable_sets m`
 	    >> METIS_TAC [mul_not_infty,positive_not_infty,MEASURE_SPACE_POSITIVE]
-	    ++ `{x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n} = 
+	    ++ `{x | x IN m_space m /\ Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n} =
                 {x | Normal (&i / 2 pow n) <= f x /\ f x < (&i + 1) / 2 pow n} INTER m_space m`
                     by (RW_TAC std_ss [EXTENSION,GSPECIFICATION,IN_INTER] ++ METIS_TAC [])
 	    ++ `!x. &x + 1 =  &(x + 1)` by METIS_TAC [extreal_of_num_def,extreal_add_def,REAL_ADD]
@@ -2626,9 +2626,9 @@ val lemma_fn_in_psfis = store_thm
 
 
 val integral_sequence = store_thm
-  ("integral_sequence",``!m f.  (!x. 0 <= f x) /\ measure_space m /\  
+  ("integral_sequence",``!m f.  (!x. 0 <= f x) /\ measure_space m /\
                         f IN measurable (m_space m,measurable_sets m) Borel
-			==> (pos_fn_integral m f = sup (IMAGE (\i. pos_fn_integral m (fn_seq m f i)) UNIV))``,	
+			==> (pos_fn_integral m f = sup (IMAGE (\i. pos_fn_integral m (fn_seq m f i)) UNIV))``,
   RW_TAC std_ss []
   ++ MATCH_MP_TAC lebesgue_monotone_convergence
   ++ RW_TAC std_ss [lemma_fn_sup,lemma_fn_mono_increasing,lemma_fn_upper_bounded,lemma_fn_5]
@@ -2636,71 +2636,71 @@ val integral_sequence = store_thm
 
 
 val measurable_sequence = store_thm
-("measurable_sequence",``!m f. measure_space m /\ f IN measurable (m_space m,measurable_sets m) Borel ==> 	
+("measurable_sequence",``!m f. measure_space m /\ f IN measurable (m_space m,measurable_sets m) Borel ==>
 	(?fi ri. (!x. mono_increasing (\i. fi i x)) /\
 	(!x. x IN m_space m ==> (sup (IMAGE (\i. fi i x) UNIV) = fn_plus f x)) /\
-	(!i. ri i IN psfis m (fi i)) /\ 
+	(!i. ri i IN psfis m (fi i)) /\
 	(!i x. fi i x <= fn_plus f x) /\
-        (!i x. 0 <= fi i x) /\  
+        (!i x. 0 <= fi i x) /\
 	(pos_fn_integral m (fn_plus f) = sup (IMAGE (\i. pos_fn_integral m (fi i)) UNIV))) /\
 
 	(?gi vi. (!x. mono_increasing (\i. gi i x)) /\
 	(!x. x IN m_space m ==> (sup (IMAGE (\i. gi i x) UNIV) = fn_minus f x)) /\
 	(!i. vi i IN psfis m (gi i)) /\
-	(!i x. (gi i) x <= fn_minus f x) /\ 
-        (!i x. 0 <= gi i x) /\  
+	(!i x. (gi i) x <= fn_minus f x) /\
+        (!i x. 0 <= gi i x) /\
 	(pos_fn_integral m (fn_minus f) = sup (IMAGE (\i. pos_fn_integral m (gi i)) UNIV)))``,
   REPEAT STRIP_TAC
   >> (Q.EXISTS_TAC `(\n. fn_seq m (fn_plus f) n)`
       ++ Q.EXISTS_TAC `(\n. fn_seq_integral m (fn_plus f) n)`
-      ++ CONJ_TAC 
+      ++ CONJ_TAC
       >> RW_TAC std_ss [FN_PLUS_POS,lemma_fn_mono_increasing]
-      ++ CONJ_TAC 
+      ++ CONJ_TAC
       >> RW_TAC std_ss [FN_PLUS_POS,lemma_fn_sup]
-      ++ CONJ_TAC 
+      ++ CONJ_TAC
       >> FULL_SIMP_TAC std_ss [FN_PLUS_POS,lemma_fn_in_psfis,IN_MEASURABLE_BOREL_FN_PLUS]
-      ++ CONJ_TAC 
+      ++ CONJ_TAC
       >> METIS_TAC [FN_PLUS_POS,lemma_fn_upper_bounded]
-      ++ CONJ_TAC 
+      ++ CONJ_TAC
       >> METIS_TAC [FN_PLUS_POS,lemma_fn_5]
       ++ METIS_TAC [FN_PLUS_POS,integral_sequence,IN_MEASURABLE_BOREL_FN_PLUS])
   ++ Q.EXISTS_TAC `(\n. fn_seq m (fn_minus f) n)`
   ++ Q.EXISTS_TAC `(\n. fn_seq_integral m (fn_minus f) n)`
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> RW_TAC std_ss [FN_MINUS_POS,lemma_fn_mono_increasing]
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> RW_TAC std_ss [FN_MINUS_POS,lemma_fn_sup]
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> FULL_SIMP_TAC std_ss [FN_MINUS_POS,lemma_fn_in_psfis,IN_MEASURABLE_BOREL_FN_MINUS]
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> METIS_TAC [FN_MINUS_POS,lemma_fn_upper_bounded]
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> METIS_TAC [FN_MINUS_POS,lemma_fn_5]
   ++ METIS_TAC [FN_MINUS_POS,integral_sequence,IN_MEASURABLE_BOREL_FN_MINUS]);
 
 val pos_fn_integral_add = store_thm
   ("pos_fn_integral_add",``!m f g. measure_space m /\ (!x. 0 <= f x /\ 0 <= g x) /\
-            f IN measurable (m_space m,measurable_sets m) Borel /\ 
-            g IN measurable (m_space m,measurable_sets m) Borel  ==> 
+            f IN measurable (m_space m,measurable_sets m) Borel /\
+            g IN measurable (m_space m,measurable_sets m) Borel  ==>
             (pos_fn_integral m (\x. f x + g x) = pos_fn_integral m f + pos_fn_integral m g)``,
   RW_TAC std_ss []
   ++ `?fi ui.
        (!x. mono_increasing (\i. fi i x)) /\
        (!x. x IN m_space m ==> (sup (IMAGE (\i. fi i x) UNIV) = f x)) /\
-       (!i. ui i IN psfis m (fi i)) /\ 
+       (!i. ui i IN psfis m (fi i)) /\
        (!i x. fi i x <= f x) /\
-       (!i x. 0 <= fi i x) /\ 
+       (!i x. 0 <= fi i x) /\
        (pos_fn_integral m f = sup (IMAGE (\i. pos_fn_integral m (fi i)) UNIV))`
   	  by METIS_TAC [measurable_sequence,FN_PLUS_POS_ID]
   ++ `?gi vi.
        (!x. mono_increasing (\i. gi i x)) /\
        (!x. x IN m_space m ==> (sup (IMAGE (\i. gi i x) UNIV) = g x)) /\
-       (!i. vi i IN psfis m (gi i)) /\ 
+       (!i. vi i IN psfis m (gi i)) /\
        (!i x. gi i x <= g x) /\
-       (!i x. 0 <= gi i x) /\ 
+       (!i x. 0 <= gi i x) /\
        (pos_fn_integral m g = sup (IMAGE (\i. pos_fn_integral m (gi i)) UNIV))`
   	  by METIS_TAC [measurable_sequence,FN_PLUS_POS_ID]
-  ++ `sup (IMAGE (\i. pos_fn_integral m (fi i)) UNIV) + sup (IMAGE (\i. pos_fn_integral m (gi i)) UNIV) = 
+  ++ `sup (IMAGE (\i. pos_fn_integral m (fi i)) UNIV) + sup (IMAGE (\i. pos_fn_integral m (gi i)) UNIV) =
       sup (IMAGE (\i. (\n. pos_fn_integral m (fi n)) i + (\n. pos_fn_integral m (gi n)) i) UNIV)`
        by (MATCH_MP_TAC (GSYM sup_add_mono)
            ++ FULL_SIMP_TAC std_ss [pos_fn_integral_pos,ext_mono_increasing_suc,pos_fn_integral_mono])
@@ -2716,17 +2716,17 @@ val pos_fn_integral_add = store_thm
 	   ++ FULL_SIMP_TAC std_ss [pos_fn_integral_pos,sup_add_mono,ext_mono_increasing_suc,pos_fn_integral_mono])
   ++ (MP_TAC o Q.SPECL [`m`,`(\x. f x + g x)`,`(\i. (\x. fi i x + gi i x))`]) lebesgue_monotone_convergence
   ++ RW_TAC std_ss []
-  ++ Suff `(\i. pos_fn_integral m (fi i) + pos_fn_integral m (gi i)) = (\i. pos_fn_integral m (\x. fi i x + gi i x))`  
+  ++ Suff `(\i. pos_fn_integral m (fi i) + pos_fn_integral m (gi i)) = (\i. pos_fn_integral m (\x. fi i x + gi i x))`
   >> RW_TAC std_ss [le_add]
   ++ RW_TAC std_ss [FUN_EQ_THM]
   ++ METIS_TAC [IN_psfis_eq,psfis_add,pos_fn_integral_pos_simple_fn]);
 
 val pos_fn_integral_sum = store_thm
   ("pos_fn_integral_sum",``!m f s. FINITE s /\ measure_space m /\ (!i. i IN s ==> (!x. 0 <= f i x)) /\
-	(!i. i IN s ==> f i IN measurable (m_space m,measurable_sets m) Borel)  
+	(!i. i IN s ==> f i IN measurable (m_space m,measurable_sets m) Borel)
 	    ==> (pos_fn_integral m (\x. SIGMA (\i. (f i) x) s) = SIGMA (\i. pos_fn_integral m (f i)) s)``,
   Suff `!s:'b->bool. FINITE s ==> (\s:'b->bool. !m f. measure_space m /\ (!i. i IN s ==> (!x. 0 <= f i x)) /\
-	   (!i. i IN s ==> f i IN measurable (m_space m,measurable_sets m) Borel)              
+	   (!i. i IN s ==> f i IN measurable (m_space m,measurable_sets m) Borel)
    	    ==> (pos_fn_integral m (\x. SIGMA (\i. (f i) x) s) = SIGMA (\i. pos_fn_integral m (f i)) s)) s`
   >> METIS_TAC []
   ++ MATCH_MP_TAC FINITE_INDUCT
@@ -2757,9 +2757,9 @@ val pos_fn_integral_sum = store_thm
   ++ METIS_TAC [measure_space_def,measurable_sets_def,subsets_def,m_space_def,space_def,extreal_of_num_def,extreal_not_infty,lt_infty,lte_trans]);
 
 val pos_fn_integral_disjoint_sets = store_thm
-  ("pos_fn_integral_disjoint_sets",``!m f s t. measure_space m /\ DISJOINT s t /\ s IN measurable_sets m /\ t IN measurable_sets m /\ 
+  ("pos_fn_integral_disjoint_sets",``!m f s t. measure_space m /\ DISJOINT s t /\ s IN measurable_sets m /\ t IN measurable_sets m /\
 		f IN measurable (m_space m,measurable_sets m) Borel /\ (!x. 0 <= f x)
-		==> (pos_fn_integral m (\x. f x * indicator_fn (s UNION t) x) = 
+		==> (pos_fn_integral m (\x. f x * indicator_fn (s UNION t) x) =
 		     pos_fn_integral m (\x. f x * indicator_fn s x) + pos_fn_integral m (\x. f x * indicator_fn t x))``,
   RW_TAC std_ss []
   ++ `(\x. f x * indicator_fn (s UNION t) x) = (\x. (\x. f x * indicator_fn s x) x + (\x. f x * indicator_fn t x) x)`
@@ -2775,17 +2775,17 @@ val pos_fn_integral_disjoint_sets = store_thm
 
 val pos_fn_integral_disjoint_sets_sum = store_thm
   ("pos_fn_integral_disjoint_sets_sum",``!m f s a. FINITE s /\ measure_space m /\
-	(!i. i IN s ==> a i IN measurable_sets m) /\ (!x. 0 <= f x) /\ 
+	(!i. i IN s ==> a i IN measurable_sets m) /\ (!x. 0 <= f x) /\
 	(!i j. i IN s /\ j IN s /\ i <> j ==> DISJOINT (a i) (a j)) /\
-	f IN measurable (m_space m,measurable_sets m) Borel 
-	==> (pos_fn_integral m (\x. f x * indicator_fn (BIGUNION (IMAGE a s)) x) = 
+	f IN measurable (m_space m,measurable_sets m) Borel
+	==> (pos_fn_integral m (\x. f x * indicator_fn (BIGUNION (IMAGE a s)) x) =
 	     SIGMA (\i. pos_fn_integral m (\x. f x * indicator_fn (a i) x)) s)``,
 
   Suff `!s:'b->bool. FINITE s ==> (\s:'b->bool. !m f a.  measure_space m /\
-       (!i. i IN s ==> a i IN measurable_sets m) /\  (!x. 0 <= f x) /\ 
+       (!i. i IN s ==> a i IN measurable_sets m) /\  (!x. 0 <= f x) /\
 	(!i j. i IN s /\ j IN s /\ i <> j ==> DISJOINT (a i) (a j)) /\
-	f IN measurable (m_space m,measurable_sets m) Borel 
-	==> (pos_fn_integral m (\x. f x * indicator_fn (BIGUNION (IMAGE a s)) x) = 
+	f IN measurable (m_space m,measurable_sets m) Borel
+	==> (pos_fn_integral m (\x. f x * indicator_fn (BIGUNION (IMAGE a s)) x) =
 	     SIGMA (\i. pos_fn_integral m (\x. f x * indicator_fn (a i) x)) s) ) s`
   >> RW_TAC std_ss []
   ++ MATCH_MP_TAC FINITE_INDUCT
@@ -2800,10 +2800,10 @@ val pos_fn_integral_disjoint_sets_sum = store_thm
 	   ++ RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,le_refl])
   ++ RW_TAC std_ss []
   ++  `~(e IN s)` by METIS_TAC [DELETE_NON_ELEMENT]
-  ++ `DISJOINT (a e) (BIGUNION (IMAGE a s))` 
+  ++ `DISJOINT (a e) (BIGUNION (IMAGE a s))`
        by (RW_TAC std_ss [DISJOINT_BIGUNION,IN_IMAGE] ++ METIS_TAC [])
   ++ `countable (IMAGE a s)` by METIS_TAC [image_countable,finite_countable]
-  ++ `(IMAGE a s) SUBSET measurable_sets m` 
+  ++ `(IMAGE a s) SUBSET measurable_sets m`
        by (RW_TAC std_ss [SUBSET_DEF,IMAGE_DEF,GSPECIFICATION]
 	   ++ METIS_TAC [])
   ++ `BIGUNION (IMAGE a s) IN measurable_sets m`
@@ -2816,12 +2816,12 @@ val pos_fn_integral_suminf = store_thm
       (pos_fn_integral m (\x. suminf (\i. f i x)) = suminf (\i. pos_fn_integral m (f i)))``,
   RW_TAC std_ss [ext_suminf_def]
   ++ RW_TAC std_ss [GSYM pos_fn_integral_sum,FINITE_COUNT]
-  ++ `(\n. pos_fn_integral m (\x. SIGMA (\i. f i x) (count n))) = 
+  ++ `(\n. pos_fn_integral m (\x. SIGMA (\i. f i x) (count n))) =
       (\n. pos_fn_integral m ((\n. (\x. SIGMA (\i. f i x) (count n)))n))` by METIS_TAC []
   ++ POP_ORW
   ++ MATCH_MP_TAC lebesgue_monotone_convergence
   ++ CONJ_TAC >> RW_TAC std_ss []
-  ++ CONJ_TAC 
+  ++ CONJ_TAC
   >> (RW_TAC std_ss []
       ++ (MATCH_MP_TAC o INST_TYPE [beta |-> ``:num``]) IN_MEASURABLE_BOREL_SUM
       ++ Q.EXISTS_TAC `f`
@@ -2886,7 +2886,7 @@ Suff `pos_simple_fn m (fn_plus f)
 	(count n) (\i. PREIMAGE f {c i} INTER m_space m) (\i. if 0 <= real (c i) then real (c i) else 0) /\
 	pos_simple_fn m (fn_minus f)
 	(count n) (\i. PREIMAGE f {c i} INTER m_space m) (\i. if real (c i) <= 0:real then ~ real (c i) else 0)`
-   
+
 
 Q.EXISTS_TAC `\m. if m = n then e else c m`
 
@@ -2972,8 +2972,8 @@ Q.EXISTS_TAC `\m. if m = n then e else c m`
 	++ METIS_TAC []])
 
    ++ RW_TAC std_ss [integral_def,finite_space_integral_def,GSYM fn_plus_def,GSYM fn_minus_def]
-   ++ (MP_TAC o Q.SPECL [`m`,`fn_plus (f :'a -> extreal)`,`count n`,`(\i. PREIMAGE (f :'a -> extreal) {c i} INTER m_space m)`,`(\i. if 0 <= real (c i) then real (c i) else 0)`]) pos_fn_integral_pos_simple_fn  
-   ++ (MP_TAC o Q.SPECL [`m`,`fn_minus (f :'a -> extreal)`,`count n`,`(\i. PREIMAGE (f :'a -> extreal) {c i} INTER m_space m)`,`(\i. if real (c i) <= 0 then -real (c i) else 0)`]) pos_fn_integral_pos_simple_fn 
+   ++ (MP_TAC o Q.SPECL [`m`,`fn_plus (f :'a -> extreal)`,`count n`,`(\i. PREIMAGE (f :'a -> extreal) {c i} INTER m_space m)`,`(\i. if 0 <= real (c i) then real (c i) else 0)`]) pos_fn_integral_pos_simple_fn
+   ++ (MP_TAC o Q.SPECL [`m`,`fn_minus (f :'a -> extreal)`,`count n`,`(\i. PREIMAGE (f :'a -> extreal) {c i} INTER m_space m)`,`(\i. if real (c i) <= 0 then -real (c i) else 0)`]) pos_fn_integral_pos_simple_fn
    ++ RW_TAC std_ss [pos_simple_fn_integral_def]
 
    ++ RW_TAC std_ss [pos_simple_fn_integral_def, real_sub]
@@ -3019,7 +3019,7 @@ val EXTREAL_SUP_SEQ = store_thm
                     ?x. (!n. x n IN P) /\ (!n. x n <= x (SUC n)) /\ (sup (IMAGE x UNIV) = sup P)``,
   RW_TAC std_ss []
   ++ Cases_on `?z. P z /\ (z = sup P)`
-  >> (Q.EXISTS_TAC `(\i. sup P)` 
+  >> (Q.EXISTS_TAC `(\i. sup P)`
       ++ RW_TAC std_ss [le_refl,SPECIFICATION]
       ++ `IMAGE (\i:num. sup P) UNIV = (\i. i = sup P)` by RW_TAC std_ss [EXTENSION,IN_IMAGE,IN_UNIV,IN_ABS]
       ++ RW_TAC std_ss [sup_const])
@@ -3040,16 +3040,16 @@ val EXTREAL_SUP_SEQ = store_thm
   ++ `!n. 0 < Normal ((1 / 2) pow n)` by METIS_TAC [extreal_lt_eq,extreal_of_num_def]
   ++ `!n. seq_sup P n IN P`
       by (Induct
-          >> (RW_TAC std_ss [seq_sup_def] 
+          >> (RW_TAC std_ss [seq_sup_def]
 	      ++ SELECT_ELIM_TAC
 	      ++ RW_TAC std_ss []
 	      ++ METIS_TAC [lt_01,SPECIFICATION])
-          ++ RW_TAC std_ss [seq_sup_def] 
+          ++ RW_TAC std_ss [seq_sup_def]
           ++ SELECT_ELIM_TAC
           ++ RW_TAC std_ss []
           ++ `?x. P x /\ seq_sup P n < x` by METIS_TAC [sup_lt,SPECIFICATION]
           ++ `?x. P x /\ sup P < x + Normal ((1 / 2) pow (SUC n))` by METIS_TAC []
-          ++ Q.EXISTS_TAC `max x'' x'''` 
+          ++ Q.EXISTS_TAC `max x'' x'''`
           ++ RW_TAC std_ss [extreal_max_def,SPECIFICATION]
           >> (`x''' < x''` by FULL_SIMP_TAC std_ss [GSYM extreal_lt_def]
               ++ `x''' +  Normal ((1 / 2) pow (SUC n)) <= x'' +  Normal ((1 / 2) pow (SUC n))` by METIS_TAC [lt_radd,lt_le,extreal_not_infty]
@@ -3061,8 +3061,8 @@ val EXTREAL_SUP_SEQ = store_thm
           ++ RW_TAC std_ss []
           >> (`?x. P x /\ seq_sup P n < x` by METIS_TAC [sup_lt,SPECIFICATION]
               ++ `?x. P x /\ sup P < x + Normal ((1 / 2) pow (SUC n))` by METIS_TAC []
-              ++ Q.EXISTS_TAC `max x'' x'''` 
-              ++ RW_TAC std_ss [extreal_max_def,SPECIFICATION] 
+              ++ Q.EXISTS_TAC `max x'' x'''`
+              ++ RW_TAC std_ss [extreal_max_def,SPECIFICATION]
 	      >> (`x''' < x''` by FULL_SIMP_TAC std_ss [GSYM extreal_lt_def]
                   ++ `x''' + Normal ((1 / 2) pow (SUC n)) <= x'' + Normal ((1 / 2) pow (SUC n))` by METIS_TAC [lt_radd,lt_le,extreal_not_infty]
                   ++ METIS_TAC [lte_trans])
@@ -3081,14 +3081,14 @@ val EXTREAL_SUP_SEQ = store_thm
 	  ++ RW_TAC std_ss []
 	  >> (`?x. P x /\ seq_sup P n < x` by METIS_TAC [sup_lt,SPECIFICATION]
               ++ `?x. P x /\ sup P < x + Normal ((1 / 2) pow (SUC n))` by METIS_TAC []
-              ++ Q.EXISTS_TAC `max x'' x'''` 
-	      ++ RW_TAC std_ss [extreal_max_def,SPECIFICATION] 
+              ++ Q.EXISTS_TAC `max x'' x'''`
+	      ++ RW_TAC std_ss [extreal_max_def,SPECIFICATION]
 	      >> (`x''' < x''` by FULL_SIMP_TAC std_ss [GSYM extreal_lt_def]
                   ++ `x''' + Normal ((1 / 2) pow (SUC n)) <= x'' + Normal ((1 / 2) pow (SUC n))` by METIS_TAC [lt_radd,lt_le,extreal_not_infty]
                   ++ METIS_TAC [lte_trans])
 	      ++ METIS_TAC [lte_trans])
 	  ++ METIS_TAC [lt_le])
-  ++ RW_TAC std_ss [sup_eq] 
+  ++ RW_TAC std_ss [sup_eq]
   >> (POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
       ++ RW_TAC std_ss [IN_IMAGE,IN_UNIV]
       ++ METIS_TAC [SPECIFICATION,lt_le])
@@ -3107,10 +3107,10 @@ val EXTREAL_SUP_SEQ = store_thm
   ++ ONCE_REWRITE_TAC [GSYM SPECIFICATION]
   ++ RW_TAC std_ss [IN_UNIV,IN_IMAGE]
   ++ METIS_TAC []);
- 
+
 val EXTREAL_SUP_FUN_SEQ_IMAGE = store_thm
-("EXTREAL_SUP_FUN_SEQ_IMAGE", ``!(P:extreal->bool) (P':('a->extreal)->bool) f. 
-		(?x. P x) /\ (?z. z <> PosInf /\ !x. P x ==> x <= z) /\ (P = IMAGE f P')  
+("EXTREAL_SUP_FUN_SEQ_IMAGE", ``!(P:extreal->bool) (P':('a->extreal)->bool) f.
+		(?x. P x) /\ (?z. z <> PosInf /\ !x. P x ==> x <= z) /\ (P = IMAGE f P')
   	  	 ==> ?g. (!n:num. g n IN P') /\ (sup (IMAGE (\n. f (g n)) UNIV) = sup P)``,
   REPEAT STRIP_TAC
   ++ `?y. (!n. y n IN P) /\ (!n. y n <= y (SUC n)) /\ (sup (IMAGE y UNIV) = sup P)` by METIS_TAC [EXTREAL_SUP_SEQ]
@@ -3134,15 +3134,15 @@ val max_fn_seq_mono = store_thm
 
 
 val EXTREAL_SUP_FUN_SEQ_MONO_IMAGE = store_thm
-  ("EXTREAL_SUP_FUN_SEQ_MONO_IMAGE", ``!(P:extreal->bool) (P':('a->extreal)->bool). 
-		(?x. P x) /\ (?z. z <> PosInf /\ !x. P x ==> x <= z) /\ (P = IMAGE f P') /\ 
+  ("EXTREAL_SUP_FUN_SEQ_MONO_IMAGE", ``!(P:extreal->bool) (P':('a->extreal)->bool).
+		(?x. P x) /\ (?z. z <> PosInf /\ !x. P x ==> x <= z) /\ (P = IMAGE f P') /\
   	  	(!g1 g2. (g1 IN P' /\ g2 IN P' /\ (!x. g1 x <= g2 x))  ==> f g1 <= f g2) /\
 		(!g1 g2. g1 IN P' /\ g2 IN P' ==> (\x. max (g1 x) (g2 x)) IN P')  ==>
               ?g. (!n. g n IN P') /\ (!x n. g n x <= g (SUC n) x) /\ (sup (IMAGE (\n. f (g n)) UNIV) = sup P)``,
   REPEAT STRIP_TAC
   ++ `?g. (!n:num. g n IN P') /\ (sup (IMAGE (\n. f (g n)) UNIV) = sup P)` by METIS_TAC [EXTREAL_SUP_FUN_SEQ_IMAGE]
   ++ Q.EXISTS_TAC `max_fn_seq g`
-  ++ `!n. max_fn_seq g n IN P'` 
+  ++ `!n. max_fn_seq g n IN P'`
       by (Induct
  	  >> (`max_fn_seq g 0 = g 0` by RW_TAC std_ss [FUN_EQ_THM,max_fn_seq_def]
 	      ++ METIS_TAC [])
@@ -3152,7 +3152,7 @@ val EXTREAL_SUP_FUN_SEQ_MONO_IMAGE = store_thm
   ++ `!g n x. max_fn_seq g n x <= max_fn_seq g (SUC n) x` by RW_TAC real_ss [max_fn_seq_def,extreal_max_def,le_refl]
   ++ CONJ_TAC >> RW_TAC std_ss []
   ++ CONJ_TAC >> RW_TAC std_ss []
-  ++ `!n. (!x. g n x <= max_fn_seq g n x)` 
+  ++ `!n. (!x. g n x <= max_fn_seq g n x)`
       by (Induct >> RW_TAC std_ss [max_fn_seq_def,le_refl]
 	  ++ METIS_TAC [le_max2,max_fn_seq_def])
   ++ `!n. f (g n) <= f (max_fn_seq g n)` by METIS_TAC []
@@ -3181,17 +3181,17 @@ val signed_measure_space_def = Define `
     signed_measure_space m = sigma_algebra (m_space m,measurable_sets m) /\ countably_additive m`;
 
 val negative_set_def = Define `
-    negative_set m A = A IN measurable_sets m /\ 
+    negative_set m A = A IN measurable_sets m /\
                       (!s. s IN measurable_sets m /\ s SUBSET A ==> measure m s <= 0)`;
 
 
 
 (*
 
-g `!m s. signed_measure_space m /\ s IN measurable_sets m /\ measure m s <= 0 ==> 
+g `!m s. signed_measure_space m /\ s IN measurable_sets m /\ measure m s <= 0 ==>
         ?A. negative_set m A /\ A SUBSET s /\ measure m A <= measure m s`;
 
-A 0 = s 
+A 0 = s
 t n = sup (IMAGE (measure m) {B | B IN measurable_sets m /\ B SUBSET A n})
 0 <= t n
 *)
@@ -3206,7 +3206,7 @@ t n = sup (IMAGE (measure m) {B | B IN measurable_sets m /\ B SUBSET A n})
 (**********************************************************)
 
 
-val RADON_F_def = Define `RADON_F m v = 
+val RADON_F_def = Define `RADON_F m v =
              {f |f IN measurable (m_space m,measurable_sets m) Borel /\ (!x. 0 <= f x) /\
 	     !A. A IN measurable_sets m ==> (pos_fn_integral m (\x. f x * indicator_fn A x) <= measure v A)}`;
 
@@ -3217,7 +3217,7 @@ val measure_absolutely_continuous_def = Define `
 	measure_absolutely_continuous m v = (!A. A IN measurable_sets m /\ (measure v A = 0) ==> (measure m A = 0))`;
 
 val lemma_radon_max_in_F = store_thm
-  ("lemma_radon_max_in_F",``!f g m v. (measure_space m /\ measure_space v /\ 
+  ("lemma_radon_max_in_F",``!f g m v. (measure_space m /\ measure_space v /\
 	(m_space v = m_space m) /\ (measurable_sets v = measurable_sets m) /\
         f IN RADON_F m v /\ g IN RADON_F m v)
 	     ==> (\x. max (f x) (g x)) IN RADON_F m v``,
@@ -3225,7 +3225,7 @@ val lemma_radon_max_in_F = store_thm
     >> FULL_SIMP_TAC std_ss [IN_MEASURABLE_BOREL_MAX,measure_space_def]
     ++ Q.ABBREV_TAC `A1 = {x | x IN A /\ g x < f x}`
     ++ Q.ABBREV_TAC `A2 = {x | x IN A /\ f x <= g x}`
-    ++ `DISJOINT A1 A2` 
+    ++ `DISJOINT A1 A2`
          by (Q.UNABBREV_TAC `A1` ++ Q.UNABBREV_TAC `A2`
 	   ++ RW_TAC std_ss [IN_DISJOINT,GSPECIFICATION]
 	   ++ METIS_TAC [extreal_lt_def])
@@ -3233,8 +3233,8 @@ val lemma_radon_max_in_F = store_thm
        by (Q.UNABBREV_TAC `A1` ++ Q.UNABBREV_TAC `A2`
 	   ++ RW_TAC std_ss [IN_UNION,EXTENSION,GSPECIFICATION]
 	   ++ METIS_TAC [extreal_lt_def])
-   ++ `(\x. max (f x) (g x) * indicator_fn A x) = 
-	   (\x. (\x. max (f x) (g x) * indicator_fn A1 x) x + 
+   ++ `(\x. max (f x) (g x) * indicator_fn A x) =
+	   (\x. (\x. max (f x) (g x) * indicator_fn A1 x) x +
 	   (\x. max (f x) (g x) * indicator_fn A2 x) x)`
        by (Q.UNABBREV_TAC `A1` ++ Q.UNABBREV_TAC `A2`
 	   ++ RW_TAC std_ss [indicator_fn_def,GSPECIFICATION,FUN_EQ_THM]
@@ -3243,12 +3243,12 @@ val lemma_radon_max_in_F = store_thm
 	   ++ RW_TAC real_ss [mul_rone,mul_rzero,add_lzero] ++ METIS_TAC [extreal_lt_def])
    ++ `additive v` by METIS_TAC [measure_space_def,sigma_algebra_def,COUNTABLY_ADDITIVE_ADDITIVE]
    ++ `A SUBSET m_space m` by RW_TAC std_ss [MEASURE_SPACE_SUBSET_MSPACE]
-   ++ `A1 = ({x | g x < f x} INTER m_space m) INTER A` 
-       by (Q.UNABBREV_TAC `A1` 
+   ++ `A1 = ({x | g x < f x} INTER m_space m) INTER A`
+       by (Q.UNABBREV_TAC `A1`
            ++ RW_TAC std_ss [EXTENSION,IN_INTER,GSPECIFICATION,CONJ_SYM]
 	   ++ METIS_TAC [SUBSET_DEF])
    ++ `A2 = ({x | f x <= g x} INTER m_space m) INTER A`
-       by (Q.UNABBREV_TAC `A2` 
+       by (Q.UNABBREV_TAC `A2`
            ++ RW_TAC std_ss [EXTENSION,IN_INTER,GSPECIFICATION,CONJ_SYM]
 	   ++ METIS_TAC [SUBSET_DEF])
    ++ `A1 IN measurable_sets m`
@@ -3273,17 +3273,17 @@ val lemma_radon_max_in_F = store_thm
 	   ++ RW_TAC std_ss [extreal_max_def,indicator_fn_def,GSPECIFICATION,mul_rone,mul_rzero]
 	   ++ METIS_TAC [extreal_lt_def])
    ++ ASM_SIMP_TAC std_ss []
-   ++ `(\x. f x * indicator_fn A1 x) IN  measurable (m_space m,measurable_sets m) Borel` 
+   ++ `(\x. f x * indicator_fn A1 x) IN  measurable (m_space m,measurable_sets m) Borel`
            by METIS_TAC [IN_MEASURABLE_BOREL_MUL_INDICATOR,measure_space_def,measurable_sets_def,subsets_def]
-   ++ `(\x. g x * indicator_fn A2 x) IN  measurable (m_space m,measurable_sets m) Borel` 
+   ++ `(\x. g x * indicator_fn A2 x) IN  measurable (m_space m,measurable_sets m) Borel`
            by METIS_TAC [IN_MEASURABLE_BOREL_MUL_INDICATOR,measure_space_def,measurable_sets_def,subsets_def]
    ++ `!x. 0 <= (\x. f x * indicator_fn A1 x) x` by RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,le_01,le_refl]
    ++ `!x. 0 <= (\x. g x * indicator_fn A2 x) x` by RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,le_01,le_refl]
    ++ FULL_SIMP_TAC std_ss [le_add2,pos_fn_integral_add]);
 
 val lemma_radon_seq_conv_sup = store_thm
-  ("lemma_radon_seq_conv_sup",``!f m v. (measure_space m /\ measure_space v /\ 
-     (m_space v = m_space m) /\ (measurable_sets v = measurable_sets m)) /\ 
+  ("lemma_radon_seq_conv_sup",``!f m v. (measure_space m /\ measure_space v /\
+     (m_space v = m_space m) /\ (measurable_sets v = measurable_sets m)) /\
         (measure v (m_space v) <> PosInf) ==>
 	?f_n. (!n. f_n n IN RADON_F m v) /\ (!x n. f_n n x <= f_n (SUC n) x) /\
 	 (sup (IMAGE (\n. pos_fn_integral m (f_n n)) UNIV) = sup (RADON_F_integrals m v))``,
@@ -3313,10 +3313,10 @@ val lemma_radon_seq_conv_sup = store_thm
 
 
 val RN_lemma1 = store_thm
-("RN_lemma1",``!m v e. measure_space m /\ measure_space v /\ 0 < e /\ 
+("RN_lemma1",``!m v e. measure_space m /\ measure_space v /\ 0 < e /\
                        (m_space v = m_space m) /\
-                       (measurable_sets v = measurable_sets m) /\ 
-                       measure v (m_space m) <> PosInf /\ 
+                       (measurable_sets v = measurable_sets m) /\
+                       measure v (m_space m) <> PosInf /\
                        measure m (m_space m) <> PosInf ==>
        (?A. A IN measurable_sets m /\ measure m (m_space m) - measure v (m_space m) <= measure m A - measure v A /\
         !B. B IN measurable_sets m /\ B SUBSET A ==> -e < measure m B - measure v B)``,
@@ -3334,18 +3334,18 @@ val RN_lemma1 = store_thm
   ++ Cases_on `e = PosInf`
   >> (Q.EXISTS_TAC `m_space m`
       ++ METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE,le_refl,lt_infty,extreal_ainv_def])
-  ++ Q.ABBREV_TAC `h = (\A. if (!B. B IN measurable_sets m /\ B SUBSET (m_space m DIFF A) ==> -e < d B) 
+  ++ Q.ABBREV_TAC `h = (\A. if (!B. B IN measurable_sets m /\ B SUBSET (m_space m DIFF A) ==> -e < d B)
                             then {} else @B. B IN measurable_sets m /\ B SUBSET (m_space m DIFF A) /\ d B <= -e )`
   ++ `!A. A IN measurable_sets m ==> h A  IN measurable_sets m`
-        by (RW_TAC std_ss [] 
+        by (RW_TAC std_ss []
 	    ++ METIS_TAC [MEASURE_SPACE_EMPTY_MEASURABLE,extreal_lt_def])
-  ++ Q.ABBREV_TAC `A = SIMP_REC {} (\a. a UNION h a)` 
+  ++ Q.ABBREV_TAC `A = SIMP_REC {} (\a. a UNION h a)`
   ++ `A 0 = {}` by METIS_TAC [SIMP_REC_THM]
   ++ `!n. A (SUC n) = (A n) UNION (h (A n))` by (Q.UNABBREV_TAC `A` ++ RW_TAC std_ss [SIMP_REC_THM])
   ++ `!n. A n IN measurable_sets m`
         by (Induct >> RW_TAC std_ss [MEASURE_SPACE_EMPTY_MEASURABLE]
 	    ++ RW_TAC std_ss [MEASURE_SPACE_UNION])
-  ++ `!n. (?B. B IN measurable_sets m /\ B SUBSET (m_space m DIFF (A n)) /\ d B <= -e) ==> 
+  ++ `!n. (?B. B IN measurable_sets m /\ B SUBSET (m_space m DIFF (A n)) /\ d B <= -e) ==>
                d (A (SUC n)) <= d (A n) - e`
        by (RW_TAC std_ss []
            ++ `~(!B. B IN measurable_sets m /\ B SUBSET (m_space m DIFF (A n)) ==> -e < d B)`
@@ -3356,7 +3356,7 @@ val RN_lemma1 = store_thm
 	   ++ SELECT_ELIM_TAC
 	   ++ RW_TAC std_ss []
 	   >> METIS_TAC []
-           ++ `DISJOINT (A n) x` 
+           ++ `DISJOINT (A n) x`
                by (RW_TAC std_ss [DISJOINT_DEF,EXTENSION,IN_INTER,NOT_IN_EMPTY]
                    ++ METIS_TAC [SUBSET_DEF,IN_DIFF])
            ++ `d ((A n) UNION x) = d (A n) + d x`
@@ -3383,7 +3383,7 @@ val RN_lemma1 = store_thm
         by (RW_TAC std_ss []
             ++ Cases_on `(?B. B IN measurable_sets m /\ B SUBSET m_space m DIFF A n /\ d B <= -e)`
             >> (`d (A n) <= d (A n) + e` by METIS_TAC [lt_le,le_addr_imp]
-		++ `d (A n) - e <= d (A n)` 
+		++ `d (A n) - e <= d (A n)`
                      by (Cases_on `d(A n)` ++ Cases_on `e`
 			 ++ RW_TAC std_ss [extreal_add_def,extreal_sub_def,extreal_le_def,extreal_not_infty,lt_infty,le_infty]
 			 ++ METIS_TAC [extreal_add_def,extreal_le_def,REAL_LE_SUB_RADD])
@@ -3449,12 +3449,12 @@ val RN_lemma1 = store_thm
   ++ `sup (IMAGE (measure v o A) UNIV) = measure v (BIGUNION (IMAGE A UNIV))`
        by METIS_TAC [MONOTONE_CONVERGENCE2,IN_FUNSET,IN_UNIV,measure_def,measurable_sets_def]
   ++ FULL_SIMP_TAC std_ss [o_DEF]
-  ++ `?r1. !n. measure m (A n) = Normal (r1 n)` 
+  ++ `?r1. !n. measure m (A n) = Normal (r1 n)`
        by (Q.EXISTS_TAC `(\n. @r. measure m (A n) = Normal r)`
            ++ RW_TAC std_ss []
 	   ++ SELECT_ELIM_TAC
 	   ++ METIS_TAC [extreal_cases])
-  ++ `?r2. !n. measure v (A n) = Normal (r2 n)` 
+  ++ `?r2. !n. measure v (A n) = Normal (r2 n)`
        by (Q.EXISTS_TAC `(\n. @r. measure v (A n) = Normal r)`
            ++ RW_TAC std_ss []
 	   ++ SELECT_ELIM_TAC
@@ -3463,17 +3463,17 @@ val RN_lemma1 = store_thm
   ++ `?l1. measure m (BIGUNION (IMAGE A UNIV)) = Normal l1` by METIS_TAC [extreal_cases]
   ++ `?l2. measure v (BIGUNION (IMAGE A UNIV)) = Normal l2` by METIS_TAC [extreal_cases]
   ++ FULL_SIMP_TAC std_ss []
-  ++ `mono_increasing r1` by METIS_TAC [mono_increasing_def,mono_increasing_suc,MEASURE_SPACE_INCREASING,increasing_def,extreal_le_def]		
+  ++ `mono_increasing r1` by METIS_TAC [mono_increasing_def,mono_increasing_suc,MEASURE_SPACE_INCREASING,increasing_def,extreal_le_def]
   ++ `mono_increasing r2` by METIS_TAC [mono_increasing_def,mono_increasing_suc,MEASURE_SPACE_INCREASING,increasing_def,extreal_le_def,measure_def,measurable_sets_def]
   ++ FULL_SIMP_TAC std_ss [GSYM sup_seq]
-  ++ `!n. -d (A n) = Normal (r2 n - r1 n)` 
+  ++ `!n. -d (A n) = Normal (r2 n - r1 n)`
         by (Q.UNABBREV_TAC `d`
             ++ RW_TAC std_ss [extreal_sub_def,extreal_ainv_def,REAL_NEG_SUB])
   ++ Q.ABBREV_TAC `r = (\n. r2 n - r1 n)`
   ++ `mono_increasing r` by METIS_TAC [mono_increasing_suc, extreal_le_def]
   ++ `r --> (l2 - l1)` by (Q.UNABBREV_TAC `r` ++ METIS_TAC [SEQ_SUB])
   ++ `sup (IMAGE (\n. Normal (r n)) UNIV) = Normal (l2 - l1)` by METIS_TAC [sup_seq]
-  ++ `sup (IMAGE (\n. -d (A n)) UNIV) = -d (BIGUNION (IMAGE A UNIV))` 
+  ++ `sup (IMAGE (\n. -d (A n)) UNIV) = -d (BIGUNION (IMAGE A UNIV))`
         by (`(\n. -d (A n)) = (\n. Normal (r n))` by METIS_TAC []
             ++ POP_ORW
 	    ++ Q.UNABBREV_TAC `d`
@@ -3492,10 +3492,10 @@ val RN_lemma1 = store_thm
            ++ RW_TAC std_ss [IN_IMAGE,IN_UNIV]
 	   ++ METIS_TAC [])
   ++ METIS_TAC [extreal_lt_def]);
-   
+
 
 val RN_lemma2 = store_thm
-("RN_lemma2",``!m v. measure_space m /\ measure_space v /\ 
+("RN_lemma2",``!m v. measure_space m /\ measure_space v /\
          (m_space v = m_space m) /\
          (measurable_sets v = measurable_sets m) /\
          measure v (m_space m) <> PosInf /\
@@ -3524,7 +3524,7 @@ val RN_lemma2 = store_thm
   ++ `!s n. s IN measurable_sets m ==> ?A. p A s n`
          by (RW_TAC std_ss []
              ++ `?A. A IN (sts s) /\ measure m s - measure v s <= measure m A - measure v A /\
-                (!B. B IN (sts s) /\ B SUBSET A ==>  -Normal ((1 / 2) pow n) < measure m B - measure v B)` 
+                (!B. B IN (sts s) /\ B SUBSET A ==>  -Normal ((1 / 2) pow n) < measure m B - measure v B)`
                  by (RW_TAC std_ss []
                      ++ (MP_TAC o Q.SPECL [`(s,sts s,measure m)`,`(s,sts s,measure v)`,`Normal ((1 / 2) pow n)`]) RN_lemma1
 	             ++ RW_TAC std_ss [m_space_def,measure_def,measurable_sets_def])
@@ -3541,9 +3541,9 @@ val RN_lemma2 = store_thm
 		 ++ FULL_SIMP_TAC std_ss [IN_IMAGE]
 		 ++ Q.EXISTS_TAC `c`
 		 ++ METIS_TAC [SUBSET_INTER2,SUBSET_TRANS]])
-  ++ Q.ABBREV_TAC `A = PRIM_REC (m_space m) (\a n. @b. p b a n)` 
+  ++ Q.ABBREV_TAC `A = PRIM_REC (m_space m) (\a n. @b. p b a n)`
   ++ `A 0 = m_space m` by METIS_TAC [PRIM_REC_THM]
-  ++ `!n. A (SUC n) = @b. p b (A n) n` 
+  ++ `!n. A (SUC n) = @b. p b (A n) n`
         by (Q.UNABBREV_TAC `A` ++ RW_TAC std_ss [PRIM_REC_THM])
   ++ `!n. A n IN measurable_sets m`
        by (Induct >> METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE]
@@ -3573,12 +3573,12 @@ val RN_lemma2 = store_thm
   ++ `measure v (BIGINTER (IMAGE A UNIV)) = inf (IMAGE (measure v o A) UNIV)`
         by (MATCH_MP_TAC (GSYM MONOTONE_CONVERGENCE_BIGINTER2)
             ++ RW_TAC std_ss [IN_UNIV,IN_FUNSET])
-  ++ `?r1. !n. measure m (A n) = Normal (r1 n)` 
+  ++ `?r1. !n. measure m (A n) = Normal (r1 n)`
        by (Q.EXISTS_TAC `(\n. @r. measure m (A n) = Normal r)`
            ++ RW_TAC std_ss []
 	   ++ SELECT_ELIM_TAC
 	   ++ METIS_TAC [extreal_cases])
-  ++ `?r2. !n. measure v (A n) = Normal (r2 n)` 
+  ++ `?r2. !n. measure v (A n) = Normal (r2 n)`
        by (Q.EXISTS_TAC `(\n. @r. measure v (A n) = Normal r)`
            ++ RW_TAC std_ss []
 	   ++ SELECT_ELIM_TAC
@@ -3590,10 +3590,10 @@ val RN_lemma2 = store_thm
   ++ Q.PAT_X_ASSUM `Normal l1 = Q` (MP_TAC o GSYM)
   ++ Q.PAT_X_ASSUM `Normal l2 = Q` (MP_TAC o GSYM)
   ++ RW_TAC std_ss [extreal_sub_def]
-  ++ `mono_decreasing r1` by METIS_TAC [mono_decreasing_def,mono_decreasing_suc,MEASURE_SPACE_INCREASING,increasing_def,extreal_le_def]		
+  ++ `mono_decreasing r1` by METIS_TAC [mono_decreasing_def,mono_decreasing_suc,MEASURE_SPACE_INCREASING,increasing_def,extreal_le_def]
   ++ `mono_decreasing r2` by METIS_TAC [mono_decreasing_def,mono_decreasing_suc,MEASURE_SPACE_INCREASING,increasing_def,extreal_le_def,measure_def,measurable_sets_def]
   ++ FULL_SIMP_TAC std_ss [GSYM inf_seq]
-  ++ `!n. -d (A n) = Normal (r2 n - r1 n)` 
+  ++ `!n. -d (A n) = Normal (r2 n - r1 n)`
         by (Q.UNABBREV_TAC `d`
             ++ RW_TAC std_ss [extreal_sub_def,extreal_ainv_def,REAL_NEG_SUB])
   ++ Q.ABBREV_TAC `r = (\n. r2 n - r1 n)`
@@ -3601,7 +3601,7 @@ val RN_lemma2 = store_thm
   ++ `mono_decreasing r` by METIS_TAC [mono_decreasing_suc, extreal_le_def,extreal_ainv_def]
   ++ `r --> (l2 - l1)` by (Q.UNABBREV_TAC `r` ++ METIS_TAC [SEQ_SUB])
   ++ `inf (IMAGE (\n. Normal (r n)) UNIV) = Normal (l2 - l1)` by METIS_TAC [inf_seq]
-  ++ `inf (IMAGE (\n. -d (A n)) UNIV) = -d (BIGINTER (IMAGE A UNIV))` 
+  ++ `inf (IMAGE (\n. -d (A n)) UNIV) = -d (BIGINTER (IMAGE A UNIV))`
         by (`(\n. -d (A n)) = (\n. Normal (r n))` by METIS_TAC []
             ++ POP_ORW
 	    ++ Q.UNABBREV_TAC `d`
@@ -3621,13 +3621,15 @@ val RN_lemma2 = store_thm
 val Radon_Nikodym = store_thm
   ("Radon_Nikodym",``!m v. measure_space m /\ measure_space v /\ (m_space v = m_space m) /\
          (measurable_sets v = measurable_sets m) /\
-         (measure v (m_space v) <> PosInf) /\ (measure m (m_space m) <> PosInf) /\ 
+         (measure v (m_space v) <> PosInf) /\ (measure m (m_space m) <> PosInf) /\
           measure_absolutely_continuous v m
-            ==> (?f. f IN measurable (m_space m,measurable_sets m) Borel /\ (!x. 0 <= f x) /\  
-                (!A. A IN measurable_sets m ==> (pos_fn_integral m (\x. f x * indicator_fn A x) = measure v A)))``,
+            ==> (?f. f IN measurable (m_space m,measurable_sets m) Borel /\ (!x. 0 <= f x) /\
+                (!A. A IN measurable_sets m ==>
+                    (pos_fn_integral m (\x. f x * indicator_fn A x) = measure v A)))``,
   RW_TAC std_ss []
   ++ `?f_n. (!n. f_n n IN RADON_F m v) /\ (!x n. f_n n x <= f_n (SUC n) x) /\
-           (sup (IMAGE (\n. pos_fn_integral m (f_n n)) univ(:num)) = sup (RADON_F_integrals m v))` 
+            (sup (IMAGE (\n. pos_fn_integral m (f_n n)) univ(:num)) =
+             sup (RADON_F_integrals m v))`
        by RW_TAC std_ss [lemma_radon_seq_conv_sup]
   ++ Q.ABBREV_TAC `g = (\x. sup (IMAGE (\n. f_n n x) UNIV))`
   ++ Q.EXISTS_TAC `g`
@@ -3637,7 +3639,7 @@ val Radon_Nikodym = store_thm
           ++ FULL_SIMP_TAC std_ss [RADON_F_def,GSPECIFICATION,measure_space_def,space_def]
           ++ Q.UNABBREV_TAC `g`
           ++ RW_TAC std_ss [])
-  ++ `!x. 0 <= g x` 
+  ++ `!x. 0 <= g x`
        by (Q.UNABBREV_TAC `g`
            ++ RW_TAC std_ss [le_sup]
            ++ MATCH_MP_TAC le_trans
@@ -3656,7 +3658,7 @@ val Radon_Nikodym = store_thm
 	   ++ RW_TAC std_ss []
 	   ++ Q.UNABBREV_TAC `g`
 	   ++ METIS_TAC [])
-  ++ `g IN RADON_F m v` 
+  ++ `g IN RADON_F m v`
       by (FULL_SIMP_TAC std_ss [RADON_F_def,GSPECIFICATION,sup_le]
           ++ RW_TAC std_ss []
 	  ++ POP_ASSUM (MP_TAC o ONCE_REWRITE_RULE [GSYM SPECIFICATION])
@@ -3674,7 +3676,7 @@ val Radon_Nikodym = store_thm
   ++ `!A. A IN measurable_sets m ==> measure v A <> PosInf` by METIS_TAC [lt_infty,INCREASING,MEASURE_SPACE_INCREASING,MEASURE_SPACE_SUBSET_MSPACE,MEASURE_SPACE_MSPACE_MEASURABLE,let_trans]
   ++ `!A. A IN measurable_sets m ==> measure m A <> PosInf` by METIS_TAC [lt_infty,INCREASING,MEASURE_SPACE_INCREASING,MEASURE_SPACE_SUBSET_MSPACE,MEASURE_SPACE_MSPACE_MEASURABLE,let_trans]
   ++ `!A x. 0 <= (\x. g x * indicator_fn A x) x` by RW_TAC std_ss [indicator_fn_def,mul_rzero,mul_rone,le_01,le_refl]
-  ++ `!A. A IN measurable_sets m ==> 0 <= pos_fn_integral m (\x. g x * indicator_fn A x)` 
+  ++ `!A. A IN measurable_sets m ==> 0 <= pos_fn_integral m (\x. g x * indicator_fn A x)`
           by (REPEAT STRIP_TAC ++ MATCH_MP_TAC pos_fn_integral_pos ++ METIS_TAC [])
   ++ `!A. A IN measurable_sets m ==> pos_fn_integral m (\x. g x * indicator_fn A x) <> NegInf` by METIS_TAC [lt_infty,extreal_of_num_def,extreal_not_infty,lte_trans]
   ++ `!A. A IN measurable_sets m ==> pos_fn_integral m (\x. g x * indicator_fn A x) <> PosInf` by METIS_TAC [let_trans,lt_infty]
@@ -3690,16 +3692,16 @@ val Radon_Nikodym = store_thm
 	   ++ RW_TAC std_ss [MEASURE_EMPTY,indicator_fn_def,NOT_IN_EMPTY,pos_fn_integral_zero,mul_rzero,mul_rone,sub_rzero])
   ++ Q.PAT_X_ASSUM `!A. A IN measurable_sets m ==> (pos_fn_integral m (\x. g x * indicator_fn A x) = Q)` (K ALL_TAC)
   ++ RW_TAC std_ss []
-  ++ `measure_space (m_space m,measurable_sets m,nu)` 
+  ++ `measure_space (m_space m,measurable_sets m,nu)`
       by (FULL_SIMP_TAC std_ss [measure_space_def,m_space_def,measurable_sets_def,countably_additive_def,measure_def]
           ++ Q.UNABBREV_TAC `nu`
           ++ RW_TAC std_ss [o_DEF]
 	  ++ `suminf (\x. measure v (f x)) = measure v (BIGUNION (IMAGE f univ(:num)))`
                by METIS_TAC [o_DEF,countably_additive_def]
 	  ++ `suminf (\x. measure v (f x)) <> PosInf` by METIS_TAC []
-          ++ `suminf (\x. measure v (f x) - pos_fn_integral m (\x'. g x' * indicator_fn (f x) x')) = 
+          ++ `suminf (\x. measure v (f x) - pos_fn_integral m (\x'. g x' * indicator_fn (f x) x')) =
               suminf (\x. measure v (f x)) - suminf (\x. pos_fn_integral m (\x'. g x' * indicator_fn (f x) x'))`
-                by  (`(\x. measure v (f x) - pos_fn_integral m (\x'. g x' * indicator_fn (f x) x')) = 
+                by  (`(\x. measure v (f x) - pos_fn_integral m (\x'. g x' * indicator_fn (f x) x')) =
                       (\x. (\x. measure v (f x)) x - (\x. pos_fn_integral m (\x'. g x' * indicator_fn (f x) x')) x)`
                          by METIS_TAC []
                      ++ POP_ORW
@@ -3710,7 +3712,7 @@ val Radon_Nikodym = store_thm
 			 ++ METIS_TAC [measure_space_def,countably_additive_def])
 		     ++ METIS_TAC [IN_FUNSET,IN_UNIV])
           ++ POP_ORW
-	  ++ Suff `pos_fn_integral m (\x. g x * indicator_fn (BIGUNION (IMAGE f univ(:num))) x) = 
+	  ++ Suff `pos_fn_integral m (\x. g x * indicator_fn (BIGUNION (IMAGE f univ(:num))) x) =
                    suminf (\x. pos_fn_integral m (\x'. g x' * indicator_fn (f x) x'))`
           >> RW_TAC std_ss []
 	  ++ `measure_space m` by METIS_TAC [measure_space_def,countably_additive_def]
@@ -3722,7 +3724,7 @@ val Radon_Nikodym = store_thm
 	  ++ RW_TAC std_ss []
 	  ++ POP_ASSUM (MP_TAC o GSYM)
 	  ++ RW_TAC std_ss []
-	  ++ Suff `(\x. g x * indicator_fn (BIGUNION (IMAGE f univ(:num))) x) = 
+	  ++ Suff `(\x. g x * indicator_fn (BIGUNION (IMAGE f univ(:num))) x) =
                    (\x'. suminf (\x. g x' * indicator_fn (f x) x'))`
           >> RW_TAC std_ss []
 	  ++ RW_TAC std_ss [FUN_EQ_THM]
@@ -3737,7 +3739,7 @@ val Radon_Nikodym = store_thm
   ++ Cases_on `nu A = 0` >> METIS_TAC [sub_0]
   ++ `0 < nu A` by METIS_TAC [lt_le,MEASURE_SPACE_POSITIVE,positive_def]
   ++ `0 < nu (m_space m)` by METIS_TAC [lte_trans]
-  ++ `0 <> measure m (m_space m)` 
+  ++ `0 <> measure m (m_space m)`
        by (SPOSE_NOT_THEN ASSUME_TAC
            ++ `measure v (m_space m) = 0` by METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE,measure_absolutely_continuous_def]
            ++ `pos_fn_integral m (\x. g x * indicator_fn (m_space m) x) <= 0` by METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE]
@@ -3748,8 +3750,8 @@ val Radon_Nikodym = store_thm
   ++ Q.ABBREV_TAC `z = nu (m_space m) / (2 * measure m (m_space m)) `
   ++ `nu (m_space m) <> NegInf` by METIS_TAC [lt_trans,lt_infty,num_not_infty]
   ++ `measure m (m_space m) <> NegInf` by METIS_TAC [lt_trans,lt_infty,num_not_infty]
-  ++ `nu (m_space m) <> PosInf` 
-       by (Q.UNABBREV_TAC `nu` 
+  ++ `nu (m_space m) <> PosInf`
+       by (Q.UNABBREV_TAC `nu`
            ++ RW_TAC std_ss []
 	   ++ METIS_TAC [sub_not_infty,MEASURE_SPACE_MSPACE_MEASURABLE])
   ++ `?e. 0 < e /\ (z = Normal e)`
@@ -3764,22 +3766,22 @@ val Radon_Nikodym = store_thm
 	   ++ `0 < r1 / (2 * r2)` by RW_TAC std_ss [REAL_LT_DIV]
 	   ++ METIS_TAC [])
   ++ Q.ABBREV_TAC `snu = (\A. nu A - Normal e * (measure m A))`
-  ++ `?A'. A' IN measurable_sets m /\ snu(m_space m) <= snu (A') /\ 
+  ++ `?A'. A' IN measurable_sets m /\ snu(m_space m) <= snu (A') /\
        (!B. B IN measurable_sets m /\ B SUBSET A' ==> 0 <= snu (B))`
         by (Q.UNABBREV_TAC `snu`
             ++ RW_TAC std_ss []
-	    ++ (MP_TAC o Q.SPECL [`(m_space m, measurable_sets m, nu)`,`(m_space m, measurable_sets m, (\A. Normal e * measure m A))`]) RN_lemma2 
+	    ++ (MP_TAC o Q.SPECL [`(m_space m, measurable_sets m, nu)`,`(m_space m, measurable_sets m, (\A. Normal e * measure m A))`]) RN_lemma2
 	    ++ RW_TAC std_ss [m_space_def,measurable_sets_def,measure_def]
 	    ++ METIS_TAC [MEASURE_SPACE_CMUL,REAL_LT_IMP_LE,mul_not_infty,extreal_not_infty])
   ++ Q.ABBREV_TAC `g' = (\x. g x + Normal e * indicator_fn (A') x)`
-  ++ `!A. A IN measurable_sets m ==> 
-          (pos_fn_integral m (\x. g' x * indicator_fn A x) = 
+  ++ `!A. A IN measurable_sets m ==>
+          (pos_fn_integral m (\x. g' x * indicator_fn A x) =
            pos_fn_integral m (\x. g x * indicator_fn A x) + Normal e * measure m (A INTER A'))`
        by (REPEAT STRIP_TAC
            ++ `measure m (A'' INTER A') = pos_fn_integral m (indicator_fn (A'' INTER A'))`
                 by METIS_TAC [pos_fn_integral_indicator,MEASURE_SPACE_INTER]
            ++ POP_ORW
-	   ++ `Normal e * pos_fn_integral m (indicator_fn (A'' INTER A')) = 
+	   ++ `Normal e * pos_fn_integral m (indicator_fn (A'' INTER A')) =
                pos_fn_integral m (\x. Normal e * indicator_fn (A'' INTER A') x)`
                 by ((MATCH_MP_TAC o GSYM) pos_fn_integral_cmul
                     ++ RW_TAC real_ss [REAL_LT_IMP_LE,indicator_fn_def,le_01,le_refl])
@@ -3792,7 +3794,7 @@ val Radon_Nikodym = store_thm
            ++ POP_ORW
 	   ++ MATCH_MP_TAC pos_fn_integral_add
 	   ++ FULL_SIMP_TAC std_ss []
-	   ++ CONJ_TAC >> (RW_TAC std_ss [indicator_fn_def,le_01,le_refl,mul_rone,mul_rzero] 
+	   ++ CONJ_TAC >> (RW_TAC std_ss [indicator_fn_def,le_01,le_refl,mul_rone,mul_rzero]
                            ++ FULL_SIMP_TAC std_ss [extreal_of_num_def,extreal_le_def,REAL_LT_IMP_LE])
            ++ RW_TAC std_ss []
 	   >> METIS_TAC [IN_MEASURABLE_BOREL_MUL_INDICATOR,measure_space_def,measurable_sets_def,subsets_def]
@@ -3815,19 +3817,19 @@ val Radon_Nikodym = store_thm
              ++ `Normal e * measure m (A'' INTER A') <> NegInf`
                   by METIS_TAC [mul_not_infty,REAL_LT_IMP_LE,MEASURE_SPACE_INTER,MEASURE_SPACE_POSITIVE,positive_not_infty]
              ++ METIS_TAC [sub_zero_le])
-  ++ `!A. A IN measurable_sets m ==> 
+  ++ `!A. A IN measurable_sets m ==>
           pos_fn_integral m (\x. g x * indicator_fn A x) + Normal e * measure m (A INTER A') <=
           pos_fn_integral m (\x. g x * indicator_fn A x) + nu (A INTER A')`
          by METIS_TAC [le_ladd_imp]
   ++ `!A. A IN measurable_sets m ==> nu (A INTER A') <= nu A`
-         by (RW_TAC std_ss [] 
+         by (RW_TAC std_ss []
              ++ (MATCH_MP_TAC o REWRITE_RULE [measurable_sets_def,measure_def] o Q.SPEC `(m_space m,measurable_sets m,nu)`) INCREASING
 	     ++ METIS_TAC [MEASURE_SPACE_INCREASING,MEASURE_SPACE_INTER,INTER_SUBSET])
-  ++ `!A. A IN measurable_sets m ==> 
+  ++ `!A. A IN measurable_sets m ==>
           pos_fn_integral m (\x. g x * indicator_fn A x) + Normal e * measure m (A INTER A') <=
           pos_fn_integral m (\x. g x * indicator_fn A x) + nu (A)`
            by METIS_TAC [le_ladd_imp,le_trans]
-  ++ `!A. A IN measurable_sets m ==> 
+  ++ `!A. A IN measurable_sets m ==>
           pos_fn_integral m (\x. g x * indicator_fn A x) + Normal e * measure m (A INTER A') <= measure v A`
            by (Q.UNABBREV_TAC `nu`
                ++ FULL_SIMP_TAC std_ss []
@@ -3835,7 +3837,7 @@ val Radon_Nikodym = store_thm
                ++ METIS_TAC [sub_add2])
   ++ `!A. A IN measurable_sets m ==> pos_fn_integral m (\x. g' x * indicator_fn A x) <= measure v A`
         by METIS_TAC []
-  ++ `g' IN RADON_F m v` 
+  ++ `g' IN RADON_F m v`
          by (RW_TAC std_ss [RADON_F_def,GSPECIFICATION]
              >> (Q.UNABBREV_TAC `g'`
                  ++ MATCH_MP_TAC IN_MEASURABLE_BOREL_ADD
@@ -3843,7 +3845,7 @@ val Radon_Nikodym = store_thm
 		 ++ Q.EXISTS_TAC `(\x. Normal e * indicator_fn A' x)`
 		 ++ CONJ_TAC >> FULL_SIMP_TAC std_ss [measure_space_def]
 		 ++ FULL_SIMP_TAC std_ss []
-		 ++ CONJ_TAC 
+		 ++ CONJ_TAC
 		 >> (MATCH_MP_TAC IN_MEASURABLE_BOREL_CMUL
 		     ++ METIS_TAC [measure_space_def,subsets_def,measurable_sets_def,IN_MEASURABLE_BOREL_INDICATOR])
 		 ++ RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,num_not_infty,space_def]
@@ -3851,7 +3853,7 @@ val Radon_Nikodym = store_thm
 	     ++ Q.UNABBREV_TAC `g'`
 	     ++ RW_TAC std_ss [indicator_fn_def,mul_rone,mul_rzero,add_rzero]
 	     ++ METIS_TAC [le_add2,add_rzero,le_trans,lt_imp_le,extreal_lt_eq,extreal_of_num_def])
-  ++ `pos_fn_integral m g' IN RADON_F_integrals m v` 
+  ++ `pos_fn_integral m g' IN RADON_F_integrals m v`
        by (FULL_SIMP_TAC std_ss [RADON_F_integrals_def,GSPECIFICATION]
            ++ METIS_TAC [])
   ++ `pos_fn_integral m (\x. g' x * indicator_fn (m_space m) x) =
@@ -3864,7 +3866,7 @@ val Radon_Nikodym = store_thm
 	  ++ METIS_TAC [le_add2,add_rzero,le_trans,lt_imp_le,extreal_lt_eq,extreal_of_num_def])
   ++ `pos_fn_integral m g' = pos_fn_integral m g + Normal e * measure m A'`
        by METIS_TAC [pos_fn_integral_mspace]
-  ++ `0 < snu (m_space m)` 
+  ++ `0 < snu (m_space m)`
        by (Q.UNABBREV_TAC `snu`
            ++ RW_TAC std_ss []
            ++ `?r1. nu (m_space m) = Normal r1` by METIS_TAC [extreal_cases]
@@ -3884,9 +3886,9 @@ val Radon_Nikodym = store_thm
   ++ `Normal e * measure m A' <> PosInf` by METIS_TAC [REAL_LT_IMP_LE,mul_not_infty]
   ++ `Normal e * measure m A' <> NegInf` by METIS_TAC [REAL_LT_IMP_LE,mul_not_infty,MEASURE_SPACE_POSITIVE,positive_not_infty]
   ++ `Normal e * measure m A' < nu (A')` by METIS_TAC [sub_zero_lt2]
-  ++ `0 <= Normal e * measure m A'` by METIS_TAC [le_mul,REAL_LT_IMP_LE,extreal_le_def,MEASURE_SPACE_POSITIVE,positive_def,extreal_of_num_def]   
+  ++ `0 <= Normal e * measure m A'` by METIS_TAC [le_mul,REAL_LT_IMP_LE,extreal_le_def,MEASURE_SPACE_POSITIVE,positive_def,extreal_of_num_def]
   ++ `0 < nu A'` by METIS_TAC [let_trans]
-  ++ `0 <> measure m A'` 
+  ++ `0 <> measure m A'`
         by (SPOSE_NOT_THEN ASSUME_TAC
             ++ `measure v A' = 0` by METIS_TAC [MEASURE_SPACE_MSPACE_MEASURABLE,measure_absolutely_continuous_def]
             ++ `pos_fn_integral m (\x. g x * indicator_fn A' x) <= 0` by METIS_TAC []
