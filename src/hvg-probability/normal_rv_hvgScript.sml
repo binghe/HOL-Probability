@@ -35,33 +35,12 @@ val _ = new_theory "normal_rv_hvg";
 
 val DISC_RW_KILL = DISCH_TAC THEN ONCE_ASM_REWRITE_TAC [] THEN 
                    POP_ASSUM K_TAC;
-				   
-val IN_REST = store_thm ("IN_REST",
- ``!x:'a. !s. x IN (REST s) <=> x IN s /\ ~(x = CHOICE s)``,
-  REWRITE_TAC[REST_DEF, IN_DELETE]);
 
 fun ASSERT_TAC tm = SUBGOAL_THEN tm STRIP_ASSUME_TAC;
 
 (* ------------------------------------------------------------------------- *)
-(*                                                                           *)
-(* ------------------------------------------------------------------------- *)
-
-(* not used anywhere *)
-val lemma1 = store_thm ("lemma1",
- ``!p X. prob_space p ==> (distribution p X (IMAGE X (m_space p)) = 1)``,
-  REWRITE_TAC [prob_space_def] THEN REPEAT STRIP_TAC THEN
-  SIMP_TAC std_ss [distribution_def] THEN
-  SIMP_TAC std_ss [IMAGE_DEF, PREIMAGE_def, INTER_DEF, GSPECIFICATION] THEN
-  REWRITE_TAC [GSYM p_space_def, prob_def] THEN
-  REWRITE_TAC [SET_RULE ``{x | (?x''. (X x = X x'') /\ x'' IN s) /\ x IN s} = s``] THEN
-  ASM_REWRITE_TAC []);
-
-(* ------------------------------------------------------------------------- *)
 (* PDF_def                                                                   *)
 (* ------------------------------------------------------------------------- *)
-
-val measurable_distr = new_definition ("measurable_distr",
-  ``measurable_distr p X = (\s. if s IN subsets borel then distribution p X s else 0)``);
 
 (* normal_rv *)
 
