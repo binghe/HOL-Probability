@@ -27,205 +27,6 @@ lebesgue_hvgTheory probability_hvgTheory lebesgue_measure_hvgTheory;
 
 val _ = new_theory "normal_rv_hvg";
 
-val normal_measure_abs_continuous = store_thm ("normal_measure_abs_continuous",
-  ``!mu sig. measure_absolutely_continuous
-     (space borel,subsets borel,normal_pmeasure mu sig) lborel``,
-  RW_TAC std_ss [] THEN
-  SIMP_TAC std_ss [measure_absolutely_continuous_def] THEN
-  RW_TAC std_ss [measurable_sets_def, measure_def] THEN
-  ONCE_REWRITE_TAC [normal_pmeasure] THEN
-  Q.ABBREV_TAC `f = (\x. Normal (normal_density mu sig x))` THEN
-  Q_TAC SUFF_TAC `A IN measurable_sets lborel /\
-   (measure (m_space lborel, measurable_sets lborel,
-    (\A. if A IN measurable_sets lborel then
-          pos_fn_integral lborel (\x. f x * indicator_fn A x)
-         else 0)) A = 0)` THENL
-  [SIMP_TAC std_ss [measure_def], ALL_TAC] THEN
-  Q_TAC SUFF_TAC `measure_space lborel /\ (!x. 0 <= f x) /\
-    f IN measurable (m_space lborel,measurable_sets lborel) Borel` THENL
-  [DISCH_THEN (MP_TAC o MATCH_MP null_sets_density_iff) THEN
-   DISCH_THEN (MP_TAC o Q.SPEC `A`) THEN DISC_RW_KILL THEN
-   ASM_SIMP_TAC std_ss [lborel, measurable_sets_def] THEN
-   SIMP_TAC std_ss [AE, ae_filter, GSPECIFICATION] THEN
-   SIMP_TAC std_ss [m_space_def, IN_UNIV] THEN Q.EXISTS_TAC `A` THEN
-   SIMP_TAC std_ss [SUBSET_DEF, GSPECIFICATION, null_sets] THEN
-   ASM_SIMP_TAC std_ss [GSYM lborel] THEN
-   ASM_SIMP_TAC std_ss [lborel, measurable_sets_def],
-   ALL_TAC] THEN
-  `(!x. 0 <= f x)` by METIS_TAC [normal_density_nonneg, extreal_of_num_def, extreal_le_def] THEN
-  ASM_SIMP_TAC std_ss [measure_space_lborel] THEN Q.UNABBREV_TAC `f` THEN
-  SIMP_TAC std_ss [IN_MEASURABLE_BOREL_normal_density]);
-
-val normal_measure_space = store_thm ("normal_measure_space",
-  ``!mu sig. measure_space (space borel,subsets borel,normal_pmeasure mu sig)``,
-  RW_TAC std_ss [] THEN
-  SIMP_TAC std_ss [measure_space_def, m_space_def, measurable_sets_def] THEN
-  SIMP_TAC std_ss [SPACE, sigma_algebra_borel] THEN
-  CONJ_TAC THENL
-  [SIMP_TAC std_ss [positive_def, measure_def, measurable_sets_def] THEN
-   CONJ_TAC THENL
-   [SIMP_TAC std_ss [normal_pmeasure] THEN ASSUME_TAC measure_space_lborel THEN
-    POP_ASSUM MP_TAC THEN SIMP_TAC std_ss [measure_space_def, sigma_algebra_iff2] THEN
-    REPEAT STRIP_TAC THEN SIMP_TAC std_ss [indicator_fn_def, NOT_IN_EMPTY, mul_rzero] THEN
-    SIMP_TAC std_ss [measure_space_lborel, pos_fn_integral_zero], ALL_TAC] THEN
-   RW_TAC std_ss [normal_pmeasure, le_refl] THEN
-   MATCH_MP_TAC pos_fn_integral_pos THEN SIMP_TAC std_ss [measure_space_lborel] THEN
-   GEN_TAC THEN SIMP_TAC std_ss [indicator_fn_def] THEN COND_CASES_TAC THEN
-   SIMP_TAC std_ss [mul_rzero, mul_rone, le_refl] THEN
-   SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def, normal_density_nonneg],
-   ALL_TAC] THEN
-
-  RW_TAC std_ss [countably_additive_def, measurable_sets_def, measure_def, o_DEF] THEN
-  SIMP_TAC std_ss [normal_pmeasure] THEN
-  `BIGUNION (IMAGE f univ(:num)) IN measurable_sets lborel` by
-   METIS_TAC [lborel, measurable_sets_def] THEN ASM_SIMP_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `!x. f x IN measurable_sets lborel` THENL
-  [ALL_TAC,
-   GEN_TAC THEN FULL_SIMP_TAC std_ss [IN_FUNSET, IN_UNIV] THEN
-   ASM_SIMP_TAC std_ss [measurable_sets_def, lborel]] THEN
-  DISCH_TAC THEN ASM_SIMP_TAC std_ss [] THEN
-  Q.ABBREV_TAC `g = (\x. (\x'. Normal (normal_density mu sig x') * indicator_fn (f x) x'))` THEN
-  Q_TAC SUFF_TAC `suminf (\x. pos_fn_integral lborel
-       (\x'. Normal (normal_density mu sig x') * indicator_fn (f x) x')) =
-                  suminf (\x. pos_fn_integral lborel (g x))` THENL
-  [DISC_RW_KILL, Q.UNABBREV_TAC `g` THEN SIMP_TAC std_ss []] THEN
-  Q_TAC SUFF_TAC `suminf (\x. pos_fn_integral lborel (g x)) =
-                  pos_fn_integral lborel (\z. suminf (\x. g x z))` THENL
-  [ALL_TAC,
-   MATCH_MP_TAC (GSYM pos_fn_integral_suminf) THEN
-   SIMP_TAC std_ss [measure_space_lborel] THEN Q.UNABBREV_TAC `g` THEN
-   SIMP_TAC std_ss [] THEN CONJ_TAC THENL
-   [REPEAT GEN_TAC THEN MATCH_MP_TAC le_mul THEN
-    SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
-    SIMP_TAC std_ss [GSYM extreal_of_num_def, indicator_fn_def] THEN
-    COND_CASES_TAC THEN SIMP_TAC real_ss [extreal_of_num_def, extreal_le_def],
-    ALL_TAC] THEN
-   GEN_TAC THEN ONCE_REWRITE_TAC [METIS [] ``Normal (normal_density mu sig x') =
-                 (\x'. Normal (normal_density mu sig x')) x'``] THEN
-   MATCH_MP_TAC IN_MEASURABLE_BOREL_MUL_INDICATOR THEN
-   ASM_SIMP_TAC std_ss [subsets_def, IN_MEASURABLE_BOREL_normal_density] THEN
-   SIMP_TAC std_ss [lborel, m_space_def, measurable_sets_def, GSYM space_borel] THEN
-   SIMP_TAC std_ss [SPACE, sigma_algebra_borel]] THEN
-  DISC_RW_KILL THEN Q.UNABBREV_TAC `g` THEN SIMP_TAC std_ss [] THEN
-  AP_TERM_TAC THEN ABS_TAC THEN Q.ABBREV_TAC `c = Normal (normal_density mu sig x)` THEN
-  ONCE_REWRITE_TAC [METIS [] ``indicator_fn (f x') x = (\x'. indicator_fn (f x') x) x'``] THEN
-  Q.ABBREV_TAC `g = (\x'. indicator_fn (f x') x)` THEN
-  Q_TAC SUFF_TAC `suminf (\x'. c * g x') = c * suminf g` THENL
-  [ALL_TAC,
-   MATCH_MP_TAC ext_suminf_cmul THEN Q.UNABBREV_TAC `c` THEN Q.UNABBREV_TAC `g` THEN
-   SIMP_TAC std_ss [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
-   GEN_TAC THEN SIMP_TAC std_ss [GSYM extreal_of_num_def, indicator_fn_def] THEN
-   COND_CASES_TAC THEN SIMP_TAC real_ss [extreal_of_num_def, extreal_le_def]] THEN
-  DISC_RW_KILL THEN AP_TERM_TAC THEN Q.UNABBREV_TAC `g` THEN SIMP_TAC std_ss [] THEN
-  GEN_REWR_TAC (LAND_CONV o ONCE_DEPTH_CONV) [indicator_fn_def] THEN
-  SIMP_TAC std_ss [] THEN COND_CASES_TAC THENL
-  [ALL_TAC,
-   SIMP_TAC std_ss [indicator_fn_def] THEN
-   Q_TAC SUFF_TAC `!x'. x NOTIN f x'` THENL
-   [DISCH_TAC THEN ASM_SIMP_TAC std_ss [suminf_0], ALL_TAC] THEN
-   ASM_SET_TAC []] THEN
-  FULL_SIMP_TAC std_ss [IN_BIGUNION, IN_IMAGE, ext_suminf_def] THEN
-  ONCE_REWRITE_TAC [EQ_SYM_EQ] THEN SIMP_TAC std_ss [sup_eq] THEN
-  CONJ_TAC THENL
-  [GEN_TAC THEN GEN_REWR_TAC LAND_CONV [GSYM SPECIFICATION] THEN
-   SIMP_TAC std_ss [GSPECIFICATION, IN_IMAGE] THEN STRIP_TAC THEN
-   ASM_REWRITE_TAC [] THEN ASM_CASES_TAC ``x' < n:num`` THENL
-   [ALL_TAC,
-    MATCH_MP_TAC le_trans THEN Q.EXISTS_TAC `0` THEN
-    SIMP_TAC real_ss [extreal_of_num_def, extreal_le_def] THEN
-    SIMP_TAC std_ss [GSYM extreal_of_num_def, le_lt] THEN
-    DISJ2_TAC THEN MATCH_MP_TAC EXTREAL_SUM_IMAGE_0 THEN
-    SIMP_TAC std_ss [FINITE_COUNT] THEN RW_TAC std_ss [count_def, GSPECIFICATION] THEN
-    `x'' <> x'` by ASM_SIMP_TAC arith_ss [] THEN SIMP_TAC std_ss [indicator_fn_def] THEN
-    `x NOTIN f x''` by ASM_SET_TAC [] THEN ASM_SIMP_TAC std_ss []] THEN
-   SIMP_TAC std_ss [count_def] THEN
-   Q_TAC SUFF_TAC `{m | m < n} = ({m | m < n} DIFF {x'}) UNION {x'}` THENL
-   [DISC_RW_KILL,
-    SIMP_TAC std_ss [EXTENSION, GSPECIFICATION, IN_DIFF, IN_UNION, IN_SING] THEN
-    ASM_SIMP_TAC real_ss []] THEN
-   Q_TAC SUFF_TAC `FINITE ({m | m < n} DIFF {x'}) /\ FINITE {x'} /\
-           DISJOINT ({m | m < n} DIFF {x'}) {x'}` THENL
-   [ALL_TAC, SIMP_TAC std_ss [GSYM count_def] THEN
-    SIMP_TAC std_ss [FINITE_SING, FINITE_COUNT, DISJOINT_DEF, FINITE_DIFF] THEN
-    SET_TAC []] THEN
-   DISCH_THEN (ASSUME_TAC o MATCH_MP EXTREAL_SUM_IMAGE_DISJOINT_UNION) THEN
-   Q_TAC SUFF_TAC `SIGMA (\x'. indicator_fn (f x') x) (({m | m < n} DIFF {x'}) UNION {x'}) =
-                   SIGMA (\x'. indicator_fn (f x') x) ({m | m < n} DIFF {x'}) +
-                   SIGMA (\x'. indicator_fn (f x') x) {x'}` THENL
-   [DISC_RW_KILL,
-    POP_ASSUM MATCH_MP_TAC THEN DISJ1_TAC THEN
-    RW_TAC std_ss [indicator_fn_def, num_not_infty]] THEN
-   ASM_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_SING, indicator_fn_def] THEN
-   `x IN f x'` by METIS_TAC [] THEN ASM_SIMP_TAC std_ss [extreal_of_num_def] THEN
-   ONCE_REWRITE_TAC [GSYM add_comm_normal] THEN
-   SIMP_TAC std_ss [le_lt] THEN DISJ2_TAC THEN
-   GEN_REWR_TAC RAND_CONV [GSYM add_rzero] THEN AP_TERM_TAC THEN
-   MATCH_MP_TAC EXTREAL_SUM_IMAGE_0 THEN
-   SIMP_TAC std_ss [FINITE_DIFF, FINITE_SING, FINITE_COUNT, GSYM count_def] THEN
-   RW_TAC std_ss [count_def, GSYM extreal_of_num_def] THEN
-   SIMP_TAC real_ss [extreal_11, extreal_of_num_def] THEN
-   UNDISCH_TAC ``x IN (f:num->real->bool) x''`` THEN POP_ASSUM MP_TAC THEN
-   SIMP_TAC arith_ss [IN_DIFF, IN_SING, GSPECIFICATION] THEN ASM_SET_TAC [],
-   ALL_TAC] THEN
-  GEN_TAC THEN DISCH_THEN MATCH_MP_TAC THEN ONCE_REWRITE_TAC [GSYM SPECIFICATION] THEN
-  SIMP_TAC std_ss [GSPECIFICATION, IN_IMAGE] THEN Q.EXISTS_TAC `SUC x'` THEN
-  SIMP_TAC std_ss [IN_UNIV, COUNT_SUC] THEN REWRITE_TAC [count_def] THEN
-  ONCE_REWRITE_TAC [SET_RULE ``a INSERT b = {a} UNION b``] THEN
-  Q_TAC SUFF_TAC `FINITE {x'} /\ FINITE {m | m < x'} /\ DISJOINT {x'} {m | m < x'}` THENL
-  [ALL_TAC, SIMP_TAC std_ss [GSYM count_def] THEN
-   SIMP_TAC std_ss [FINITE_SING, FINITE_COUNT, DISJOINT_DEF, FINITE_DIFF] THEN
-   ASM_SIMP_TAC arith_ss [count_def, EXTENSION, NOT_IN_EMPTY, IN_INTER,
-    GSPECIFICATION, IN_SING]] THEN
-  DISCH_THEN (ASSUME_TAC o MATCH_MP EXTREAL_SUM_IMAGE_DISJOINT_UNION) THEN
-  Q_TAC SUFF_TAC `SIGMA (\x'. indicator_fn (f x') x) ({x'} UNION {m | m < x'}) =
-                  SIGMA (\x'. indicator_fn (f x') x) {x'} +
-                  SIGMA (\x'. indicator_fn (f x') x) {m | m < x'}` THENL
-  [DISC_RW_KILL,
-   POP_ASSUM MATCH_MP_TAC THEN DISJ1_TAC THEN
-   RW_TAC std_ss [indicator_fn_def, num_not_infty]] THEN
-  `x IN f x'` by METIS_TAC [] THEN
-  ASM_SIMP_TAC std_ss [EXTREAL_SUM_IMAGE_SING, indicator_fn_def] THEN
-  GEN_REWR_TAC LAND_CONV [GSYM add_rzero] THEN AP_TERM_TAC THEN
-  ONCE_REWRITE_TAC [EQ_SYM_EQ] THEN MATCH_MP_TAC EXTREAL_SUM_IMAGE_0 THEN
-  SIMP_TAC std_ss [FINITE_COUNT, GSYM count_def] THEN
-  RW_TAC std_ss [count_def, GSPECIFICATION] THEN
-  `x'' <> x'` by ASM_SIMP_TAC arith_ss [] THEN ASM_SET_TAC []);
-
-val normal_pdf_nonneg = store_thm ("normal_pdf_nonneg",
- ``!X p mu sig. normal_rv X p mu sig ==>
-            !x. 0 <= PDF p (X:'a->real) x``,
-  RW_TAC std_ss [normal_rv] THEN MATCH_MP_TAC PDF_LE_POS THEN
-  FULL_SIMP_TAC std_ss [random_variable_def, prob_space_def] THEN
-  METIS_TAC [normal_measure_abs_continuous, normal_measure_space]);
-
-val normal_pdf_integral_eq_1 = store_thm ("normal_pdf_integral_eq_1",
- ``!X p mu sig. normal_rv X p mu sig ==> (integral lborel (PDF p X) = 1)``,
-  RW_TAC std_ss [normal_rv] THEN MATCH_MP_TAC INTEGRAL_PDF_1 THEN
-  RW_TAC std_ss [prob_space_def, normal_measure_space, m_space_def,
-                 normal_measure_abs_continuous, measure_def, p_space_def] THEN
-  POP_ASSUM (ASSUME_TAC o ONCE_REWRITE_RULE [EQ_SYM_EQ]) THEN
-  FULL_SIMP_TAC std_ss [random_variable_def, distribution_def,
-                        measurable_distr, prob_space_def] THEN
-  `space borel IN subsets borel` by
-   METIS_TAC [ALGEBRA_SPACE, sigma_algebra_borel, sigma_algebra_def] THEN
-  ASM_SIMP_TAC std_ss [] THEN
-  Q_TAC SUFF_TAC `PREIMAGE X (space borel) INTER p_space p = p_space p` THENL
-  [METIS_TAC [prob_def], ALL_TAC] THEN
-  FULL_SIMP_TAC std_ss [PREIMAGE_def] THEN
-  FULL_SIMP_TAC std_ss [IN_MEASURABLE, space_def, IN_FUNSET] THEN
-  ASM_SET_TAC []);
-
-val integral_normal_pdf_eq_density = store_thm ("integral_normal_pdf_eq_density",
-  ``!X p mu sig A. normal_rv X p mu sig /\ A IN measurable_sets lborel ==>
-       (pos_fn_integral lborel (\x. PDF p X x * indicator_fn A x) =
-        pos_fn_integral lborel
-         (\x. Normal (normal_density mu sig x) * indicator_fn A x))``,
-  RW_TAC std_ss [normal_rv, PDF_def, RN_deriv] THEN
-  SELECT_ELIM_TAC THEN RW_TAC std_ss [measure_def, normal_pmeasure] THEN
-  Q.EXISTS_TAC `(\x. Normal (normal_density mu sig x))` THEN
-  SIMP_TAC real_ss [extreal_of_num_def, extreal_le_def, normal_density_nonneg] THEN
-  SIMP_TAC std_ss [IN_MEASURABLE_BOREL_normal_density]);
-
 val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density'",
   ``!X p mu sig f. normal_rv X p mu sig /\ (!x. 0 <= f x) /\
        f IN measurable (m_space lborel, measurable_sets lborel) Borel ==>
@@ -238,6 +39,8 @@ val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density
    pos_fn_integral (density lborel
     (RN_deriv lborel (space borel,subsets borel,normal_pmeasure mu sig))) f` THENL
   [DISC_RW_KILL,
+
+  
    `f = (\x. max 0 (f x))` by METIS_TAC [FUN_EQ_THM, extreal_max_def] THEN
    POP_ASSUM (fn th => GEN_REWR_TAC (RAND_CONV o ONCE_DEPTH_CONV) [th]) THEN
    ONCE_REWRITE_TAC [EQ_SYM_EQ] THEN
@@ -247,6 +50,7 @@ val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density
     Q_TAC SUFF_TAC `!x. 0 <= f x * g x` THENL [METIS_TAC [extreal_max_def], ALL_TAC] THEN
     GEN_TAC THEN MATCH_MP_TAC le_mul THEN ASM_SIMP_TAC std_ss [] THEN
     METIS_TAC [PDF_def, normal_pdf_nonneg, normal_rv]] THEN
+    
    ONCE_REWRITE_TAC [mul_comm] THEN
    MATCH_MP_TAC (REWRITE_RULE [GSYM density] pos_fn_integral_density') THEN
    Q.UNABBREV_TAC `g` THEN ASM_SIMP_TAC std_ss [measure_space_lborel] THEN
@@ -262,17 +66,22 @@ val integral_normal_pdf_eq_density' = store_thm ("integral_normal_pdf_eq_density
     CONJ_TAC THENL [METIS_TAC [normal_measure_space], ALL_TAC] THEN
     CONJ_TAC THENL [METIS_TAC [normal_measure_abs_continuous], ALL_TAC] THEN
     METIS_TAC [lborel, measurable_sets_def], ALL_TAC] THEN
+    
    SIMP_TAC std_ss [AE, ae_filter, GSPECIFICATION] THEN Q.EXISTS_TAC `{}` THEN
    SIMP_TAC std_ss [null_sets, GSPECIFICATION] THEN RW_TAC std_ss [] THENL
    [SIMP_TAC std_ss [lborel, measurable_sets_def] THEN
     METIS_TAC [borel_closed, CLOSED_EMPTY],
     METIS_TAC [measure_space_lborel, measure_space_def, positive_def],
     ALL_TAC] THEN
+    
    Q_TAC SUFF_TAC `RN_deriv lborel (space borel,subsets borel,normal_pmeasure mu sig) =
     PDF p X` THENL [DISC_RW_KILL, ASM_SIMP_TAC std_ss [PDF_def]] THEN
    `normal_rv X p mu sig` by ASM_SIMP_TAC std_ss [normal_rv] THEN
    `!x. 0 <= PDF p X x` by METIS_TAC [normal_pdf_nonneg] THEN
-   ASM_SIMP_TAC std_ss [GSPEC_F, SUBSET_EMPTY]] THEN
+   ASM_SIMP_TAC std_ss [GSPEC_F, SUBSET_EMPTY]
+
+  ] THEN
+  
   Q.ABBREV_TAC `N = (space borel,subsets borel,normal_pmeasure mu sig)` THEN
   Q_TAC SUFF_TAC `pos_fn_integral lborel (\x. f x * Normal (normal_density mu sig x)) =
     pos_fn_integral N f` THENL

@@ -1,5 +1,5 @@
 (*
-Theorem RN_deriv_density : (* was: density_RN_deriv *)
+Theorem density_RN_deriv :
     !M N. sigma_finite_measure_space M /\ measure_space N /\
           measure_absolutely_continuous (measure N) M /\
           measurable_sets M = measurable_sets N ==>
