@@ -124,48 +124,6 @@ val measure_space_closed = store_thm ("measure_space_closed",
   REPEAT GEN_TAC THEN SIMP_TAC std_ss [measure_space_def, sigma_algebra_iff2] THEN
   SIMP_TAC std_ss [measurable_sets_def, m_space_def]);
 
-val positive_cong_eq = store_thm ("positive_cong_eq",
-  ``!sp M u u'. ring sp M /\ (!a. a IN M ==> (u' a = u a)) ==>
-                (positive (sp,M,u) = positive (sp,M,u'))``,
-  SIMP_TAC std_ss [positive_def, measure_def, measurable_sets_def] THEN
-  RW_TAC std_ss [ring, semiring, subset_class_def]);
-
-val countably_additive_eq = store_thm ("countably_additive_eq",
-  ``!sp M u u'. (!a. a IN M ==> (u' a = u a)) ==>
-                (countably_additive (sp,M,u') = countably_additive (sp,M,u))``,
-  SIMP_TAC std_ss [countably_additive_def] THEN
-  REPEAT STRIP_TAC THEN EQ_TAC THEN REPEAT STRIP_TAC THEN
-  FIRST_X_ASSUM (MP_TAC o SPEC ``f:num->'a->bool``) THEN
-  FULL_SIMP_TAC std_ss [measurable_sets_def, measure_def, o_DEF] THEN
-  DISCH_TAC THEN AP_TERM_TAC THEN ABS_TAC THENL
-  [ALL_TAC, ONCE_REWRITE_TAC [EQ_SYM_EQ]] THEN
-  FIRST_X_ASSUM MATCH_MP_TAC THEN POP_ASSUM K_TAC THEN
-  POP_ASSUM K_TAC THEN POP_ASSUM K_TAC THEN POP_ASSUM MP_TAC THEN
-  EVAL_TAC THEN SET_TAC []);
-
-val measure_space_eq = store_thm ("measure_space_eq",
-  ``!sp A u u'. A SUBSET POW sp /\
-             (!a. a IN sigma_sets sp A ==> (u a = u' a)) ==>
-             (measure_space (sp, (sigma_sets sp A), u) =
-              measure_space (sp, (sigma_sets sp A), u'))``,
-  REPEAT STRIP_TAC THEN POP_ASSUM MP_TAC THEN FIRST_ASSUM MP_TAC THEN
-  DISCH_THEN (MP_TAC o MATCH_MP sigma_algebra_sigma_sets) THEN
-  SIMP_TAC std_ss [measure_space_def] THEN REPEAT STRIP_TAC THEN
-  SIMP_TAC std_ss [measurable_sets_def, m_space_def] THEN AP_TERM_TAC THEN
-  MATCH_MP_TAC (TAUT `(a = b) /\ (c = d) ==>
-    ((a /\ c) = (b /\ d))`) THEN CONJ_TAC THENL
-  [MATCH_MP_TAC positive_cong_eq THEN ONCE_REWRITE_TAC [EQ_SYM_EQ] THEN
-   FULL_SIMP_TAC std_ss [sigma_algebra_alt_eq, algebra_alt_eq],
-   MATCH_MP_TAC countably_additive_eq THEN ASM_REWRITE_TAC []]);
-
-val measure_of_eq = store_thm ("measure_of_eq",
-  ``!sp A u u'. A SUBSET POW sp /\ (!a. a IN sigma_sets sp A ==> (u a = u' a)) ==>
-                (measure_of (sp,A,u) = measure_of (sp,A,u'))``,
-  REPEAT GEN_TAC THEN DISCH_TAC THEN FIRST_ASSUM MP_TAC THEN
-  DISCH_THEN (MP_TAC o MATCH_MP measure_space_eq) THEN
-  SIMP_TAC std_ss [measure_of] THEN DISCH_TAC THEN
-  ABS_TAC THEN COND_CASES_TAC THEN FULL_SIMP_TAC std_ss []);
-
 val space_sets_measure_conv = store_thm ("space_sets_measure_conv",
   ``!sp A u. (m_space (measure_of (sp,A,u)) = sp) /\
              (measurable_sets (measure_of (sp,A,u)) =
@@ -813,6 +771,7 @@ val borel_measurable_cmul = store_thm ("borel_measurable_cmul",
           METIS_TAC [REAL_LT_RDIV_EQ_NEG, REAL_MUL_COMM]) THEN
   METIS_TAC [in_measurable_borel_alt1]);
 
+(* now defined in distributionTheory *)
 val finite_measure = new_definition ("finite_measure",
   ``finite_measure m = sigma_finite_measure m /\
                        (measure m (m_space m) <> PosInf)``);
